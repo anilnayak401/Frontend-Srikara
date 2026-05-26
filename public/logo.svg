@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 170">
+
+  <!-- EMBLEM center: 80, 85 -->
+  <g transform="translate(80,85)">
+
+    <!-- 8 figures, each: dark navy head + purple swept body/arms -->
+
+    <!-- 0° top -->
+    <g transform="rotate(0)">
+      <circle cx="0" cy="-56" r="6" fill="#2d3561"/>
+      <path d="M0,-50 C-12,-42 -20,-30 -10,-22 C-4,-18 0,-20 0,-20 C0,-20 4,-18 10,-22 C20,-30 12,-42 0,-50Z" fill="#9b27af"/>
+    </g>
+    <!-- 45° -->
+    <g transform="rotate(45)">
+      <circle cx="0" cy="-56" r="5.5" fill="#2d3561"/>
+      <path d="M0,-50 C-11,-42 -19,-30 -9,-22 C-4,-18 0,-20 0,-20 C0,-20 4,-18 9,-22 C19,-30 11,-42 0,-50Z" fill="#9b27af"/>
+    </g>
+    <!-- 90° -->
+    <g transform="rotate(90)">
+      <circle cx="0" cy="-56" r="5.5" fill="#2d3561"/>
+      <path d="M0,-50 C-11,-42 -19,-30 -9,-22 C-4,-18 0,-20 0,-20 C0,-20 4,-18 9,-22 C19,-30 11,-42 0,-50Z" fill="#9b27af"/>
+    </g>
+    <!-- 135° -->
+    <g transform="rotate(135)">
+      <circle cx="0" cy="-56" r="5.5" fill="#2d3561"/>
+      <path d="M0,-50 C-11,-42 -19,-30 -9,-22 C-4,-18 0,-20 0,-20 C0,-20 4,-18 9,-22 C19,-30 11,-42 0,-50Z" fill="#9b27af"/>
+    </g>
+    <!-- 180° -->
+    <g transform="rotate(180)">
+      <circle cx="0" cy="-56" r="5.5" fill="#2d3561"/>
+      <path d="M0,-50 C-11,-42 -19,-30 -9,-22 C-4,-18 0,-20 0,-20 C0,-20 4,-18 9,-22 C19,-30 11,-42 0,-50Z" fill="#9b27af"/>
+    </g>
+    <!-- 225° -->
+    <g transform="rotate(225)">
+      <circle cx="0" cy="-56" r="5.5" fill="#2d3561"/>
+      <path d="M0,-50 C-11,-42 -19,-30 -9,-22 C-4,-18 0,-20 0,-20 C0,-20 4,-18 9,-22 C19,-30 11,-42 0,-50Z" fill="#9b27af"/>
+    </g>
+    <!-- 270° -->
+    <g transform="rotate(270)">
+      <circle cx="0" cy="-56" r="5.5" fill="#2d3561"/>
+      <path d="M0,-50 C-11,-42 -19,-30 -9,-22 C-4,-18 0,-20 0,-20 C0,-20 4,-18 9,-22 C19,-30 11,-42 0,-50Z" fill="#9b27af"/>
+    </g>
+    <!-- 315° -->
+    <g transform="rotate(315)">
+      <circle cx="0" cy="-56" r="6" fill="#2d3561"/>
+      <path d="M0,-50 C-12,-42 -20,-30 -10,-22 C-4,-18 0,-20 0,-20 C0,-20 4,-18 10,-22 C20,-30 12,-42 0,-50Z" fill="#9b27af"/>
+    </g>
+
+    <!-- Center white 8-point star -->
+    <polygon points="0,-18 4,-8 14,-8 7,-1 10,10 0,4 -10,10 -7,-1 -14,-8 -4,-8"
+      fill="white"/>
+    <circle cx="0" cy="0" r="6" fill="white"/>
+  </g>
+
+  <!-- SR — dark navy -->
+  <text x="158" y="100"
+    font-family="'Arial Black','Franklin Gothic Heavy',Arial,sans-serif"
+    font-weight="900" font-size="76" fill="#2d3561">SR</text>
+
+  <!-- The "I" = tall leaf/teardrop shape -->
+  <!-- Outer dark navy leaf -->
+  <path d="M293,22 C285,22 278,36 278,62 C278,84 284,100 293,108 C302,100 308,84 308,62 C308,36 301,22 293,22Z"
+    fill="#2d3561"/>
+  <!-- Inner purple leaf -->
+  <path d="M293,30 C287,30 282,42 282,62 C282,80 287,94 293,100 C299,94 304,80 304,62 C304,42 299,30 293,30Z"
+    fill="#9b27af"/>
+
+  <!-- KARA — dark navy -->
+  <text x="312" y="100"
+    font-family="'Arial Black','Franklin Gothic Heavy',Arial,sans-serif"
+    font-weight="900" font-size="76" fill="#2d3561">KARA</text>
+
+  <!-- V-tick + teardrop below the leaf-I -->
+  <path d="M278,108 L293,132 L308,108"
+    stroke="#9b27af" stroke-width="5.5"
+    fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="293" cy="134" r="4" fill="#9b27af"/>
+
+  <!-- HOSPITALS — purple -->
+  <text x="312" y="148"
+    font-family="'Arial Black','Franklin Gothic Heavy',Arial,sans-serif"
+    font-weight="900" font-size="46" fill="#9b27af"
+    letter-spacing="1.5">HOSPITALS</text>
+
+</svg>

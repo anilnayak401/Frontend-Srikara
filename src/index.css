@@ -1,0 +1,309 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─────────────────────────────────────────────────────────────
+   GLOBAL BRAND DESIGN SYSTEM
+   Primary:    #8B1A4A  (deep rose)
+   Secondary:  #2D3A4A  (teal)
+   Bg Light:   #F5E8EF
+   Text Dark:  #1A1A1A
+───────────────────────────────────────────────────────────── */
+
+@layer base {
+  :root {
+    /* shadcn tokens */
+    --background:  248 230 236;
+    --foreground:  26 26 26;
+    --radius:      1rem;
+    --border:      232 200 212;
+    --input:       252 228 236;
+    --ring:        194 24 91;
+
+    /* ── Brand CSS variables (use anywhere with var()) ── */
+    --brand-primary:        #8B1A4A;
+    --brand-primary-dark:   #5E0F30;
+    --brand-primary-light:  #E8B4C8;
+    --brand-primary-bg:     #F5D6E3;
+
+    --brand-secondary:      #2D3A4A;
+    --brand-secondary-dark: #1A2330;
+    --brand-secondary-light:#8A9BAD;
+    --brand-secondary-bg:   #E8EDF2;
+
+    --brand-bg-light:       #F5E8EF;
+    --brand-text-dark:      #1A1A1A;
+    --brand-text-muted:     #4A4A4A;
+
+    /* gradient shorthand */
+    --brand-gradient: linear-gradient(90deg, #8B1A4A, #2D3A4A);
+    --brand-gradient-soft: linear-gradient(135deg, #F5D6E3 0%, #E8EDF2 100%);
+  }
+
+  * { @apply border-outline-variant; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    @apply bg-surface text-on-surface font-sans antialiased;
+    background-color: #FFFFFF;
+    color: #1A1A1A;
+  }
+
+  /* ── Global heading color ── */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+    color: #8B1A4A;
+    letter-spacing: -0.01em;
+  }
+
+  /* ── Links ── */
+  a {
+    color: #8B1A4A;
+    transition: color 0.2s ease;
+  }
+  a:hover { color: #2D3A4A; }
+
+  /* Performance */
+  section { contain: layout style; }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   GLOBAL COMPONENT CLASSES
+───────────────────────────────────────────────────────────── */
+@layer components {
+
+  /* Primary button */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2
+           bg-[#8B1A4A] text-white font-bold uppercase tracking-widest
+           px-8 py-4 rounded-full shadow-primary
+           transition-all duration-300;
+  }
+  .btn-primary:hover {
+    background-color: #2D3A4A;
+    @apply shadow-secondary scale-[1.02];
+  }
+  .btn-primary:active { @apply scale-[0.98]; }
+
+  /* Secondary / outline button */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2
+           border-2 border-[#2D3A4A] text-[#2D3A4A] font-bold uppercase tracking-widest
+           px-8 py-4 rounded-full
+           transition-all duration-300 bg-transparent;
+  }
+  .btn-secondary:hover {
+    @apply bg-[#2D3A4A] text-white;
+  }
+
+  /* ── Hero gradient text — line 2 of every hero heading ── */
+  .hero-gradient-text {
+    background: linear-gradient(90deg, #A02057, #8B1A4A, #5E0F30);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    /* subtle glow that works on dark backgrounds */
+    filter: drop-shadow(0 2px 10px rgba(139, 26, 74, 0.30));
+  }
+
+  /* brand-gradient-text — used on dark pages (About etc.) */
+  .brand-gradient-text {
+    background: linear-gradient(90deg, #A02057, #8B1A4A, #5E0F30);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 2px 8px rgba(139, 26, 74, 0.25));
+  }
+
+  /* Glass card — light theme */
+  .glass-card-light {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(139, 26, 74, 0.12);
+    transition: all 0.4s ease;
+  }
+  .glass-card-light:hover {
+    border-color: rgba(139, 26, 74, 0.3);
+    box-shadow: 0 20px 50px rgba(139, 26, 74, 0.10);
+    transform: translateY(-4px);
+  }
+
+  /* Glass card — dark theme */
+  .glass-card-dark {
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .glass-card-dark:hover {
+    border-color: rgba(139, 26, 74, 0.35);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(139, 26, 74,0.15);
+    transform: translateY(-6px);
+  }
+
+  /* Section accent bar */
+  .accent-bar {
+    @apply w-12 h-1 rounded-full;
+    background: var(--brand-gradient);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   MOBILE-ONLY OVERRIDES  (max-width: 767px)
+   Zero desktop impact — all rules scoped inside this query.
+───────────────────────────────────────────────────────────── */
+@media (max-width: 767px) {
+
+  /* ── Hero section ── */
+  .hero-section {
+    min-height: 520px !important;
+    padding-top: 72px;
+    padding-bottom: 40px;
+  }
+
+  /* Hero content wrapper */
+  .hero-content {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  /* Line 1 — white text */
+  .hero-line-1 {
+    font-size: 28px !important;
+    line-height: 1.15 !important;
+    letter-spacing: -0.02em;
+  }
+
+  /* Line 2 — gradient text */
+  .hero-line-2 {
+    font-size: 26px !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Hero description */
+  .hero-desc {
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+    margin-bottom: 20px !important;
+  }
+
+  /* ── Hero buttons — full-width, touch-friendly ── */
+  .hero-btn-wrap {
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 100%;
+  }
+
+  .hero-btn-wrap > button,
+  .hero-btn-wrap > a {
+    width: 100% !important;
+    min-height: 48px !important;
+    justify-content: center;
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+    font-size: 12px !important;
+  }
+
+  /* ── Disease search panel ── */
+  .disease-search-panel {
+    border-radius: 14px !important;
+  }
+
+  /* Tighter padding inside each column on mobile */
+  .disease-search-panel > div > div {
+    padding: 16px !important;
+  }
+
+  /* Alphabet section header */
+  .disease-search-panel h3 {
+    font-size: 14px !important;
+    margin-bottom: 10px !important;
+  }
+
+  /* Alphabet grid — 6 columns, compact gap */
+  .alpha-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+  }
+
+  /* Alphabet buttons — 34px circles */
+  .alpha-btn {
+    width: 34px !important;
+    height: 34px !important;
+    font-size: 11px !important;
+    min-height: 34px;
+  }
+
+  /* Search input — full width, 44px touch target */
+  .search-input-wrap input {
+    height: 44px !important;
+    font-size: 14px !important;
+  }
+
+  /* Results pills — smaller on mobile */
+  .disease-pill {
+    font-size: 12px !important;
+    padding: 4px 10px !important;
+  }
+
+  /* ── Section spacing — reduce excessive margins ── */
+  section {
+    padding-top: 40px !important;
+    padding-bottom: 40px !important;
+  }
+
+  /* Horizontal padding for all sections */
+  .section-inner {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  /* ── Disable heavy hover transforms on touch ── */
+  .glass-card-light:hover,
+  .glass-card-dark:hover {
+    transform: none !important;
+  }
+
+  /* Disable shimmer sweep on mobile (saves paint) */
+  .shimmer-btn::after {
+    display: none !important;
+  }
+}
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+
+  /* Lazy image fade-in */
+  img[loading="lazy"] { opacity: 0; transition: opacity 0.4s ease; }
+  img[loading="lazy"]:not([src=""]) { opacity: 1; }
+
+  /* Skeleton shimmer */
+  @keyframes shimmer {
+    0%   { background-position: -400px 0; }
+    100% { background-position:  400px 0; }
+  }
+  .skeleton {
+    background: linear-gradient(90deg,
+      rgba(139, 26, 74,0.04) 25%,
+      rgba(139, 26, 74,0.10) 50%,
+      rgba(139, 26, 74,0.04) 75%);
+    background-size: 800px 100%;
+    animation: shimmer 1.4s infinite linear;
+  }
+
+  /* Scrollbar hide */
+  .custom-scrollbar::-webkit-scrollbar { display: none; }
+
+  /* Shimmer button sweep */
+  .shimmer-btn { position: relative; overflow: hidden; }
+  .shimmer-btn::after {
+    content: '';
+    position: absolute; top: 0; left: -150%; width: 50%; height: 100%;
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.35), transparent);
+    transform: skewX(-25deg); transition: 0.75s;
+  }
+  .shimmer-btn:hover::after { left: 150%; }
+
+  /* Emergency card left border */
+  .emergency-card { border-left: 3px solid #BA1A1A; }
+}
