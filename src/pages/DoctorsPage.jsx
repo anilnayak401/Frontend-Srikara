@@ -161,6 +161,19 @@ export function DoctorsPage() {
   const [activeBranch, setActiveBranch] = useState('all')
   const tabsRef = useRef(null)
 
+  const [mouseX, setMouseX] = useState(0)
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    setMousePos({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    })
+    const percent = (e.clientX / window.innerWidth - 0.5) * 45
+    setMouseX(percent)
+  }
+
   const branches = ['all', ...new Set(ALL_DOCTORS.map(d => d.branch))]
   const specialties = getSpecialties(activeBranch === 'all' ? null : activeBranch)
 
@@ -233,15 +246,33 @@ export function DoctorsPage() {
             </div>
           </section>
 
-          {/* ── 2. CHAIRMAN SPOTLIGHT (Awwwards-Level Editorial Layout) ── */}
+          {/* ── 2. CHAIRMAN SPOTLIGHT (Highly Interactive Editorial Layout) ── */}
           {chairman && (
-            <section className="relative pt-24 lg:pt-32 pb-0 px-8 lg:px-12 overflow-hidden bg-[#050811] text-white border-b border-white/5 min-h-[600px] lg:min-h-[720px] flex items-center">
-              {/* Marquee Background text */}
-              <div className="absolute top-10 left-0 right-0 overflow-hidden whitespace-nowrap opacity-[0.01] pointer-events-none select-none">
-                <span className="text-[120px] font-display font-black tracking-[0.2em] text-slate-400 uppercase inline-block">
+            <section 
+              onMouseMove={handleMouseMove}
+              className="relative pt-12 lg:pt-14 pb-0 px-8 lg:px-12 overflow-hidden bg-[#050811] text-white border-b border-white/5 min-h-[550px] lg:min-h-[660px] flex items-center"
+            >
+              {/* Dynamic Interactive Glow */}
+              <div 
+                className="absolute pointer-events-none rounded-full blur-[110px] opacity-50 transition-all duration-300 ease-out"
+                style={{
+                  width: '380px',
+                  height: '380px',
+                  background: 'radial-gradient(circle, rgba(139,26,74,0.3) 0%, transparent 70%)',
+                  left: `${mousePos.x - 190}px`,
+                  top: `${mousePos.y - 190}px`,
+                }}
+              />
+
+              {/* Marquee Background text tracking mouse position */}
+              <motion.div 
+                style={{ x: mouseX }}
+                className="absolute top-6 left-0 right-0 overflow-hidden whitespace-nowrap opacity-[0.02] pointer-events-none select-none transition-all duration-500 ease-out"
+              >
+                <span className="text-[120px] font-display font-black tracking-[0.2em] text-slate-400 uppercase inline-block w-full text-center">
                   VISIONARY • PIONEER • LEADER • SURGEON
                 </span>
-              </div>
+              </motion.div>
 
               <div className="max-w-7xl mx-auto relative z-10 w-full">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center">
@@ -249,29 +280,71 @@ export function DoctorsPage() {
                   {/* Left Column Spacer (5 cols) to make room for absolutely positioned left image */}
                   <div className="hidden lg:block lg:col-span-5 h-[1px]" />
 
-                  {/* Right Column (7 cols): Massive Typography Slogan (Now Right Aligned & Themed) */}
-                  <div className="col-span-1 lg:col-span-7 flex flex-col items-start text-left py-12 lg:py-20 lg:pl-8">
+                  {/* Right Column (7 cols): Massive Typography Slogan (Shifted up with smaller padding) */}
+                  <div className="col-span-1 lg:col-span-7 flex flex-col items-start text-left py-6 lg:pt-6 lg:pb-16 lg:pl-8">
+                    
+                    {/* Interactive Srikara Logo Emblem */}
+                    <motion.div 
+                      whileHover={{ scale: 1.1, rotate: 180 }}
+                      transition={{ type: 'spring', stiffness: 200, damping: 10 }}
+                      className="cursor-pointer mb-5"
+                    >
+                      <svg width="44" height="44" viewBox="0 0 80 80" className="text-[#8B1A4A]">
+                        <g transform="translate(40, 40)">
+                          {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, idx) => (
+                            <g key={idx} transform={`rotate(${angle})`}>
+                              <circle cx="0" cy="-22" r="2.5" fill="#8B1A4A" />
+                              <path d="M-4 -18 Q0 -14 4 -18" stroke="#8B1A4A" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+                              <line x1="0" y1="-14" x2="0" y2="-9" stroke="#8B1A4A" strokeWidth="1" />
+                            </g>
+                          ))}
+                          <circle cx="0" cy="0" r="5" fill="#8B1A4A" opacity="0.2" />
+                          <circle cx="0" cy="0" r="3" fill="#8B1A4A" opacity="0.5" />
+                          <circle cx="0" cy="0" r="1" fill="#8B1A4A" />
+                        </g>
+                      </svg>
+                    </motion.div>
+
                     <div className="flex flex-wrap items-center gap-3 mb-6">
-                      <span className="bg-[#8B1A4A]/20 border border-[#8B1A4A]/40 text-[#E8B4C8] text-[9px] font-black uppercase tracking-[0.25em] px-3.5 py-1.5 rounded-full flex items-center gap-1.5">
+                      <span className="bg-[#8B1A4A]/25 border border-[#8B1A4A]/40 text-[#E8B4C8] text-[9px] font-black uppercase tracking-[0.25em] px-3.5 py-1.5 rounded-full flex items-center gap-1.5">
                         <Sparkles size={10} className="fill-[#E8B4C8]" />
                         FOUNDING CHAIRMAN
                       </span>
-                      <span className="bg-[#2D3A4A]/40 border border-[#2D3A4A]/50 text-[#A0B3CD] text-[9px] font-black uppercase tracking-[0.2em] px-3.5 py-1.5 rounded-full">
+                      <span className="bg-[#2D3A4A]/50 border border-[#2D3A4A]/60 text-[#A0B3CD] text-[9px] font-black uppercase tracking-[0.2em] px-3.5 py-1.5 rounded-full">
                         CHIEF ROBOTIC SURGEON
                       </span>
                     </div>
 
-                    <h2 className="text-4xl md:text-6xl lg:text-[80px] font-display font-black text-white tracking-tighter leading-[1.02] mb-6 select-none">
+                    <h2 className="text-4xl md:text-6xl lg:text-[76px] font-display font-black text-white tracking-tighter leading-[1.02] mb-5 select-none">
                       Pioneering the<br />
                       <span className="bg-gradient-to-r from-[#8B1A4A] via-[#b5179e] to-[#cc00cc] bg-clip-text text-transparent">future of robotic</span><br />
                       joint replacement.
                     </h2>
                     
-                    <p className="text-slate-300 text-base md:text-lg max-w-2xl mb-8 leading-relaxed font-light">
+                    <p className="text-slate-300 text-base md:text-lg max-w-2xl mb-6 leading-relaxed font-light">
                       Dr. Akhil Dadi has performed over 30,000 surgeries, introducing South India's first NAVIO robotic knee replacement system to establish Srikara as a global leader in orthopedic precision.
                     </p>
 
-                    {/* Interactive CTAs styled like reference */}
+                    {/* Interactive Quick Stats */}
+                    <div className="grid grid-cols-3 gap-4 mb-8 w-full max-w-lg">
+                      {[
+                        { value: "30k+", label: "Surgeries", desc: "Successfully completed procedures" },
+                        { value: "1st", label: "NAVIO Robot", desc: "Pioneered South India's first robotic knee system" },
+                        { value: "15+", label: "Years Exp", desc: "Expertise trained across premier centers globally" }
+                      ].map((stat, idx) => (
+                        <motion.div
+                          key={idx}
+                          whileHover={{ y: -4, backgroundColor: 'rgba(139, 26, 74, 0.12)', borderColor: '#8B1A4A' }}
+                          className="p-3 rounded-2xl border border-white/10 bg-white/5 transition-all duration-300 cursor-help"
+                          title={stat.desc}
+                        >
+                          <div className="text-xl md:text-2xl font-black text-[#E8B4C8]">{stat.value}</div>
+                          <div className="text-[10px] uppercase tracking-wider text-slate-300 font-bold mt-1">{stat.label}</div>
+                        </motion.div>
+                      ))}
+                    </div>
+
+                    {/* Interactive CTAs */}
                     <div className="flex items-center gap-4">
                       <button 
                         onClick={() => navigate(`/book/${chairman.slug}`)}

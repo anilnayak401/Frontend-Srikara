@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { 
   ArrowLeft, Star, Award, Calendar, Phone, MessageCircle, 
   MapPin, Clock, GraduationCap, Globe, Shield, Heart, 
-  Activity, Sparkles, Mail, ChevronRight
+  Activity, Sparkles, Mail, ChevronRight, Play, BookOpen, Tv, X
 } from 'lucide-react'
 import { StickyNavbar } from '@/components/layout/StickyNavbar'
 import { Footer } from '@/components/layout/Footer'
@@ -394,7 +394,431 @@ function InteractiveMilestones({ milestones, brandAccent }) {
 }
 
 // ─────────────────────────────────────────────────────────────
+// 7. DOCTOR-SPECIFIC BLOGS & VIDEOS DATASET
+// ─────────────────────────────────────────────────────────────
+const DOCTOR_MEDIA = {
+  'dr-akhil-dadi': {
+    blogs: [
+      {
+        id: 'b-dadi-1',
+        title: "NAVIO Robotic Knee Joint Balancing: The Precision Factor",
+        category: "Orthopaedics",
+        date: "March 12, 2025",
+        readTime: "5 min read",
+        image: "https://images.unsplash.com/photo-1581595220892-b0739db3ba8c?auto=format&fit=crop&q=80&w=800",
+        excerpt: "An in-depth analysis of sub-millimetre implant balancing and how it maximizes knee joint longevity.",
+        content: `<h3>Surgical Precision with Robotic Assistance</h3>
+        <p>The success of a knee replacement relies heavily on how well the knee joint is balanced throughout its range of motion. Traditional surgical techniques rely on mechanical alignment guides and the surgeon's tactile feedback. However, even a deviation of 2 to 3 degrees can result in uneven load distribution, leading to premature wear of the implant.</p>
+        <h3>The NAVIO Solution</h3>
+        <p>With NAVIO robotic assistance, we map the patient's unique joint anatomy in real-time. This eliminates the need for preoperative CT scans. The robot provides a digital model of the joint and helps plan the precise bone cuts and implant size. During the operation, the robotic-assisted handpiece automatically shuts off if it moves outside the predefined safety boundary, ensuring perfect execution of the plan.</p>
+        <blockquote>"Precision is not an option; it's the foundation of a successful recovery." — Dr. Akhil Dadi</blockquote>`
+      },
+      {
+        id: 'b-dadi-2',
+        title: "Accelerating Post-Op Day 1 Mobilization in Knee Replacement Patients",
+        category: "Orthopaedics",
+        date: "January 18, 2025",
+        readTime: "4 min read",
+        image: "https://images.unsplash.com/photo-1576091160550-217359f42f8c?auto=format&fit=crop&q=80&w=800",
+        excerpt: "How minimally invasive robotic bone cuts decrease trauma and allow patients to walk within 24 hours.",
+        content: `<h3>Redefining Recovery Timelines</h3>
+        <p>Historically, patients undergoing knee replacement were bedridden for several days, followed by weeks of painful physical therapy. Modern protocols, specifically when combined with robotic-assisted surgery, have completely transformed this timeline.</p>
+        <h3>Minimal Tissue Trauma</h3>
+        <p>Because the NAVIO system restricts bone cuts to the absolute millimetre required, the surrounding ligaments and soft tissues are preserved. This reduction in physical trauma, coupled with advanced local nerve blocks, allows patients to experience significantly less pain immediately after surgery.</p>
+        <p>Consequently, we are able to stand our patients up and guide them to walk on Post-Operative Day 1, which dramatically reduces the risk of deep vein thrombosis and boosts patient confidence.</p>`
+      }
+    ],
+    videos: [
+      {
+        id: 'v-dadi-1',
+        title: "NAVIO Robotic Interface & Digital Planning Demo",
+        duration: "4:20",
+        thumbnail: "https://images.unsplash.com/photo-1581595220892-b0739db3ba8c?auto=format&fit=crop&q=80&w=600",
+        videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+      },
+      {
+        id: 'v-dadi-2',
+        title: "Patient Spotlight: Bilateral Robotic Knee Replacement Journey",
+        duration: "3:15",
+        thumbnail: "https://images.unsplash.com/photo-1576091160550-217359f42f8c?auto=format&fit=crop&q=80&w=600",
+        videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+      }
+    ]
+  },
+  'dr-nikhil-veludandi': {
+    blogs: [
+      {
+        id: 'b-nikhil-1',
+        title: "Minimally Invasive Endoscopic Discectomy: Techniques & Recovery",
+        category: "Neurosurgery",
+        date: "April 05, 2025",
+        readTime: "4 min read",
+        image: "https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&q=80&w=800",
+        excerpt: "An inside look at how keyhole spinal procedures preserve muscle tissue and accelerate returning to work.",
+        content: `<h3>The Shift to Endoscopic Spine Care</h3>
+        <p>Herniated discs in the lower back are a common source of debilitating leg and back pain. While open discectomy has been the standard treatment, minimally invasive endoscopic spine surgery offers a highly effective alternative through an incision of less than 8mm.</p>
+        <h3>Preserving Spinal Infrastructure</h3>
+        <p>Using high-definition endoscopes and micro-instruments, we access the spinal canal directly by dilating the muscles rather than cutting them. The herniated disc material compressing the nerve is removed under direct visualization. Patients are typically discharged on the same day and can return to light desk jobs within a week.</p>`
+      }
+    ],
+    videos: [
+      {
+        id: 'v-nikhil-1',
+        title: "Keyhole Spinal Endoscopy: Procedure Overview",
+        duration: "5:10",
+        thumbnail: "https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&q=80&w=600",
+        videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+      }
+    ]
+  },
+  'dr-rameshwari-vishwakarma': {
+    blogs: [
+      {
+        id: 'b-rameshwari-1',
+        title: "Primary Angioplasty Benchmarks: Door-to-Balloon Under 45 Minutes",
+        category: "Cardiology",
+        date: "February 12, 2025",
+        readTime: "5 min read",
+        image: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?auto=format&fit=crop&q=80&w=800",
+        excerpt: "How rapid clinical workflows and advanced catheterization labs save myocardium during acute heart attacks.",
+        content: `<h3>Time is Muscle</h3>
+        <p>During an acute myocardial infarction (heart attack), every minute of artery blockage leads to irreversible heart muscle death. The international gold standard for re-opening the blocked artery (Door-to-Balloon time) is 90 minutes. At Srikara, our dedicated heart team routinely achieves this in under 45 minutes.</p>
+        <h3>Seamless Cardiac Workflows</h3>
+        <p>From the moment a patient enters the emergency department with chest pain, an automatic protocol is activated. The cath lab is primed immediately, allowing us to guide the wire, inflate the balloon, and place a drug-eluting stent to restore coronary blood flow with rapid speed, minimizing long-term heart failure risks.</p>`
+      }
+    ],
+    videos: [
+      {
+        id: 'v-ramesh-1',
+        title: "Interventional Cardiology & Cath Lab Technologies",
+        duration: "6:05",
+        thumbnail: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?auto=format&fit=crop&q=80&w=600",
+        videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+      }
+    ]
+  },
+  'dr-vaishnavi-pochineni': {
+    blogs: [
+      {
+        id: 'b-vaish-1',
+        title: "Mayo Clinic Protocols in Kidney Transplant Immunosuppression",
+        category: "Nephrology",
+        date: "March 20, 2025",
+        readTime: "5 min read",
+        image: "https://images.unsplash.com/photo-1579684453423-f84349ef60b0?auto=format&fit=crop&q=80&w=800",
+        excerpt: "Implementing advanced post-transplant regimens to avoid organ rejection while minimizing drug toxicity.",
+        content: `<h3>Tailored Immunosuppression</h3>
+        <p>Successful kidney transplantation relies heavily on balancing the body's immune system. Too little immunosuppression leads to organ rejection; too much makes the patient vulnerable to infections. Drawing from fellowship protocols at the Mayo Clinic, we design customized drug regimens that monitor donor-specific antibodies in real-time.</p>
+        <p>This precision monitoring allows us to taper drug doses safely, maintaining long-term graft survival while preserving the patient's overall health and vitality.</p>`
+      }
+    ],
+    videos: [
+      {
+        id: 'v-vaish-1',
+        title: "Advances in Renal Transplant Medicine",
+        duration: "4:50",
+        thumbnail: "https://images.unsplash.com/photo-1579684453423-f84349ef60b0?auto=format&fit=crop&q=80&w=600",
+        videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+      }
+    ]
+  },
+  'garapati-raja-bhagat': {
+    blogs: [
+      {
+        id: 'b-raja-1',
+        title: "Robotic Surgical Oncology: Achieving Clean Resection Margins",
+        category: "Oncology",
+        date: "April 01, 2025",
+        readTime: "6 min read",
+        image: "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&q=80&w=800",
+        excerpt: "How robotic arm dexterity enables precise tumor isolation in complex pelvic and abdominal cancers.",
+        content: `<h3>Robotic Precision in Cancer Excision</h3>
+        <p>In surgical oncology, removing the entire tumor with a surrounding border of healthy tissue (achieving negative or 'clean' margins) is critical to prevent cancer recurrence. In deep anatomical spaces like the pelvis, standard laparoscopic instruments have limited movement.</p>
+        <h3>The Multi-Jointed Robotic Edge</h3>
+        <p>Using the robotic platform, we gain 3D high-definition visualization magnified up to 10x, and instruments that rotate with greater flexibility than the human wrist. This enables precise dissection of tumors away from major blood vessels and nerves, resulting in safer margins and quicker recovery.</p>`
+      }
+    ],
+    videos: [
+      {
+        id: 'v-raja-1',
+        title: "Robotic Tools in Complex Abdominal Oncosurgery",
+        duration: "7:12",
+        thumbnail: "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&q=80&w=600",
+        videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+      }
+    ]
+  },
+  'dr-sushmitha-akula': {
+    blogs: [
+      {
+        id: 'b-sush-1',
+        title: "Hyperacute Stroke Interventions: Thrombolysis Windows & Protocols",
+        category: "Neurology",
+        date: "March 02, 2025",
+        readTime: "4 min read",
+        image: "https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?auto=format&fit=crop&q=80&w=800",
+        excerpt: "Why the first 4.5 hours are critical for administering tissue plasminogen activator (tPA) to stroke patients.",
+        content: `<h3>The Golden Hours of Stroke Care</h3>
+        <p>An ischemic stroke occurs when a clot blocks blood flow to the brain, starving brain cells of oxygen. For every minute that passes, nearly 1.9 million neurons die. Reversing this process relies heavily on initiating thrombolytic (clot-busting) therapy as soon as possible.</p>
+        <h3>tPA Administration Windows</h3>
+        <p>The FDA-approved window for administering intravenous tPA is within 4.5 hours of symptom onset. Our rapid stroke protocol ensures that brain imaging is completed and medication is started shortly after the patient arrives, helping to prevent permanent disability.</p>`
+      }
+    ],
+    videos: [
+      {
+        id: 'v-sush-1',
+        title: "Recognizing Stroke Symptoms & Rapid Response Protocols",
+        duration: "5:02",
+        thumbnail: "https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?auto=format&fit=crop&q=80&w=600",
+        videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+      }
+    ]
+  },
+  'default': {
+    blogs: [
+      {
+        id: 'b-def-1',
+        title: "Evidence-Based Diagnostic Protocols at Srikara",
+        category: "Clinical Care",
+        date: "April 02, 2025",
+        readTime: "4 min read",
+        image: "https://images.unsplash.com/photo-1579684453423-f84349ef60b0?auto=format&fit=crop&q=80&w=800",
+        excerpt: "Integrating clinical expertise with modern diagnostic imaging for optimal patient recovery pathways.",
+        content: `<h3>The Srikara Standard of Care</h3>
+        <p>Modern medicine demands that treatment decisions be backed by clinical evidence and accurate diagnostics. At Srikara, we combine the experience of our specialists with state-of-the-art laboratory and imaging technologies to ensure every patient receives a precise diagnosis.</p>
+        <p>By mapping out care plans based on proven protocols, we reduce unnecessary interventions, minimize recovery times, and help our patients return to their active daily routines safely.</p>`
+      }
+    ],
+    videos: [
+      {
+        id: 'v-def-1',
+        title: "Clinical Technology & Diagnostics Advancements",
+        duration: "3:45",
+        thumbnail: "https://images.unsplash.com/photo-1579684453423-f84349ef60b0?auto=format&fit=crop&q=80&w=600",
+        videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+      }
+    ]
+  }
+};
+
+// ─────────────────────────────────────────────────────────────
+// 8. INTERACTIVE BLOGS & VIDEOS (Awwwards-Level Challenge Layout)
+// ─────────────────────────────────────────────────────────────
+function InteractiveBlogsAndVideos({ slug, name, brandAccent }) {
+  const mediaData = DOCTOR_MEDIA[slug] || DOCTOR_MEDIA['default'];
+  const [activeVideo, setActiveVideo] = useState(mediaData.videos[0] || null);
+  const [hoveredBlogId, setHoveredBlogId] = useState(null);
+  const [selectedBlog, setSelectedBlog] = useState(null);
+
+  if (!mediaData.blogs.length && !mediaData.videos.length) return null;
+
+  return (
+    <motion.section 
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: "-80px" }}
+      variants={fadeInUpVariants}
+      className="relative overflow-hidden rounded-[40px] bg-[#070b19] border border-white/5 p-8 md:p-14 text-white shadow-2xl"
+    >
+      {/* Decorative vector grid overlay for Awwwards vibe */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(139,26,74,0.15),transparent_50%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:30px_30px] opacity-20 pointer-events-none" />
+
+      {/* Reading Modal for blogs */}
+      {selectedBlog && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md" onClick={() => setSelectedBlog(null)}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96, y: 30 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 30 }}
+            onClick={e => e.stopPropagation()}
+            className="w-full max-w-[780px] max-h-[85vh] bg-[#0d1425] text-white border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col"
+          >
+            <div className="relative h-60 flex-shrink-0">
+              <img src={selectedBlog.image} alt={selectedBlog.title} className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0d1425] via-transparent to-transparent" />
+              <button 
+                onClick={() => setSelectedBlog(null)} 
+                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/60 border border-white/10 text-white flex items-center justify-center hover:bg-white hover:text-black transition-colors"
+              >
+                <X size={18} />
+              </button>
+              <span className="absolute top-4 left-4 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full" style={{ backgroundColor: brandAccent }}>
+                {selectedBlog.category}
+              </span>
+            </div>
+            <div className="flex-1 overflow-y-auto px-8 pb-10 pt-4">
+              <div className="flex items-center gap-4 text-xs text-slate-400 mb-4">
+                <span>{selectedBlog.date}</span>
+                <span>·</span>
+                <span>{selectedBlog.readTime}</span>
+              </div>
+              <h2 className="text-3xl font-display font-black text-white mb-6 leading-tight">{selectedBlog.title}</h2>
+              <div
+                className="text-slate-300 text-sm leading-relaxed space-y-4 [&_h3]:text-white [&_h3]:font-black [&_h3]:text-lg [&_h3]:pt-4 [&_h3]:pb-1 [&_blockquote]:border-l-4 [&_blockquote]:border-[#8B1A4A] [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-[#E8B4C8]"
+                dangerouslySetInnerHTML={{ __html: selectedBlog.content }}
+              />
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Top Header */}
+      <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12 border-b border-white/5 pb-8">
+        <div>
+          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E8B4C8] block mb-2">
+            RESEARCH &amp; BROADCAST SUITE
+          </span>
+          <h3 className="text-4xl md:text-5xl font-display font-black tracking-tight text-white">
+            Insights &amp; Clinical Videos
+          </h3>
+        </div>
+        <p className="text-slate-400 text-sm max-w-sm font-light leading-relaxed">
+          Explore medical case reviews, surgical insights, and video lectures authored directly by {name}.
+        </p>
+      </div>
+
+      {/* Grid Suite */}
+      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+        
+        {/* Left Column: Interactive Case Studies (7 Cols) */}
+        <div className="lg:col-span-7 space-y-6">
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 mb-2">
+            <BookOpen size={12} className="text-[#8B1A4A]" />
+            <span>Clinical Journals ({mediaData.blogs.length})</span>
+          </div>
+
+          <div className="space-y-4">
+            {mediaData.blogs.map((blog) => {
+              const isHovered = hoveredBlogId === blog.id;
+              return (
+                <motion.div
+                  key={blog.id}
+                  onMouseEnter={() => setHoveredBlogId(blog.id)}
+                  onMouseLeave={() => setHoveredBlogId(null)}
+                  onClick={() => setSelectedBlog(blog)}
+                  className="group relative cursor-pointer overflow-hidden rounded-2xl border transition-all duration-500 bg-[#0d1425]/40"
+                  style={{ 
+                    borderColor: isHovered ? brandAccent : 'rgba(255,255,255,0.05)',
+                    boxShadow: isHovered ? `0 15px 30px -10px ${brandAccent}20` : 'none'
+                  }}
+                  whileHover={{ y: -3 }}
+                >
+                  <div className="flex flex-col md:flex-row items-center gap-6 p-5">
+                    {/* Thumbnail */}
+                    <div className="relative w-full md:w-36 aspect-[4/3] rounded-xl overflow-hidden shrink-0 bg-slate-800">
+                      <img src={blog.image} alt={blog.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                      <div className="absolute inset-0 bg-black/20" />
+                    </div>
+
+                    {/* Meta & Title */}
+                    <div className="flex-1 flex flex-col">
+                      <div className="flex items-center gap-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">
+                        <span style={{ color: brandAccent }}>{blog.category}</span>
+                        <span>·</span>
+                        <span>{blog.readTime}</span>
+                      </div>
+                      <h4 className="text-lg font-display font-black text-white leading-snug group-hover:text-[#E8B4C8] transition-colors mb-2">
+                        {blog.title}
+                      </h4>
+                      <p className="text-slate-400 text-xs font-light line-clamp-2 leading-relaxed">
+                        {blog.excerpt}
+                      </p>
+                    </div>
+
+                    {/* Dynamic Read Indicator */}
+                    <div className="shrink-0 flex items-center justify-center w-10 h-10 rounded-full border border-white/10 group-hover:bg-white group-hover:text-black transition-all duration-300">
+                      <ChevronRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Right Column: Immersive Video Lounge (5 Cols) */}
+        {activeVideo && (
+          <div className="lg:col-span-5 flex flex-col space-y-6">
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 mb-2">
+              <Tv size={12} className="text-[#8B1A4A]" />
+              <span>Video Lectures ({mediaData.videos.length})</span>
+            </div>
+
+            {/* Video Player Box */}
+            <div className="relative rounded-2xl overflow-hidden border border-white/5 bg-[#0d1425] shadow-xl group">
+              <div className="aspect-video w-full bg-black relative">
+                <iframe 
+                  src={activeVideo.videoUrl} 
+                  title={activeVideo.title}
+                  className="absolute inset-0 w-full h-full border-none"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                  allowFullScreen
+                />
+              </div>
+
+              {/* Player Bottom Info */}
+              <div className="p-4 bg-[#0d1425] border-t border-white/5">
+                <div className="flex justify-between items-center gap-4">
+                  <div>
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Active Stream</span>
+                    <h5 className="text-sm font-bold text-white leading-tight mt-0.5">{activeVideo.title}</h5>
+                  </div>
+                  <span className="text-[10px] font-bold text-[#E8B4C8] bg-[#8B1A4A]/20 px-2 py-1 rounded-md shrink-0">
+                    {activeVideo.duration}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Video Playlist Selector */}
+            <div className="space-y-2">
+              {mediaData.videos.map((vid) => {
+                const isActive = activeVideo.id === vid.id;
+                return (
+                  <button
+                    key={vid.id}
+                    onClick={() => setActiveVideo(vid)}
+                    className="w-full flex items-center justify-between text-left p-3.5 rounded-xl border text-xs transition-all duration-300 bg-[#0d1425]/20 hover:bg-[#0d1425]/60"
+                    style={{ 
+                      borderColor: isActive ? brandAccent : 'rgba(255,255,255,0.03)',
+                      color: isActive ? '#white' : '#94A3B8'
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border transition-all"
+                        style={{ 
+                          backgroundColor: isActive ? brandAccent : 'rgba(255,255,255,0.03)',
+                          borderColor: isActive ? 'transparent' : 'rgba(255,255,255,0.05)',
+                          color: isActive ? '#white' : '#64748B'
+                        }}
+                      >
+                        <Play size={12} className={isActive ? "fill-white" : ""} />
+                      </div>
+                      <span className={`font-bold leading-tight ${isActive ? 'text-white font-extrabold' : 'text-slate-300 font-semibold'}`}>
+                        {vid.title}
+                      </span>
+                    </div>
+                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider shrink-0 ml-2">
+                      {vid.duration}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+          </div>
+        )}
+
+      </div>
+    </motion.section>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
 // INNER CONTENT COMPONENT
+// ─────────────────────────────────────────────────────────────
 // ─────────────────────────────────────────────────────────────
 function DoctorProfilePageContent() {
   const { slug } = useParams()
@@ -770,6 +1194,9 @@ function DoctorProfilePageContent() {
                 </div>
               </div>
             </motion.section>
+
+            {/* Section 3: Interactive Blogs & Video Lectures Showcase */}
+            <InteractiveBlogsAndVideos slug={doctor.slug} name={doctor.name} brandAccent={brandAccent} />
 
           </div>
 
