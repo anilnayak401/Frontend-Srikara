@@ -224,7 +224,7 @@ export function BookAppointmentPage() {
         {/* Booking Overlay (Deep Luxury) */}
         <AnimatePresence>
           {isBookingOpen && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 overflow-y-auto">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 py-6 overflow-y-auto">
                <motion.div 
                  initial={{ opacity: 0 }}
                  animate={{ opacity: 1 }}
@@ -236,63 +236,63 @@ export function BookAppointmentPage() {
                  initial={{ opacity: 0, scale: 0.95, y: 30 }}
                  animate={{ opacity: 1, scale: 1, y: 0 }}
                  exit={{ opacity: 0, scale: 0.95, y: 30 }}
-                 className="relative w-full max-w-4xl bg-white border border-[#E2E8F0] rounded-3xl overflow-hidden shadow-2xl"
+                 className="relative w-full max-w-4xl bg-white border border-[#E2E8F0] rounded-3xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col"
                >
-                 <button onClick={() => setIsBookingOpen(false)} className="absolute top-6 right-6 text-[#94A3B8] hover:text-[#1A202C] transition-colors z-20">
-                    <X size={24} />
+                 <button onClick={() => setIsBookingOpen(false)} className="absolute top-4 right-4 sm:top-6 sm:right-6 text-[#94A3B8] hover:text-[#1A202C] transition-colors z-20 bg-white/80 rounded-full w-8 h-8 flex items-center justify-center border border-slate-100 sm:border-0 shadow-sm sm:shadow-none">
+                    <X size={18} />
                  </button>
 
-                 <div className="grid grid-cols-1 md:grid-cols-5 min-h-[560px]">
-                    <div className="md:col-span-2 bg-[#0D1B2A] p-10 flex flex-col justify-between relative overflow-hidden">
+                 <div className="grid grid-cols-1 md:grid-cols-5 flex-1 overflow-y-auto">
+                    <div className="md:col-span-2 bg-[#0D1B2A] p-6 sm:p-10 flex flex-col justify-between relative overflow-hidden">
                        <div className="absolute top-0 left-0 w-full h-1 bg-[#8B1A4A]" />
                        <div>
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-[#8B1A4A]/70 mb-8 block">Booking Summary</span>
-                          <h2 className="font-bold text-3xl text-white leading-tight mb-8">Confirm Your <span className="text-[#8B1A4A]">Appointment.</span></h2>
-                          <div className="space-y-6">
-                             <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-[#8B1A4A]"><User size={18} /></div>
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-[#8B1A4A]/70 mb-3 sm:mb-8 block">Booking Summary</span>
+                          <h2 className="font-bold text-xl sm:text-3xl text-white leading-tight mb-4 sm:mb-8">Confirm Your <span className="text-[#8B1A4A]">Appointment.</span></h2>
+                          <div className="space-y-4 sm:space-y-6">
+                             <div className="flex items-center gap-3 sm:gap-4">
+                                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/10 flex items-center justify-center text-[#8B1A4A]"><User size={15} /></div>
                                 <div>
-                                   <p className="text-[9px] font-bold uppercase text-white/30 tracking-widest">Consultant</p>
-                                   <p className="font-semibold text-white">{selectedDoc?.name}</p>
+                                   <p className="text-[8px] sm:text-[9px] font-bold uppercase text-white/30 tracking-widest">Consultant</p>
+                                   <p className="text-xs sm:text-base font-semibold text-white">{selectedDoc?.name}</p>
                                 </div>
                              </div>
-                             <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-[#8B1A4A]"><MapPin size={18} /></div>
+                             <div className="flex items-center gap-3 sm:gap-4">
+                                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/10 flex items-center justify-center text-[#8B1A4A]"><MapPin size={15} /></div>
                                 <div>
-                                   <p className="text-[9px] font-bold uppercase text-white/30 tracking-widest">Branch</p>
-                                   <p className="font-semibold text-white">{selectedBranch?.title}</p>
+                                   <p className="text-[8px] sm:text-[9px] font-bold uppercase text-white/30 tracking-widest">Branch</p>
+                                   <p className="text-xs sm:text-base font-semibold text-white">{selectedBranch?.title}</p>
                                 </div>
                              </div>
                           </div>
                        </div>
-                       <div className="flex items-center gap-2 pt-8">
+                       <div className="flex items-center gap-2 pt-6 sm:pt-8">
                           <ShieldCheck size={14} className="text-[#8B1A4A]" />
-                          <span className="text-[9px] font-bold uppercase text-white/30 tracking-widest">Secure & Confidential</span>
+                          <span className="text-[8px] sm:text-[9px] font-bold uppercase text-white/30 tracking-widest">Secure & Confidential</span>
                        </div>
                     </div>
 
-                    <div className="md:col-span-3 p-10">
-                       <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); alert('Appointment Confirmed! Our team will contact you shortly.'); setIsBookingOpen(false); }}>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                             <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase tracking-widest text-[#8B1A4A]">Full Name</label>
-                                <input type="text" placeholder="Your name" required className="w-full h-12 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-4 outline-none focus:border-[#8B1A4A] text-[#1A202C] text-sm transition-all" />
+                    <div className="md:col-span-3 p-6 sm:p-10">
+                       <form className="space-y-4 sm:space-y-6" onSubmit={(e) => { e.preventDefault(); alert('Appointment Confirmed! Our team will contact you shortly.'); setIsBookingOpen(false); }}>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+                             <div className="space-y-1.5 sm:space-y-2">
+                                <label className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#8B1A4A]">Full Name</label>
+                                <input type="text" placeholder="Your name" required className="w-full h-11 sm:h-12 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-4 outline-none focus:border-[#8B1A4A] text-[#1A202C] text-sm transition-all" />
                              </div>
-                             <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase tracking-widest text-[#8B1A4A]">Mobile Number</label>
-                                <input type="tel" placeholder="+91 00000 00000" required className="w-full h-12 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-4 outline-none focus:border-[#8B1A4A] text-[#1A202C] text-sm transition-all" />
+                             <div className="space-y-1.5 sm:space-y-2">
+                                <label className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#8B1A4A]">Mobile Number</label>
+                                <input type="tel" placeholder="+91 00000 00000" required className="w-full h-11 sm:h-12 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-4 outline-none focus:border-[#8B1A4A] text-[#1A202C] text-sm transition-all" />
                              </div>
                           </div>
-                          <div className="space-y-2">
-                             <label className="text-xs font-bold uppercase tracking-widest text-[#8B1A4A]">Preferred Slot</label>
-                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-1.5 sm:space-y-2">
+                             <label className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#8B1A4A]">Preferred Slot</label>
+                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                 <div className="relative">
-                                   <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]" size={15} />
-                                   <input type="date" required className="w-full h-12 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl pl-10 pr-4 outline-none focus:border-[#8B1A4A] text-[#1A202C] text-sm transition-all" />
+                                   <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]" size={14} />
+                                   <input type="date" required className="w-full h-11 sm:h-12 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl pl-10 pr-4 outline-none focus:border-[#8B1A4A] text-[#1A202C] text-sm transition-all" />
                                 </div>
                                 <div className="relative">
-                                   <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]" size={15} />
-                                   <select className="w-full h-12 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl pl-10 pr-4 outline-none focus:border-[#8B1A4A] text-[#1A202C] text-sm appearance-none transition-all">
+                                   <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]" size={14} />
+                                   <select className="w-full h-11 sm:h-12 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl pl-10 pr-4 outline-none focus:border-[#8B1A4A] text-[#1A202C] text-sm appearance-none transition-all">
                                       <option>Choose Time...</option>
                                       <option>10:00 AM</option>
                                       <option>02:30 PM</option>
@@ -301,11 +301,11 @@ export function BookAppointmentPage() {
                                 </div>
                              </div>
                           </div>
-                          <div className="pt-4">
-                             <button className="w-full h-12 bg-[#8B1A4A] text-white rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-[#7a1640] transition-all">
+                          <div className="pt-2 sm:pt-4">
+                             <button className="w-full h-11 sm:h-12 bg-[#8B1A4A] text-white rounded-2xl font-bold text-xs sm:text-sm uppercase tracking-widest hover:bg-[#7a1640] transition-all">
                                 Confirm Appointment →
                              </button>
-                             <p className="text-center text-[#94A3B8] text-xs mt-4">Our team will call you within 15 minutes</p>
+                             <p className="text-center text-[#94A3B8] text-[10px] sm:text-xs mt-3 sm:mt-4">Our team will call you within 15 minutes</p>
                           </div>
                        </form>
                     </div>

@@ -13,6 +13,7 @@ import { DepartmentSearch } from '@/components/sections/DepartmentSearch'
 import { PremiumLocation } from '@/components/sections/PremiumLocation'
 import { AchievementsSection } from '@/components/sections/AchievementsSection'
 import { DarkCentersOfExcellence } from '@/components/sections/DarkCentersOfExcellence'
+import { UnevenDepartmentCollage } from '@/components/sections/UnevenDepartmentCollage'
 
 const SPECIALTY_IMAGES = [
   'https://images.unsplash.com/photo-1576091160550-217359f42f8c?auto=format&fit=crop&q=80',
@@ -103,9 +104,11 @@ export function PeerzadigudaPage() {
           <section className="py-24 bg-surface-container-low px-8">
             <div className="max-w-7xl mx-auto">
               <div className="text-center mb-16">
-                <h2 className="font-headline text-4xl font-extrabold text-[#8B1A4A] tracking-tight mb-4 uppercase">
-                  Modern Infrastructure
+                <h2 className="editorial-title text-4xl font-black tracking-tight leading-none mb-4">
+                  <span className="block text-[#2D3A4A]">Modern</span>
+                  <span className="block text-[#8B1A4A] mt-2">Infrastructure</span>
                 </h2>
+                <div className="w-16 h-[2px] bg-[#8B1A4A]/25 mx-auto mb-6" />
                 <p className="text-[#4A4A4A] max-w-2xl mx-auto">
                   A seamless integration of robotics and diagnostics to ensure zero-error outcomes.
                 </p>
@@ -143,6 +146,9 @@ export function PeerzadigudaPage() {
 
           <AppointmentWidget currentBranch={branch} />
         </div>{/* end xl:pl-16 */}
+
+        {/* Centers of Excellence Asymmetric Collage */}
+        <UnevenDepartmentCollage />
 
         {/* ── DOCTOR SLIDER ── */}
         <PremiumDoctorFinder branchTitle={branch.title} branchId={branch.title} />

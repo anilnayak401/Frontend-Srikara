@@ -13,6 +13,7 @@ import { LuxuryCentersOfExcellence } from '@/components/sections/LuxuryCentersOf
 import { PremiumDoctorFinder } from '@/components/sections/PremiumDoctorFinder'
 import { PremiumCaseStudies } from '@/components/sections/PremiumCaseStudies'
 import { PremiumLocation } from '@/components/sections/PremiumLocation'
+import { UnevenDepartmentCollage } from '@/components/sections/UnevenDepartmentCollage'
 import { assetUrl } from '@/lib/assetUrl'
 
 const SPECIALTY_IMAGES = [
@@ -102,10 +103,11 @@ export function BranchLandingPage({ branch }) {
             <section className="py-20 bg-surface-container-low px-8">
               <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
                 <div>
-                  <h2 className="font-headline text-4xl md:text-5xl font-extrabold text-[#8B1A4A] tracking-tight mb-8">
-                    The {branch.title}<br />
-                    <span className="text-[#2D3A4A] italic">Advantage.</span>
+                  <h2 className="editorial-title text-4xl md:text-5xl font-black tracking-tight leading-tight mb-4">
+                    <span className="block text-[#2D3A4A]">The {branch.title}</span>
+                    <span className="block text-[#8B1A4A] mt-2">Advantage</span>
                   </h2>
+                  <div className="w-16 h-[2px] bg-[#8B1A4A]/25 mb-6" />
                   <p className="text-lg text-[#4A4A4A] mb-8 leading-relaxed">{branch.description}</p>
                   <ul className="space-y-4 mb-10">
                     {branch.highlights.map((item, i) => (
@@ -135,6 +137,9 @@ export function BranchLandingPage({ branch }) {
             </section>
           )}
 
+          {/* ── 4.5 CENTERS OF EXCELLENCE DEPARTMENT COLLAGE ── */}
+          <UnevenDepartmentCollage />
+
           {/* ── 5. PREMIUM DOCTOR FINDER ── */}
           <PremiumDoctorFinder branchTitle={branch.title} branchId={branch.title} />
 
@@ -143,9 +148,11 @@ export function BranchLandingPage({ branch }) {
             <section className="py-20 bg-surface-container-low px-8">
               <div className="max-w-7xl mx-auto">
                 <div className="text-center mb-14">
-                  <h2 className="font-headline text-4xl font-extrabold text-[#8B1A4A] tracking-tight uppercase mb-3">
-                    Precision Ecosystem
+                  <h2 className="editorial-title text-4xl font-black tracking-tight leading-none mb-4">
+                    <span className="block text-[#2D3A4A]">Precision</span>
+                    <span className="block text-[#8B1A4A] mt-2">Ecosystem</span>
                   </h2>
+                  <div className="w-16 h-[2px] bg-[#8B1A4A]/25 mx-auto mb-6" />
                   <p className="text-[#4A4A4A] max-w-2xl mx-auto">
                     We invest in the future of healthcare so you can invest in your health.
                   </p>

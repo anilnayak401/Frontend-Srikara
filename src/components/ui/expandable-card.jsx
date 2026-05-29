@@ -65,7 +65,7 @@ export function ExpandableCard({
               )}
             >
               {/* Hero image */}
-              <div className="relative h-72 flex-shrink-0">
+              <div className="relative h-36 sm:h-72 flex-shrink-0">
                 <img
                   src={src}
                   alt={title}
@@ -78,21 +78,21 @@ export function ExpandableCard({
               </div>
 
               {/* Scrollable content */}
-              <div className="flex-1 overflow-y-auto px-8 pb-10">
-                <div className="flex justify-between items-start pt-6 mb-4">
+              <div className="flex-1 overflow-y-auto px-5 sm:px-8 pb-6 sm:pb-10 pt-1">
+                <div className="flex justify-between items-start pt-4 sm:pt-6 mb-3">
                   <div>
-                    <h3 className="font-headline font-black text-[#1A202C] text-3xl tracking-tight uppercase">
+                    <h3 className="font-headline font-black text-[#1A202C] text-xl sm:text-3xl tracking-tight uppercase">
                       {title}
                     </h3>
-                    <p className="text-[#8B1A4A] text-sm font-bold uppercase tracking-[0.3em] mt-2">
+                    <p className="text-[#8B1A4A] text-[10px] sm:text-sm font-bold uppercase tracking-[0.3em] mt-1 sm:mt-2">
                       {description}
                     </p>
                   </div>
                   <button
                     onClick={() => setActive(false)}
-                    className="flex-shrink-0 ml-4 w-10 h-10 rounded-full bg-[#F1F5F9] flex items-center justify-center hover:bg-[#8B1A4A] hover:text-white transition-all"
+                    className="flex-shrink-0 ml-4 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#F1F5F9] flex items-center justify-center hover:bg-[#8B1A4A] hover:text-white transition-all"
                   >
-                    <X size={18} />
+                    <X size={16} />
                   </button>
                 </div>
                 {children}

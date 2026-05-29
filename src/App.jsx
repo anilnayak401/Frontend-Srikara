@@ -16,6 +16,7 @@ const BlogsPage         = lazy(() => import('./pages/BlogsPage').then(m => ({ de
 const BookAppointmentPage = lazy(() => import('./pages/BookAppointmentPage').then(m => ({ default: m.BookAppointmentPage })))
 const IndividualBookingPage = lazy(() => import('./pages/IndividualBookingPage').then(m => ({ default: m.IndividualBookingPage })))
 const SpecialtiesPage   = lazy(() => import('./pages/SpecialtiesPage').then(m => ({ default: m.SpecialtiesPage })))
+const SpecialtyDetailPage = lazy(() => import('./pages/SpecialtyDetailPage').then(m => ({ default: m.SpecialtyDetailPage })))
 const ServicesPage      = lazy(() => import('./pages/ServicesPage').then(m => ({ default: m.ServicesPage })))
 const AboutPage         = lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })))
 const PlaceholderPage   = lazy(() => import('./pages/PlaceholderPage').then(m => ({ default: m.PlaceholderPage })))
@@ -58,6 +59,7 @@ function App() {
             <Route path="/doctors"      element={<DoctorsPage />} />
             <Route path="/doctors/:slug" element={<DoctorProfilePage />} />
             <Route path="/specialties"  element={<SpecialtiesPage />} />
+            <Route path="/specialties/:specialtyId" element={<SpecialtyDetailPage />} />
             <Route path="/services"     element={<ServicesPage />} />
             <Route path="/about"        element={<AboutPage />} />
             <Route path="/book"          element={<BookAppointmentPage />} />

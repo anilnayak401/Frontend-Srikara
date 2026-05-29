@@ -13,6 +13,7 @@ import { PremiumDoctorFinder } from '@/components/sections/PremiumDoctorFinder'
 import { PremiumCaseStudies } from '@/components/sections/PremiumCaseStudies'
 import { PremiumLocation } from '@/components/sections/PremiumLocation'
 import { DepartmentSearch } from '@/components/sections/DepartmentSearch'
+import { UnevenDepartmentCollage } from '@/components/sections/UnevenDepartmentCollage'
 import { ecil as branch } from '@/data/branches/ecil'
 
 export function EcilPage() {
@@ -76,6 +77,9 @@ export function EcilPage() {
           </section>
 
 
+          {/* Centers of Excellence Asymmetric Collage */}
+          <UnevenDepartmentCollage />
+
           {/* 5. PREMIUM DOCTOR FINDER */}
           <PremiumDoctorFinder branchTitle={branch.title} branchId={branch.title} />
 
@@ -84,9 +88,11 @@ export function EcilPage() {
             <section className="pt-12 pb-20 bg-surface-container-low px-8">
               <div className="max-w-7xl mx-auto">
                 <div className="text-center mb-14">
-                  <h2 className="font-headline text-4xl font-extrabold text-[#8B1A4A] tracking-tight uppercase mb-3">
-                    Precision Ecosystem
+                  <h2 className="editorial-title text-4xl font-black tracking-tight leading-none mb-4">
+                    <span className="block text-[#2D3A4A]">Precision</span>
+                    <span className="block text-[#8B1A4A] mt-2">Ecosystem</span>
                   </h2>
+                  <div className="w-16 h-[2px] bg-[#8B1A4A]/25 mx-auto mb-6" />
                   <p className="text-[#4A4A4A] max-w-2xl mx-auto">
                     We invest in the future of healthcare so you can invest in your health.
                   </p>

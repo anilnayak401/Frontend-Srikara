@@ -24,7 +24,7 @@ export function StickyNavbar({ currentBranch }) {
 
   useEffect(() => {
     const unsub = scrollY.onChange(y => {
-      setHideBar(y > lastScrollY.current && y > 160)
+      setHideBar(false)
       setScrolled(y > 50)
       lastScrollY.current = y
     })
@@ -295,46 +295,56 @@ export function StickyNavbar({ currentBranch }) {
       {/* ══════════════ MOBILE DRAWER ══════════════ */}
       <AnimatePresence>
         {mobileOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.26, ease: 'easeOut' }}
-            className="fixed top-0 left-0 right-0 z-[190] pt-[64px] pb-8 px-5 bg-white shadow-2xl lg:hidden"
-          >
-            <nav className="flex flex-col gap-1 mt-3">
-              {[
-                { label: 'Home', to: '/branches/ecil' },
-                { label: 'Find Hospitals', to: '/branches' },
-                { label: 'Doctors', to: '/doctors' },
-                { label: 'Specialties', to: '/specialties' },
-                { label: 'Discover Srikara', to: '/about' },
-                { label: 'Blogs', to: '/blogs' },
-              ].map(lnk => (
-                <Link key={lnk.label} to={lnk.to} onClick={() => setMobileOpen(false)}
-                  className="flex items-center justify-between py-4 px-5 rounded-2xl font-bold text-base uppercase tracking-wide transition-all"
-                  style={{
-                    color: isActive(lnk.to) ? 'white' : '#222',
-                    backgroundColor: isActive(lnk.to) ? ACCENT : 'transparent',
-                  }}>
-                  {lnk.label}
-                  <ChevronDown size={17} className="-rotate-90 opacity-40" />
-                </Link>
-              ))}
-            </nav>
-            <div className="mt-5 flex gap-3">
-              <a href={`tel:${phone.replace(/\D/g, '')}`}
-                className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-white text-[14px]"
-                style={{ backgroundColor: ACCENT }}>
-                <Phone size={16} fill="white" /> {phone}
-              </a>
-              <button onClick={() => { navigate('/book'); setMobileOpen(false) }}
-                className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-white text-[14px]"
-                style={{ backgroundColor: '#2D3A4A' }}>
-                <Calendar size={16} /> Book Now
-              </button>
-            </div>
-          </motion.div>
+          <>
+            {/* Dark overlay backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileOpen(false)}
+              className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[180] lg:hidden"
+            />
+            <motion.div
+              initial={{ opacity: 0, y: -15, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -15, scale: 0.96 }}
+              transition={{ duration: 0.28, ease: [0.23, 1, 0.32, 1] }}
+              className="fixed top-20 left-4 right-4 z-[190] p-5 bg-white/95 backdrop-blur-md rounded-[24px] shadow-[0_20px_50px_rgba(139,26,74,0.18)] border border-slate-100 lg:hidden overflow-hidden"
+            >
+              <nav className="flex flex-col gap-0.5">
+                {[
+                  { label: 'Home', to: '/branches/ecil' },
+                  { label: 'Find Hospitals', to: '/branches' },
+                  { label: 'Doctors', to: '/doctors' },
+                  { label: 'Specialties', to: '/specialties' },
+                  { label: 'Discover Srikara', to: '/about' },
+                  { label: 'Blogs', to: '/blogs' },
+                ].map(lnk => (
+                  <Link key={lnk.label} to={lnk.to} onClick={() => setMobileOpen(false)}
+                    className="flex items-center justify-between py-2.5 px-4 rounded-xl font-bold text-xs uppercase tracking-wider transition-all duration-300"
+                    style={{
+                      color: isActive(lnk.to) ? 'white' : '#475569',
+                      backgroundColor: isActive(lnk.to) ? ACCENT : 'transparent',
+                    }}>
+                    {lnk.label}
+                    <ChevronDown size={14} className="-rotate-90 opacity-50" />
+                  </Link>
+                ))}
+              </nav>
+              <div className="mt-4 pt-4 border-t border-slate-100 flex gap-2">
+                <a href={`tel:${phone.replace(/\D/g, '')}`}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-xl font-bold text-white text-[12px] uppercase tracking-wider transition-all duration-300 active:scale-95 shadow-md shadow-[#8B1A4A]/25"
+                  style={{ backgroundColor: ACCENT }}>
+                  <Phone size={14} fill="white" /> Call Now
+                </a>
+                <button onClick={() => { navigate('/book'); setMobileOpen(false) }}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-xl font-bold text-white text-[12px] uppercase tracking-wider transition-all duration-300 active:scale-95 shadow-md"
+                  style={{ backgroundColor: '#2D3A4A' }}>
+                  <Calendar size={14} /> Book Now
+                </button>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </>

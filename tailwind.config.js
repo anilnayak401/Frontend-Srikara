@@ -80,6 +80,7 @@ export default {
       },
       fontFamily: {
         sans:     ['Inter', 'system-ui', 'sans-serif'],
+        serif:    ['"Playfair Display"', 'Georgia', 'ui-serif', 'serif'],
         display:  ['Manrope', 'sans-serif'],
         headline: ['Manrope', 'sans-serif'],
         body:     ['Inter', 'sans-serif'],

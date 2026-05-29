@@ -81,10 +81,11 @@ export const PremiumCaseStudies = () => {
             <span className="text-[#8B1A4A] text-[10px] font-black uppercase tracking-[0.5em]">Institutional Impact</span>
           </motion.div>
           
-          <h2 className="text-4xl md:text-6xl lg:text-7xl font-black text-[#1A202C] tracking-tight leading-[1.1] mb-8">
-            Precision Protocols & <br />
-            <span className="text-[#8B1A4A]">Success Narratives.</span>
+          <h2 className="editorial-title text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1] mb-4">
+            <span className="block text-[#2D3A4A]">Precision Protocols &amp;</span>
+            <span className="block text-[#8B1A4A] mt-2">Success Narratives</span>
           </h2>
+          <div className="w-16 h-[2px] bg-[#8B1A4A]/25 mb-6" />
           <p className="text-[#4A4A4A] text-lg max-w-2xl font-light leading-relaxed opacity-80">
             Beyond standard care. We document our breakthrough clinical outcomes, setting global standards in robotic precision and neuro-recovery.
           </p>

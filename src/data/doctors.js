@@ -405,7 +405,7 @@ export const ALL_DOCTORS = [
     label: 'Chief Joint replacement Surgeon',
     sub: 'MBBS, MS (Orthopedics), Fellowship in Spine & Joint Replacement Surgery (Germany)',
     rating: '5.0', exp: '15+ Years',
-    image: 'https://i.ibb.co/SDP4XP8d/dr-akhil-dadi-1.png', fallback: dummy('akhil-dadi'),
+    image: assetUrl('doctors/akhil-dadi.png'), fallback: dummy('akhil-dadi'),
     tagline: 'Chief Joint Replacement Surgeon.',
     about: 'Dr. Akhil Dadi is the Chief Joint replacement Surgeon at Srikara Hospitals L.B. Nagar, bringing expert care from Germany.',
     expertise: ['Joint Replacement Surgery', 'Spine Surgery'],

@@ -95,9 +95,11 @@ export const MiyapurDiseasesSearch = () => {
       <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
           <p className="text-[#8B1A4A] text-xs font-bold uppercase tracking-widest mb-3">Medical Resource Center</p>
-          <h2 className="text-4xl md:text-5xl font-bold text-[#1A202C] leading-tight">
-            Diseases &amp; <span className="text-[#8B1A4A]">Conditions</span>
+          <h2 className="editorial-title text-4xl md:text-5xl font-black tracking-tight leading-none mb-4">
+            <span className="block text-[#2D3A4A]">Diseases</span>
+            <span className="block text-[#8B1A4A] mt-2">&amp; Conditions</span>
           </h2>
+          <div className="w-16 h-[2px] bg-[#8B1A4A]/25 mb-6" />
           <p className="text-[#64748B] text-base mt-3 max-w-lg">
             Search any condition to access clinical insights, symptoms, and treatment options.
           </p>

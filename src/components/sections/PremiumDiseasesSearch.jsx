@@ -114,10 +114,11 @@ export const PremiumDiseasesSearch = () => {
             <div className="inline-flex items-center gap-2 text-[#8B1A4A]/50 text-[10px] font-bold uppercase tracking-[0.4em] mb-8">
               MEDICAL RESOURCE CENTER
             </div>
-            <h2 className="font-serif text-6xl md:text-8xl text-[#1A202C] font-bold mb-8 leading-[0.85] tracking-tighter">
-              Diseases <br /><span className="text-[#8B1A4A]"> & Conditions</span>
+            <h2 className="editorial-title text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-none mb-6">
+              <span className="block text-[#2D3A4A]">Diseases</span>
+              <span className="block text-[#8B1A4A] mt-2">&amp; Conditions</span>
             </h2>
-            <div className="h-1 w-24 bg-[#8B1A4A]/10 mb-8 rounded-full" />
+            <div className="w-16 h-[2px] bg-[#8B1A4A]/25 mb-8" />
             <p className="text-[#4A5568] text-xl font-medium leading-relaxed max-w-xl">
               Access globally-verified clinical insights into conditions, treatments, and patient care.
             </p>

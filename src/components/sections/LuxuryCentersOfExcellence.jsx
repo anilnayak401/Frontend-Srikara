@@ -109,10 +109,11 @@ export const LuxuryCentersOfExcellence = () => {
               <span className="text-[#8B1A4A] text-[10px] font-black uppercase tracking-[0.5em] leading-none">Clinical Artistry</span>
             </motion.div>
 
-            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl xl:text-8xl font-black text-[#1A202C] tracking-tight leading-none mb-10 flex items-baseline gap-x-3 whitespace-nowrap overflow-visible">
-              <span>Centers of</span>
+            <h2 className="editorial-title text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-none mb-6">
+              <span className="text-[#2D3A4A]">Centers of </span>
               <span className="text-[#8B1A4A]">Excellence</span>
             </h2>
+            <div className="w-16 h-[2px] bg-[#8B1A4A]/25 mb-8" />
 
             <p className="text-[#4A4A4A] text-lg leading-relaxed font-light max-w-xl opacity-90">
               Every beat, every breath, every breakthrough. Our centers are built around the human experience, merging clinical mastery with profound empathy.

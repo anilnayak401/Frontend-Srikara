@@ -97,9 +97,11 @@ export const PeerzadigudaDiseasesSearch = () => {
           <div className="flex flex-col lg:flex-row gap-6 items-start">
             {/* Left */}
             <div className="flex-1">
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
-                Diseases &amp; Conditions
+              <h2 className="editorial-title text-4xl md:text-5xl font-black tracking-tight leading-none mb-4">
+                <span className="block text-white">Diseases</span>
+                <span className="block text-[#E8B4C8] mt-2">&amp; Conditions</span>
               </h2>
+              <div className="w-16 h-[2px] bg-white/30 mb-6" />
               <p className="text-white/70 text-lg mb-10 max-w-md">
                 Easy-to-understand answers about diseases and conditions
               </p>

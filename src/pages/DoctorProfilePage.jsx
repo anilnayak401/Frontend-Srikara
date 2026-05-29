@@ -1,16 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { motion } from 'framer-motion'
 import { 
   ArrowLeft, Star, Award, Calendar, Phone, MessageCircle, 
   MapPin, Clock, GraduationCap, Globe, Shield, Heart, 
-  Activity, Sparkles, Mail, ChevronRight, Play, BookOpen, Tv, X
+  Activity, Sparkles, Mail, ChevronRight, Play, BookOpen, Tv, X, ChevronLeft, Volume2, VolumeX, Pause, ArrowRight
 } from 'lucide-react'
 import { StickyNavbar } from '@/components/layout/StickyNavbar'
 import { Footer } from '@/components/layout/Footer'
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
 import { ALL_DOCTORS, ACCENT_MAP } from '@/data/doctors'
+import { assetUrl } from '@/lib/assetUrl'
 
 // ─────────────────────────────────────────────────────────────
 // ANIMATION VARIANTS
@@ -426,6 +428,32 @@ const DOCTOR_MEDIA = {
         <h3>Minimal Tissue Trauma</h3>
         <p>Because the NAVIO system restricts bone cuts to the absolute millimetre required, the surrounding ligaments and soft tissues are preserved. This reduction in physical trauma, coupled with advanced local nerve blocks, allows patients to experience significantly less pain immediately after surgery.</p>
         <p>Consequently, we are able to stand our patients up and guide them to walk on Post-Operative Day 1, which dramatically reduces the risk of deep vein thrombosis and boosts patient confidence.</p>`
+      },
+      {
+        id: 'b-dadi-3',
+        title: "Sub-Millimetre Accuracy in Complex Revision Knee Arthroplasty",
+        category: "Orthopaedics",
+        date: "November 05, 2024",
+        readTime: "6 min read",
+        image: "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&q=80&w=800",
+        excerpt: "A technical study on revising failed conventional implants using robotic visual mapping.",
+        content: `<h3>The Challenge of Revision Surgery</h3>
+        <p>Revision knee replacement is significantly more complex than primary surgery due to bone loss, scar tissue, and altered landmarks. Achieving perfect alignment is critical to ensure the second implant does not fail.</p>
+        <h3>Robotic Revision Workflows</h3>
+        <p>By using the NAVIO platform, we can perform detailed anatomical mapping of the joint surface and calculate the exact bone deficits. The system allows us to simulate the revision implant placement digitally before making any cuts, resulting in clean, predictable outcomes for complex joint failure cases.</p>`
+      },
+      {
+        id: 'b-dadi-4',
+        title: "Robotic vs Manual Knee Replacements: A 1000-Patient Study",
+        category: "Orthopaedics",
+        date: "September 14, 2024",
+        readTime: "7 min read",
+        image: "https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?auto=format&fit=crop&q=80&w=800",
+        excerpt: "Comparing patient satisfaction, recovery times, and alignment metrics over 5 years of follow-up.",
+        content: `<h3>Comparative Trial Details</h3>
+        <p>We tracked 500 patients who underwent manual knee replacement and 500 patients who received robotic-assisted replacements at Srikara Hospitals over a five-year period.</p>
+        <h3>Key Findings</h3>
+        <p>The robotic-assisted cohort demonstrated significantly better alignment scores (97% within target vs 78% for manual) and reported shorter hospital stays (average 2.1 days vs 4.4 days). Most importantly, patient-reported satisfaction scores were 18% higher in the robotic group due to a more natural-feeling joint.</p>`
       }
     ],
     videos: [
@@ -459,6 +487,28 @@ const DOCTOR_MEDIA = {
         <p>Herniated discs in the lower back are a common source of debilitating leg and back pain. While open discectomy has been the standard treatment, minimally invasive endoscopic spine surgery offers a highly effective alternative through an incision of less than 8mm.</p>
         <h3>Preserving Spinal Infrastructure</h3>
         <p>Using high-definition endoscopes and micro-instruments, we access the spinal canal directly by dilating the muscles rather than cutting them. The herniated disc material compressing the nerve is removed under direct visualization. Patients are typically discharged on the same day and can return to light desk jobs within a week.</p>`
+      },
+      {
+        id: 'b-nikhil-2',
+        title: "Microscopic Keyhole Resection for Complex Spine Tumors",
+        category: "Neurosurgery",
+        date: "February 20, 2025",
+        readTime: "5 min read",
+        image: "https://images.unsplash.com/photo-1581595220892-b0739db3ba8c?auto=format&fit=crop&q=80&w=800",
+        excerpt: "Utilizing advanced neuro-navigation and keyhole corridors to safely remove intradural spinal lesions.",
+        content: `<h3>Precision in Tumor Resection</h3>
+        <p>Spinal cord tumors present extreme challenges because of the risk of neurological damage. Advanced intraoperative neuro-monitoring (IONM) allows us to track nerve function in real-time while performing keyhole resections under microscopic magnification, achieving safe removal with minimal disruption.</p>`
+      },
+      {
+        id: 'b-nikhil-3',
+        title: "Cervical Disc Replacement: Preserving Neck Mobility",
+        category: "Neurosurgery",
+        date: "November 12, 2024",
+        readTime: "5 min read",
+        image: "https://images.unsplash.com/photo-1579684453423-f84349ef60b0?auto=format&fit=crop&q=80&w=800",
+        excerpt: "Why artificial disc replacements are superior to fusion for younger, active patients with pinched nerves.",
+        content: `<h3>Fusion vs Motion Preservation</h3>
+        <p>For patients with severe cervical radiculopathy, surgical decompression is highly effective. Rather than fusing the vertebrae (which limits neck mobility and increases wear on adjacent joints), we replace the damaged disc with a flexible artificial implant, preserving natural motion.</p>`
       }
     ],
     videos: [
@@ -485,6 +535,28 @@ const DOCTOR_MEDIA = {
         <p>During an acute myocardial infarction (heart attack), every minute of artery blockage leads to irreversible heart muscle death. The international gold standard for re-opening the blocked artery (Door-to-Balloon time) is 90 minutes. At Srikara, our dedicated heart team routinely achieves this in under 45 minutes.</p>
         <h3>Seamless Cardiac Workflows</h3>
         <p>From the moment a patient enters the emergency department with chest pain, an automatic protocol is activated. The cath lab is primed immediately, allowing us to guide the wire, inflate the balloon, and place a drug-eluting stent to restore coronary blood flow with rapid speed, minimizing long-term heart failure risks.</p>`
+      },
+      {
+        id: 'b-rameshwari-2',
+        title: "Stenting vs Bypass (CABG) in Complex Multi-Vessel Disease",
+        category: "Cardiology",
+        date: "December 08, 2024",
+        readTime: "6 min read",
+        image: "https://images.unsplash.com/photo-1576091160550-217359f42f8c?auto=format&fit=crop&q=80&w=800",
+        excerpt: "Analyzing clinical outcomes, vessel anatomy, and long-term survival metrics to decide optimal therapies.",
+        content: `<h3>The Multidisciplinary Heart Team Decision</h3>
+        <p>When patients present with blockages in multiple coronary arteries, choosing the best therapy requires weighing stenting (PCI) against open-heart bypass surgery (CABG). We discuss how coronary complexity (SYNTAX scores) and patient comorbidities guide our clinical choices.</p>`
+      },
+      {
+        id: 'b-rameshwari-3',
+        title: "Preventing Heart Failure: Early Warning Signs & Lifestyle Steps",
+        category: "Cardiology",
+        date: "October 15, 2024",
+        readTime: "4 min read",
+        image: "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&q=80&w=800",
+        excerpt: "A practical clinical guide to managing blood pressure, cholesterol, and diabetes to protect cardiac muscle.",
+        content: `<h3>The Path to Prevention</h3>
+        <p>Heart failure is often the final stage of long-standing hypertension or coronary artery disease. We outline diagnostic markers, such as B-type natriuretic peptide (BNP) and ejection fraction, and discuss medical and lifestyle strategies to manage risks early.</p>`
       }
     ],
     videos: [
@@ -510,6 +582,28 @@ const DOCTOR_MEDIA = {
         content: `<h3>Tailored Immunosuppression</h3>
         <p>Successful kidney transplantation relies heavily on balancing the body's immune system. Too little immunosuppression leads to organ rejection; too much makes the patient vulnerable to infections. Drawing from fellowship protocols at the Mayo Clinic, we design customized drug regimens that monitor donor-specific antibodies in real-time.</p>
         <p>This precision monitoring allows us to taper drug doses safely, maintaining long-term graft survival while preserving the patient's overall health and vitality.</p>`
+      },
+      {
+        id: 'b-vaish-2',
+        title: "Dialysis vs Preemptive Transplantation: Finding the Best Path",
+        category: "Nephrology",
+        date: "January 11, 2025",
+        readTime: "5 min read",
+        image: "https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?auto=format&fit=crop&q=80&w=800",
+        excerpt: "Why receiving a kidney transplant before starting dialysis leads to superior long-term survival rates.",
+        content: `<h3>Preemptive Kidney Transplant Advantage</h3>
+        <p>Preemptive transplantation refers to receiving a kidney transplant before a patient's kidney function deteriorates to the point of needing dialysis. We analyze clinical survival data and graft outcomes to demonstrate why preemptive transplant is the gold standard.</p>`
+      },
+      {
+        id: 'b-vaish-3',
+        title: "Understanding Glomerulonephritis: Diagnosis and Interventions",
+        category: "Nephrology",
+        date: "November 08, 2024",
+        readTime: "4 min read",
+        image: "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&q=80&w=800",
+        excerpt: "A guide to recognizing kidney inflammation signs and utilizing biopsies for early therapy.",
+        content: `<h3>Deciphering Glomerular Inflammation</h3>
+        <p>Glomerulonephritis is a group of diseases that injure the part of the kidney that filters blood. Left untreated, it can lead to acute kidney injury or chronic renal failure. We outline key symptoms like hematuria and proteinuria, and explain the role of renal biopsies in creating treatment plans.</p>`
       }
     ],
     videos: [
@@ -536,6 +630,28 @@ const DOCTOR_MEDIA = {
         <p>In surgical oncology, removing the entire tumor with a surrounding border of healthy tissue (achieving negative or 'clean' margins) is critical to prevent cancer recurrence. In deep anatomical spaces like the pelvis, standard laparoscopic instruments have limited movement.</p>
         <h3>The Multi-Jointed Robotic Edge</h3>
         <p>Using the robotic platform, we gain 3D high-definition visualization magnified up to 10x, and instruments that rotate with greater flexibility than the human wrist. This enables precise dissection of tumors away from major blood vessels and nerves, resulting in safer margins and quicker recovery.</p>`
+      },
+      {
+        id: 'b-raja-2',
+        title: "Enhanced Recovery Protocols (ERAS) in Gastrointestinal Cancers",
+        category: "Oncology",
+        date: "February 15, 2025",
+        readTime: "5 min read",
+        image: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?auto=format&fit=crop&q=80&w=800",
+        excerpt: "How standard post-op pathways cut hospital stays by 40% in major abdominal cancer surgeries.",
+        content: `<h3>Optimizing Post-Operative Recovery</h3>
+        <p>Enhanced Recovery After Surgery (ERAS) represents a paradigm shift in perioperative care. We discuss preoperative counseling, optimal nutrition, early mobilization, and tailored pain protocols to improve gastrointestinal cancer surgery recovery.</p>`
+      },
+      {
+        id: 'b-raja-3',
+        title: "Discipline and Precision: Translating Military Values to the OR",
+        category: "Oncology",
+        date: "December 10, 2024",
+        readTime: "4 min read",
+        image: "https://images.unsplash.com/photo-1579684453423-f84349ef60b0?auto=format&fit=crop&q=80&w=800",
+        excerpt: "Dr. (Maj) Garapati Raja discusses how structured routines and army values optimize surgical outcomes.",
+        content: `<h3>The Surgical Mission</h3>
+        <p>As a former military surgeon, Dr. Garapati Raja brings structured checklists, rigorous team communication, and unwavering focus to the operating room. He outlines how these habits reduce surgical errors and create a safer environment for patients.</p>`
       }
     ],
     videos: [
@@ -562,6 +678,28 @@ const DOCTOR_MEDIA = {
         <p>An ischemic stroke occurs when a clot blocks blood flow to the brain, starving brain cells of oxygen. For every minute that passes, nearly 1.9 million neurons die. Reversing this process relies heavily on initiating thrombolytic (clot-busting) therapy as soon as possible.</p>
         <h3>tPA Administration Windows</h3>
         <p>The FDA-approved window for administering intravenous tPA is within 4.5 hours of symptom onset. Our rapid stroke protocol ensures that brain imaging is completed and medication is started shortly after the patient arrives, helping to prevent permanent disability.</p>`
+      },
+      {
+        id: 'b-sush-2',
+        title: "Epilepsy Management: Beyond Anticonvulsant Medications",
+        category: "Neurology",
+        date: "January 15, 2025",
+        readTime: "5 min read",
+        image: "https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&q=80&w=800",
+        excerpt: "Exploring vagus nerve stimulation (VNS) and dietary plans for drug-resistant epilepsy cases.",
+        content: `<h3>Dealing with Drug-Resistant Epilepsy</h3>
+        <p>Around 30% of epilepsy patients continue to experience seizures despite taking anticonvulsant medications. We discuss neuromodulation therapies, such as Vagus Nerve Stimulation (VNS), and explore lifestyle options that help improve seizure control.</p>`
+      },
+      {
+        id: 'b-sush-3',
+        title: "Diagnostic Evaluation of Peripheral Neuropathies",
+        category: "Neurology",
+        date: "November 18, 2024",
+        readTime: "4 min read",
+        image: "https://images.unsplash.com/photo-1576091160550-217359f42f8c?auto=format&fit=crop&q=80&w=800",
+        excerpt: "How electromyography (EMG) and nerve conduction studies localize nerve disorders.",
+        content: `<h3>Localizing Peripheral Nerve Damage</h3>
+        <p>Peripheral neuropathy causes numbness, pain, and weakness, often in the hands and feet. We outline our systematic diagnostic approach, including Electromyography (EMG) and nerve conduction velocity (NCV) testing, to isolate specific nerve roots and guide therapies.</p>`
       }
     ],
     videos: [
@@ -587,6 +725,28 @@ const DOCTOR_MEDIA = {
         content: `<h3>The Srikara Standard of Care</h3>
         <p>Modern medicine demands that treatment decisions be backed by clinical evidence and accurate diagnostics. At Srikara, we combine the experience of our specialists with state-of-the-art laboratory and imaging technologies to ensure every patient receives a precise diagnosis.</p>
         <p>By mapping out care plans based on proven protocols, we reduce unnecessary interventions, minimize recovery times, and help our patients return to their active daily routines safely.</p>`
+      },
+      {
+        id: 'b-def-2',
+        title: "Patient Recovery and Rehabilitation Best Practices",
+        category: "Clinical Care",
+        date: "February 22, 2025",
+        readTime: "5 min read",
+        image: "https://images.unsplash.com/photo-1576091160550-217359f42f8c?auto=format&fit=crop&q=80&w=800",
+        excerpt: "A comprehensive review of physical therapy timelines after major orthopedic and spinal procedures.",
+        content: `<h3>Rehabilitation for Long-Term Mobility</h3>
+        <p>Surgery is only the first step towards recovery. A structured, early physical rehabilitation program is key to restoring muscle strength and joint movement. We outline recovery exercises and discuss patient compliance guidelines that optimize long-term mobility.</p>`
+      },
+      {
+        id: 'b-def-3',
+        title: "Preventative Screenings: The First Line of Health Defense",
+        category: "Clinical Care",
+        date: "December 18, 2024",
+        readTime: "4 min read",
+        image: "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&q=80&w=800",
+        excerpt: "Why early screenings for blood pressure, glucose, and tumors prevent major chronic diseases.",
+        content: `<h3>Catching Health Risks Early</h3>
+        <p>Many serious conditions like hypertension, Type 2 diabetes, and early-stage cancers show no symptoms. Regular health checkups allow our medical team to detect risks and intervene before complications develop. We review recommended tests and screening schedules for adults.</p>`
       }
     ],
     videos: [
@@ -602,217 +762,300 @@ const DOCTOR_MEDIA = {
 };
 
 // ─────────────────────────────────────────────────────────────
+// BLOG READ MODAL
+// ─────────────────────────────────────────────────────────────
+function BlogModal({ blog, onClose }) {
+  const modalContent = (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md" onClick={onClose}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        onClick={e => e.stopPropagation()}
+        className="w-full max-w-[820px] max-h-[90vh] bg-white rounded-3xl overflow-hidden shadow-2xl flex flex-col"
+      >
+        <div className="relative h-64 md:h-72 flex-shrink-0">
+          <img 
+            src={blog.image} 
+            alt={blog.title} 
+            className="w-full h-full object-cover"
+            onError={e => { e.target.src = 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=800' }} 
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent" />
+          <button onClick={onClose} className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/95 flex items-center justify-center hover:bg-white shadow transition-all hover:scale-105">
+            <X size={16} />
+          </button>
+          <span className="absolute top-4 left-4 bg-[#8B1A4A] text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full z-10">
+            {blog.tag || 'Case Study'}
+          </span>
+        </div>
+        <div className="flex-1 overflow-y-auto px-8 md:px-10 pb-10 pt-6">
+          <div className="flex items-center gap-4 text-xs text-[#94A3B8] mb-4">
+            <span className="flex items-center gap-1"><Calendar size={12} />{blog.date}</span>
+            <span className="flex items-center gap-1"><Clock size={12} />{blog.readTime}</span>
+            <span className="text-[#8B1A4A] font-semibold">{blog.category}</span>
+          </div>
+          <h2 className="text-2xl md:text-3xl font-bold text-[#1A202C] mb-6 leading-tight">{blog.title}</h2>
+          <div
+            className="text-[#475569] text-sm md:text-base leading-relaxed space-y-4 [&_h3]:text-[#1A202C] [&_h3]:font-bold [&_h3]:text-base [&_h3]:mt-6 [&_h3]:mb-3 [&_p]:mb-4 [&_blockquote]:border-l-4 [&_blockquote]:border-[#8B1A4A] [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-[#8B1A4A] [&_strong]:text-[#1A202C]"
+            dangerouslySetInnerHTML={{ __html: blog.content }}
+          />
+        </div>
+      </motion.div>
+    </div>
+  );
+  return createPortal(modalContent, document.body);
+}
+
+// ─────────────────────────────────────────────────────────────
 // 8. INTERACTIVE BLOGS & VIDEOS (Awwwards-Level Challenge Layout)
 // ─────────────────────────────────────────────────────────────
 function InteractiveBlogsAndVideos({ slug, name, brandAccent }) {
-  const mediaData = DOCTOR_MEDIA[slug] || DOCTOR_MEDIA['default'];
-  const [activeVideo, setActiveVideo] = useState(mediaData.videos[0] || null);
-  const [hoveredBlogId, setHoveredBlogId] = useState(null);
+  const rawMediaData = DOCTOR_MEDIA[slug] || DOCTOR_MEDIA['default'];
   const [selectedBlog, setSelectedBlog] = useState(null);
+  const [hoveredBlogId, setHoveredBlogId] = useState(null);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [isDesktopSticky, setIsDesktopSticky] = useState(false);
 
-  if (!mediaData.blogs.length && !mediaData.videos.length) return null;
+  const parentRef = useRef(null);
+  const sliderRef = useRef(null);
+  const blogs = rawMediaData.blogs;
 
-  return (
-    <motion.section 
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: "-80px" }}
-      variants={fadeInUpVariants}
-      className="relative overflow-hidden rounded-[40px] bg-[#070b19] border border-white/5 p-8 md:p-14 text-white shadow-2xl"
-    >
-      {/* Decorative vector grid overlay for Awwwards vibe */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(139,26,74,0.15),transparent_50%)] pointer-events-none" />
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:30px_30px] opacity-20 pointer-events-none" />
+  useEffect(() => {
+    const checkSticky = () => {
+      setIsDesktopSticky(window.innerWidth >= 1024 && window.innerHeight >= 750);
+    };
+    checkSticky();
+    window.addEventListener('resize', checkSticky);
+    return () => window.removeEventListener('resize', checkSticky);
+  }, []);
 
-      {/* Reading Modal for blogs */}
-      {selectedBlog && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md" onClick={() => setSelectedBlog(null)}>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.96, y: 30 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: 30 }}
-            onClick={e => e.stopPropagation()}
-            className="w-full max-w-[780px] max-h-[85vh] bg-[#0d1425] text-white border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col"
-          >
-            <div className="relative h-60 flex-shrink-0">
-              <img src={selectedBlog.image} alt={selectedBlog.title} className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0d1425] via-transparent to-transparent" />
-              <button 
-                onClick={() => setSelectedBlog(null)} 
-                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/60 border border-white/10 text-white flex items-center justify-center hover:bg-white hover:text-black transition-colors"
-              >
-                <X size={18} />
-              </button>
-              <span className="absolute top-4 left-4 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full" style={{ backgroundColor: brandAccent }}>
-                {selectedBlog.category}
-              </span>
-            </div>
-            <div className="flex-1 overflow-y-auto px-8 pb-10 pt-4">
-              <div className="flex items-center gap-4 text-xs text-slate-400 mb-4">
-                <span>{selectedBlog.date}</span>
-                <span>·</span>
-                <span>{selectedBlog.readTime}</span>
-              </div>
-              <h2 className="text-3xl font-display font-black text-white mb-6 leading-tight">{selectedBlog.title}</h2>
-              <div
-                className="text-slate-300 text-sm leading-relaxed space-y-4 [&_h3]:text-white [&_h3]:font-black [&_h3]:text-lg [&_h3]:pt-4 [&_h3]:pb-1 [&_blockquote]:border-l-4 [&_blockquote]:border-[#8B1A4A] [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-[#E8B4C8]"
-                dangerouslySetInnerHTML={{ __html: selectedBlog.content }}
-              />
-            </div>
-          </motion.div>
+  const handleScroll = () => {
+    if (!sliderRef.current || isDesktopSticky) return;
+    const container = sliderRef.current;
+    const totalScroll = container.scrollWidth - container.clientWidth;
+    if (totalScroll > 0) {
+      setScrollProgress((container.scrollLeft / totalScroll) * 100);
+    }
+  };
+
+  useEffect(() => {
+    const container = sliderRef.current;
+    if (container && !isDesktopSticky) {
+      container.addEventListener('scroll', handleScroll, { passive: true });
+      handleScroll();
+    }
+    return () => {
+      if (container) {
+        container.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, [blogs.length, isDesktopSticky]);
+
+  useEffect(() => {
+    if (!isDesktopSticky) return;
+
+    const handleStickyScroll = () => {
+      if (!parentRef.current || !sliderRef.current) return;
+      const parent = parentRef.current;
+      const slider = sliderRef.current;
+      
+      const rect = parent.getBoundingClientRect();
+      const parentHeight = rect.height;
+      const viewHeight = window.innerHeight;
+      const stickyTop = 110; 
+      
+      const stickyHeight = viewHeight - stickyTop;
+      const pinningDistance = parentHeight - stickyHeight;
+      
+      if (pinningDistance <= 0) return;
+      
+      let progress = (stickyTop - rect.top) / pinningDistance;
+      progress = Math.max(0, Math.min(1, progress));
+      
+      const maxScroll = slider.scrollWidth - slider.clientWidth;
+      slider.scrollLeft = progress * maxScroll;
+      
+      setScrollProgress(progress * 100);
+    };
+
+    window.addEventListener('scroll', handleStickyScroll, { passive: true });
+    handleStickyScroll();
+    
+    return () => {
+      window.removeEventListener('scroll', handleStickyScroll);
+    };
+  }, [isDesktopSticky, blogs.length]);
+
+  const handleWheel = (e) => {
+    if (!sliderRef.current || isDesktopSticky) return;
+    const container = sliderRef.current;
+    const isAtStart = container.scrollLeft === 0;
+    const isAtEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - 5;
+
+    if (e.deltaY !== 0) {
+      if ((e.deltaY > 0 && !isAtEnd) || (e.deltaY < 0 && !isAtStart)) {
+        e.preventDefault();
+        container.scrollLeft += e.deltaY;
+      }
+    }
+  };
+
+  if (!blogs.length) return null;
+
+  const renderContent = () => (
+    <div className="relative z-10 space-y-6">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-8 pb-8 border-b border-slate-100 relative">
+        <div className="space-y-3 max-w-2xl">
+          <span className="text-[#8B1A4A] text-[11px] font-black uppercase tracking-[0.5em] mb-2 block">Clinical Insights</span>
+          <h2 className="editorial-title text-3xl md:text-[44px] font-black tracking-tight leading-[1.1] mb-4">
+            <span className="block text-slate-900">Blogs &amp;</span>
+            <span className="block text-[#8B1A4A] mt-2">Case Studies</span>
+          </h2>
+          <div className="w-16 h-[2px] bg-[#8B1A4A]/25 mb-6" />
         </div>
-      )}
-
-      {/* Top Header */}
-      <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12 border-b border-white/5 pb-8">
-        <div>
-          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E8B4C8] block mb-2">
-            RESEARCH &amp; BROADCAST SUITE
-          </span>
-          <h3 className="text-4xl md:text-5xl font-display font-black tracking-tight text-white">
-            Insights &amp; Clinical Videos
-          </h3>
+        
+        <div className="flex flex-col gap-1 items-end shrink-0 ml-auto lg:ml-0">
+          <div className="flex gap-1">
+            <div className="w-[42px] h-[42px] bg-black border border-slate-800 flex items-center justify-center relative overflow-hidden">
+              <svg className="w-full h-full text-white p-2" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="8">
+                <line x1="10" y1="90" x2="90" y2="10" />
+                <line x1="40" y1="90" x2="90" y2="40" strokeWidth="4" opacity="0.6" />
+              </svg>
+            </div>
+            <div className="w-[42px] h-[42px] bg-black border border-slate-800 flex items-center justify-center relative overflow-hidden">
+              <svg className="w-full h-full text-white p-2" viewBox="0 0 100 100" fill="currentColor">
+                <polygon points="10,90 90,90 90,10" />
+              </svg>
+            </div>
+          </div>
+          <div className="flex gap-1">
+            <div className="w-[42px] h-[42px] bg-black border border-slate-800 flex items-center justify-center relative overflow-hidden">
+              <svg className="w-full h-full text-white p-2" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="8">
+                <line x1="10" y1="90" x2="90" y2="10" />
+              </svg>
+            </div>
+            <div className="w-[42px] h-[42px] bg-black border border-slate-800 flex items-center justify-center relative overflow-hidden">
+              <svg className="w-full h-full text-white p-2.5" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="8">
+                <line x1="20" y1="10" x2="20" y2="90" />
+                <line x1="50" y1="10" x2="50" y2="90" />
+                <line x1="80" y1="10" x2="80" y2="90" />
+              </svg>
+            </div>
+            <div className="w-[42px] h-[42px] bg-black border border-slate-800 flex items-center justify-center relative overflow-hidden">
+              <svg className="w-full h-full text-white p-2" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="8">
+                <polygon points="50,15 15,85 85,85" />
+              </svg>
+            </div>
+          </div>
         </div>
-        <p className="text-slate-400 text-sm max-w-sm font-light leading-relaxed">
-          Explore medical case reviews, surgical insights, and video lectures authored directly by {name}.
-        </p>
       </div>
 
-      {/* Grid Suite */}
-      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-        
-        {/* Left Column: Interactive Case Studies (7 Cols) */}
-        <div className="lg:col-span-7 space-y-6">
-          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 mb-2">
-            <BookOpen size={12} className="text-[#8B1A4A]" />
-            <span>Clinical Journals ({mediaData.blogs.length})</span>
-          </div>
+      <div 
+        ref={sliderRef}
+        onWheel={handleWheel}
+        className={`w-full py-4 flex gap-6 snap-x snap-mandatory scroll-smooth scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] select-none ${isDesktopSticky ? 'overflow-x-hidden' : 'overflow-x-auto'}`}
+      >
+        {blogs.map((blog, idx) => {
+          const isHovered = hoveredBlogId === blog.id;
 
-          <div className="space-y-4">
-            {mediaData.blogs.map((blog) => {
-              const isHovered = hoveredBlogId === blog.id;
-              return (
-                <motion.div
-                  key={blog.id}
-                  onMouseEnter={() => setHoveredBlogId(blog.id)}
-                  onMouseLeave={() => setHoveredBlogId(null)}
-                  onClick={() => setSelectedBlog(blog)}
-                  className="group relative cursor-pointer overflow-hidden rounded-2xl border transition-all duration-500 bg-[#0d1425]/40"
-                  style={{ 
-                    borderColor: isHovered ? brandAccent : 'rgba(255,255,255,0.05)',
-                    boxShadow: isHovered ? `0 15px 30px -10px ${brandAccent}20` : 'none'
-                  }}
-                  whileHover={{ y: -3 }}
-                >
-                  <div className="flex flex-col md:flex-row items-center gap-6 p-5">
-                    {/* Thumbnail */}
-                    <div className="relative w-full md:w-36 aspect-[4/3] rounded-xl overflow-hidden shrink-0 bg-slate-800">
-                      <img src={blog.image} alt={blog.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                      <div className="absolute inset-0 bg-black/20" />
-                    </div>
-
-                    {/* Meta & Title */}
-                    <div className="flex-1 flex flex-col">
-                      <div className="flex items-center gap-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">
-                        <span style={{ color: brandAccent }}>{blog.category}</span>
-                        <span>·</span>
-                        <span>{blog.readTime}</span>
-                      </div>
-                      <h4 className="text-lg font-display font-black text-white leading-snug group-hover:text-[#E8B4C8] transition-colors mb-2">
-                        {blog.title}
-                      </h4>
-                      <p className="text-slate-400 text-xs font-light line-clamp-2 leading-relaxed">
-                        {blog.excerpt}
-                      </p>
-                    </div>
-
-                    {/* Dynamic Read Indicator */}
-                    <div className="shrink-0 flex items-center justify-center w-10 h-10 rounded-full border border-white/10 group-hover:bg-white group-hover:text-black transition-all duration-300">
-                      <ChevronRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Right Column: Immersive Video Lounge (5 Cols) */}
-        {activeVideo && (
-          <div className="lg:col-span-5 flex flex-col space-y-6">
-            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 mb-2">
-              <Tv size={12} className="text-[#8B1A4A]" />
-              <span>Video Lectures ({mediaData.videos.length})</span>
-            </div>
-
-            {/* Video Player Box */}
-            <div className="relative rounded-2xl overflow-hidden border border-white/5 bg-[#0d1425] shadow-xl group">
-              <div className="aspect-video w-full bg-black relative">
-                <iframe 
-                  src={activeVideo.videoUrl} 
-                  title={activeVideo.title}
-                  className="absolute inset-0 w-full h-full border-none"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                  allowFullScreen
+          return (
+            <motion.div
+              key={blog.id}
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.5, ease: "easeOut", delay: idx * 0.05 }}
+              onMouseEnter={() => setHoveredBlogId(blog.id)}
+              onMouseLeave={() => setHoveredBlogId(null)}
+              onClick={() => setSelectedBlog(blog)}
+              className="snap-start relative w-[380px] h-[480px] rounded-2xl overflow-hidden border border-[#E2E8F0] bg-white cursor-pointer shrink-0 transition-all duration-300 group flex flex-col hover:border-[#8B1A4A]/30 hover:shadow-[0_16px_48px_rgba(139,26,74,0.1)]"
+            >
+              <div className="relative h-52 w-full overflow-hidden bg-[#F1F5F9] shrink-0 border-b border-[#E2E8F0]">
+                <img 
+                  src={blog.image} 
+                  alt={blog.title} 
+                  className="w-full h-full object-cover transition-transform duration-700 ease-out" 
+                  style={{ transform: isHovered ? 'scale(1.05)' : 'scale(1)' }}
+                  onError={e => { e.target.src = 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=800' }}
                 />
+                
+                <span 
+                  className="absolute top-4 left-4 bg-[#8B1A4A] text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full z-20"
+                >
+                  {blog.tag || 'Case Study'}
+                </span>
               </div>
 
-              {/* Player Bottom Info */}
-              <div className="p-4 bg-[#0d1425] border-t border-white/5">
-                <div className="flex justify-between items-center gap-4">
-                  <div>
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Active Stream</span>
-                    <h5 className="text-sm font-bold text-white leading-tight mt-0.5">{activeVideo.title}</h5>
+              <div className="p-6 flex-1 flex flex-col justify-between text-left">
+                <div>
+                  <div className="flex items-center gap-3 text-xs text-[#94A3B8] mb-3">
+                    <span className="text-[#8B1A4A] font-semibold">{blog.category}</span>
+                    <span>·</span>
+                    <span className="flex items-center gap-1"><Calendar size={11} />{blog.date}</span>
+                    <span className="flex items-center gap-1"><Clock size={11} />{blog.readTime}</span>
                   </div>
-                  <span className="text-[10px] font-bold text-[#E8B4C8] bg-[#8B1A4A]/20 px-2 py-1 rounded-md shrink-0">
-                    {activeVideo.duration}
-                  </span>
+
+                  <h4 className="font-bold text-[#1A202C] text-lg leading-snug mb-3 group-hover:text-[#8B1A4A] transition-colors line-clamp-2">
+                    {blog.title}
+                  </h4>
+
+                  <p className="text-[#64748B] text-sm leading-relaxed line-clamp-3 mb-5">
+                    {blog.excerpt}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 text-[#8B1A4A] text-xs font-bold uppercase tracking-wider">
+                  Read More <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
-            </div>
-
-            {/* Video Playlist Selector */}
-            <div className="space-y-2">
-              {mediaData.videos.map((vid) => {
-                const isActive = activeVideo.id === vid.id;
-                return (
-                  <button
-                    key={vid.id}
-                    onClick={() => setActiveVideo(vid)}
-                    className="w-full flex items-center justify-between text-left p-3.5 rounded-xl border text-xs transition-all duration-300 bg-[#0d1425]/20 hover:bg-[#0d1425]/60"
-                    style={{ 
-                      borderColor: isActive ? brandAccent : 'rgba(255,255,255,0.03)',
-                      color: isActive ? '#white' : '#94A3B8'
-                    }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div 
-                        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border transition-all"
-                        style={{ 
-                          backgroundColor: isActive ? brandAccent : 'rgba(255,255,255,0.03)',
-                          borderColor: isActive ? 'transparent' : 'rgba(255,255,255,0.05)',
-                          color: isActive ? '#white' : '#64748B'
-                        }}
-                      >
-                        <Play size={12} className={isActive ? "fill-white" : ""} />
-                      </div>
-                      <span className={`font-bold leading-tight ${isActive ? 'text-white font-extrabold' : 'text-slate-300 font-semibold'}`}>
-                        {vid.title}
-                      </span>
-                    </div>
-                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider shrink-0 ml-2">
-                      {vid.duration}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-          </div>
-        )}
-
+            </motion.div>
+          );
+        })}
       </div>
-    </motion.section>
+
+      <div className="pt-4 flex flex-col items-center">
+        <div className="w-48 h-[2px] bg-slate-100 rounded-none relative overflow-hidden">
+          <div 
+            className="absolute top-0 left-0 h-full bg-[#8B1A4A] transition-all duration-75"
+            style={{ width: `${scrollProgress}%` }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      {selectedBlog && (
+        <BlogModal blog={selectedBlog} onClose={() => setSelectedBlog(null)} />
+      )}
+
+      {isDesktopSticky ? (
+        <div ref={parentRef} className="relative w-full h-[220vh]">
+          <div className="sticky top-[110px] h-[calc(100vh-110px)] min-h-[620px] w-full flex flex-col justify-center overflow-hidden bg-white">
+            <motion.section 
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-80px" }}
+              variants={fadeInUpVariants}
+              className="relative overflow-hidden w-full text-slate-900 space-y-6"
+            >
+              {renderContent()}
+            </motion.section>
+          </div>
+        </div>
+      ) : (
+        <motion.section 
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+          variants={fadeInUpVariants}
+          className="relative overflow-hidden py-12 text-slate-900 space-y-8 bg-white"
+        >
+          {renderContent()}
+        </motion.section>
+      )}
+    </>
   );
 }
 
@@ -862,250 +1105,253 @@ function DoctorProfilePageContent() {
     "Multidisciplinary Diagnostics"
   ]
 
+  const organImage = (() => {
+    switch (doctor.specialtyId) {
+      case 'cardio': return 'images/heart-3d.png'
+      case 'neuro':
+      case 'neurosurg':
+      case 'spine': return 'images/brain-3d.png'
+      case 'ortho': return 'images/joint-3d.png'
+      case 'nephro':
+      case 'urology': return 'images/kidney-3d.png'
+      case 'pulmo': return 'images/lungs-3d.png'
+      default: return 'images/liver-3d.png'
+    }
+  })()
+
+  const organLabel = (() => {
+    switch (doctor.specialtyId) {
+      case 'cardio': return 'Healed Hearts'
+      case 'neuro':
+      case 'neurosurg':
+      case 'spine': return 'Healed Brains'
+      case 'ortho': return 'Healed Joints'
+      case 'nephro':
+      case 'urology': return 'Healed Kidneys'
+      case 'pulmo': return 'Healed Lungs'
+      default: return 'Healed Patients'
+    }
+  })()
+
   return (
     <div className="min-h-screen bg-white font-body text-slate-800 antialiased selection:bg-[#8B1A4A] selection:text-white">
       <StickyNavbar currentBranch={{ branchLogo: 'https://i.ibb.co/CK9bqmXK/sri-logo.jpg' }} />
 
-      <div className="pt-[110px] lg:pt-[130px] bg-white">
+      <div className="pt-[76px] lg:pt-[88px] bg-white">
         
-        <main className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16 pb-20">
-          
-          <motion.button 
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-            onClick={() => navigate('/doctors')} 
-            className="inline-flex items-center gap-2 text-slate-400 hover:text-slate-900 text-[11px] font-bold uppercase tracking-[0.2em] mb-10 transition-colors"
-          >
-            <ArrowLeft size={12} /> Back to Doctors
-          </motion.button>
+        <main className="w-full pb-20">
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+          {/* Nuvica Premium Glassmorphic Hero Container - Stretched Full Width */}
+          <div className="w-full border-y border-slate-200/80 bg-gradient-to-r from-slate-50 via-sky-50/40 to-blue-50/50 shadow-[0_16px_48px_rgba(31,41,55,0.03)] py-8 relative overflow-hidden mb-16 select-none flex justify-center">
             
-            <motion.div 
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: [0.25, 1, 0.5, 1] }}
-              className="lg:col-span-5 flex flex-col items-center lg:items-start"
-            >
-              <InteractivePortrait 
-                src={doctor.image} 
-                alt={doctor.name} 
-                fallback={doctor.fallback} 
-              />
+            {/* Wide layout inner content alignment */}
+            <div className="w-full max-w-[1680px] mx-auto px-6 md:px-16 lg:px-24 relative">
+            
+            {/* Background glowing mesh circles */}
+            <div className="absolute -top-16 -right-16 w-[450px] md:w-[600px] h-[450px] md:h-[600px] rounded-full blur-3xl pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.1) 0%, rgba(139,92,246,0.02) 70%, transparent 100%)' }} />
+            <div className="absolute -bottom-16 -left-16 w-[300px] md:w-[450px] h-[300px] md:h-[450px] rounded-full blur-3xl pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(244,63,94,0.06) 0%, rgba(251,191,36,0.02) 70%, transparent 100%)' }} />
 
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4 }}
-                className="mt-6 flex items-center justify-between w-full max-w-[420px] px-4 py-3 bg-slate-50/50 rounded-xl border border-slate-100/60"
-              >
-                <div className="flex items-center gap-1.5">
-                  <Star size={14} className="text-amber-500 fill-amber-500" />
-                  <span className="text-xs font-black text-slate-800">{doctor.rating}</span>
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Patient Choice</span>
-                </div>
-                <div className="flex items-center gap-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                  <Shield size={12} style={{ color: brandAccent }} />
-                  <span>Verified Expert</span>
-                </div>
-              </motion.div>
-            </motion.div>
+            {/* Floating Top Left Pill tag - Completely glassmorphic */}
+            <div className="absolute top-6 left-8 inline-flex items-center gap-2 bg-white/50 backdrop-blur-md border border-white/70 px-4 py-2 rounded-full shadow-sm text-slate-700">
+              <Activity size={14} className="text-[#3b82f6]" />
+              <span className="text-[10px] font-black uppercase tracking-[0.2em]">Fast Treatment</span>
+            </div>
 
-            <motion.div 
-              variants={staggerContainer}
-              initial="hidden"
-              animate="visible"
-              className="lg:col-span-7 flex flex-col pt-1"
-            >
+            {/* Floating Top Right Badge - Completely glassmorphic */}
+            <div className="absolute top-6 right-8 bg-white/55 backdrop-blur-md border border-white/70 px-5 py-2.5 rounded-full flex items-center gap-3.5 shadow-sm hover:scale-[1.02] transition-all cursor-pointer">
+              <img src={assetUrl('favicon-logo.jpg')} alt="Srikara Logo" className="w-8 h-8 rounded-full border border-white/60 object-cover shrink-0" />
+              <div className="text-left leading-tight">
+                <p className="text-[11px] font-black text-slate-800">@srikara_health</p>
+                <p className="text-[8.5px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">Verified Medical Center</p>
+              </div>
+            </div>
+
+            {/* 3-Column Grid Layout: Details on Left, Portrait in Center, Organ on Right */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center relative z-10 pt-16">
               
-              {isChairman && (
-                <motion.div 
-                  variants={{
-                    hidden: { opacity: 0, y: 10 },
-                    visible: { opacity: 1, y: 0 }
-                  }}
-                  className="flex items-center gap-2 mb-3 text-[#cca830] font-black uppercase text-[10px] tracking-[0.3em]"
-                >
-                  <Award size={14} className="fill-[#cca830]/20" />
-                  Visionary Founder & Chairman
-                </motion.div>
-              )}
+              {/* Left Column (lg:col-span-4): Nuvica Details & Actions (Light High-Contrast Theme) */}
+              <div className="lg:col-span-4 flex flex-col text-left">
+                {isChairman && (
+                  <div className="font-black uppercase text-[10px] tracking-[0.3em] mb-2.5 flex items-center gap-1.5 animate-pulse" style={{ color: brandAccent }}>
+                    <Award size={14} className="fill-current opacity-20" />
+                    Visionary Founder &amp; Chairman
+                  </div>
+                )}
 
-              <h1 className="text-5xl md:text-6xl lg:text-[72px] font-display font-black text-slate-900 tracking-tighter leading-[0.95] mb-4 flex flex-wrap">
-                <SplitText text={doctor.name} />
-              </h1>
+                {/* Display Title in Slate-800 */}
+                <h1 className="text-slate-800 text-3xl md:text-4xl lg:text-[42px] font-display font-black tracking-tighter leading-[1.0] uppercase mb-5">
+                  <SplitText text={doctor.name} />
+                </h1>
 
-              <motion.p 
-                variants={fadeInUpVariants}
-                className="text-sm font-black uppercase tracking-[0.2em] mb-6"
-                style={{ color: brandAccent }}
-              >
-                {doctor.label}
-              </motion.p>
+                <p className="text-sm font-black uppercase tracking-[0.2em] mb-4" style={{ color: brandAccent }}>
+                  {doctor.label}
+                </p>
 
-              <motion.p 
-                variants={fadeInUpVariants}
-                className="text-lg md:text-xl text-slate-700 font-light leading-relaxed mb-4 max-w-2xl"
-              >
-                {doctor.tagline || `Committed to providing world-class diagnostic and surgical precision.`}
-              </motion.p>
+                <p className="text-base text-slate-850 font-bold leading-tight mb-3">
+                  {doctor.tagline || `Committed to providing world-class diagnostic and surgical precision.`}
+                </p>
 
-              <motion.p 
-                variants={fadeInUpVariants}
-                className="text-xs md:text-sm text-slate-400 font-light leading-relaxed mb-8 max-w-xl"
-              >
-                {doctor.about || `${doctor.name} is a renowned ${doctor.specialty} specialist at Srikara Hospitals, leading innovative patient care and advanced therapeutic solutions in the region.`}
-              </motion.p>
+                <p className="text-slate-500 text-xs md:text-sm font-light leading-relaxed mb-8 max-w-sm">
+                  {doctor.about || `${doctor.name} is a renowned ${doctor.specialty} specialist at Srikara Hospitals, leading innovative patient care and advanced therapeutic solutions.`}
+                </p>
 
-              <motion.div 
-                variants={fadeInUpVariants}
-                className="w-full h-[1px] bg-slate-200/80 my-2" 
-              />
-
-              <motion.div 
-                variants={fadeInUpVariants}
-                className="grid grid-cols-1 sm:grid-cols-2 gap-8 my-8"
-              >
-                <div className="flex flex-col">
-                  <h4 
-                    className="text-[10px] font-black uppercase tracking-[0.25em] mb-4"
-                    style={{ color: brandAccent }}
+                {/* Staggered Capsule Buttons */}
+                <div className="flex flex-wrap gap-2.5">
+                  <MagneticButton 
+                    onClick={() => navigate(`/book/${doctor.slug}`)}
+                    className="bg-slate-900 hover:bg-slate-800 text-white px-6 py-3.5 rounded-xl font-black text-[11px] uppercase tracking-wider shadow-md transition-all duration-300 flex items-center gap-2"
                   >
-                    Education & Fellowships
-                  </h4>
-                  <ul className="space-y-3 mb-6 flex-1">
-                    {doctor.education?.length > 0 ? (
-                      doctor.education.map((edu, idx) => (
-                        <li key={idx} className="text-[13px] font-bold text-slate-800 leading-snug flex items-start gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-slate-300 mt-1.5 shrink-0" />
-                          <span>{edu}</span>
-                        </li>
-                      ))
-                    ) : (
-                      <li className="text-[13px] font-bold text-slate-800 leading-snug flex items-start gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-slate-300 mt-1.5 shrink-0" />
-                        <span>{doctor.sub}</span>
+                    <Calendar size={14} className="stroke-white fill-none" /> BOOK APPOINTMENT
+                  </MagneticButton>
+                  
+                  <MagneticButton
+                    onClick={() => window.location.href = `tel:${doctor.phone}`}
+                    className="bg-slate-100/80 hover:bg-slate-200/90 text-slate-800 px-6 py-3.5 rounded-xl font-black text-[11px] transition-all duration-300 flex items-center gap-2 border border-slate-200/60 shadow-sm"
+                  >
+                    <Phone size={14} className="text-slate-700 stroke-[2.5px] fill-none" /> Call Now
+                  </MagneticButton>
+
+                  <MagneticButton
+                    onClick={() => window.open(`https://wa.me/${doctor.whatsapp}?text=Hello%20${encodeURIComponent(doctor.name)}%2C%20I%20would%20like%20to%20book%20an%20appointment.`, '_blank')}
+                    className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-6 py-3.5 rounded-xl font-black text-[11px] transition-all duration-300 flex items-center gap-2 shadow-sm"
+                  >
+                    <MessageCircle size={14} className="stroke-white fill-none" /> WhatsApp
+                  </MagneticButton>
+                </div>
+              </div>
+
+              {/* Center Column (lg:col-span-4): Curved Doctor Portrait (Completely background-free) */}
+              <div className="lg:col-span-4 flex justify-center relative pt-8 lg:pt-0">
+                <div className="relative w-full max-w-[420px] aspect-[4/5] overflow-hidden select-none group transition-transform duration-500 hover:scale-[1.03]">
+                  <img 
+                    src={doctor.image} 
+                    alt={doctor.name} 
+                    className="w-full h-full object-cover object-top filter contrast-[102%] hover:scale-105 transition-all duration-700 pointer-events-none"
+                    onError={e => { if (doctor.fallback) e.target.src = doctor.fallback }} 
+                  />
+                </div>
+
+                {/* Overlapping bubble: Experience - Completely glassmorphic */}
+                <div className="absolute bottom-[-16px] left-[6%] bg-white/60 backdrop-blur-md border border-white/80 px-5 py-3.5 rounded-2xl flex items-center gap-3.5 shadow-lg select-none pointer-events-none max-w-[280px] z-20">
+                  <div className="w-9 h-9 rounded-xl bg-blue-50/50 backdrop-blur-sm flex items-center justify-center text-blue-600 shrink-0 font-bold">
+                    💼
+                  </div>
+                  <div className="text-left">
+                    <p className="text-xs font-black text-slate-800 leading-none">{doctor.exp}</p>
+                    <p className="text-[8px] text-slate-500 font-bold uppercase tracking-wider mt-1 leading-none">Medical Excellence</p>
+                  </div>
+                </div>
+
+                {/* Floating Rating Badge at Top Right - Completely glassmorphic */}
+                <div className="absolute top-4 right-[6%] bg-white/60 backdrop-blur-md border border-white/80 px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-md z-20">
+                  <Star size={13} className="text-amber-500 fill-amber-500" />
+                  <span className="text-[10px] font-black text-slate-800">{doctor.rating}</span>
+                  <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider leading-none">Choice</span>
+                </div>
+              </div>
+
+              {/* Right Column (lg:col-span-4): Floating 3D Specialty Organ (Completely background-free & interactive) */}
+              <div className="lg:col-span-4 flex flex-col justify-center relative select-none pt-8 lg:pt-0">
+                <div className="w-full min-h-[350px] md:min-h-[420px] flex items-center justify-center relative">
+                  {/* Subtle Light Burgundy Background Shading Glow */}
+                  <div className="absolute w-[240px] h-[240px] md:w-[320px] md:h-[320px] rounded-full blur-3xl pointer-events-none mix-blend-multiply opacity-80" style={{ background: 'radial-gradient(circle, rgba(139,26,74,0.18) 0%, rgba(139,26,74,0.02) 65%, transparent 100%)' }} />
+
+                  {/* Direct beautiful transparent organ PNG with very slight and slow automatic vertical levitation */}
+                  <motion.div
+                    animate={{
+                      y: [-5, 5, -5]
+                    }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: 8,
+                      ease: "easeInOut"
+                    }}
+                    className="relative z-10"
+                  >
+                    <img 
+                      src={assetUrl(organImage)} 
+                      alt={organLabel} 
+                      className="w-64 md:w-76 lg:w-[360px] h-auto object-contain filter drop-shadow-[0_16px_32px_rgba(31,41,55,0.08)] hover:scale-105 hover:rotate-2 hover:drop-shadow-[0_24px_48px_rgba(31,41,55,0.12)] transition-all duration-500 ease-out cursor-pointer"
+                    />
+                  </motion.div>
+
+                  {/* Floating Awards Tag above Organ - Completely glassmorphic */}
+                  <div className="absolute top-4 left-4 bg-white/60 backdrop-blur-md border border-white/80 px-4 py-2.5 rounded-2xl flex items-center gap-3 shadow-md hover:scale-[1.02] transition-transform animate-bounce-subtle z-20">
+                    <div className="w-8 h-8 rounded-xl bg-amber-50/50 backdrop-blur-sm flex items-center justify-center text-[#cca830] shrink-0 font-bold">
+                      🏆
+                    </div>
+                    <div className="text-left leading-none">
+                      <p className="text-[11px] font-black text-slate-800">490</p>
+                      <p className="text-[8px] text-slate-455 font-bold uppercase tracking-wider mt-0.5">Awards</p>
+                    </div>
+                  </div>
+
+                  {/* Floating Healed Patient Tag next to Organ - Completely glassmorphic */}
+                  <div className="absolute bottom-8 right-4 bg-white/60 backdrop-blur-md border border-white/80 px-4 py-2.5 rounded-2xl flex items-center gap-3 shadow-md hover:scale-[1.02] transition-transform animate-float-subtle z-20">
+                    <div className="w-8 h-8 rounded-xl bg-blue-50/50 backdrop-blur-sm flex items-center justify-center text-blue-600 shrink-0 font-bold">
+                      🩺
+                    </div>
+                    <div className="text-left leading-none">
+                      <p className="text-[11px] font-black text-slate-800">
+                        {doctor.specialtyId === 'ortho' ? '15,000+' : 
+                         doctor.specialtyId === 'cardio' ? '6,700+' :
+                         doctor.specialtyId === 'nephro' ? '2,500+' :
+                         doctor.specialtyId === 'neuro' || doctor.specialtyId === 'neurosurg' ? '1,800+' :
+                         '10,000+'}
+                      </p>
+                      <p className="text-[8px] text-slate-455 font-bold uppercase tracking-wider mt-0.5">
+                        {organLabel}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Quick Education Details banner at the bottom of the card (Frosted Glass Light Theme) */}
+            <div className="w-full h-[1px] bg-slate-200/80 mt-12 mb-8 relative z-10" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left relative z-10">
+              <div>
+                <h4 className="text-[10px] font-black uppercase tracking-[0.25em] mb-3 text-slate-500">
+                  Academic Credentials &amp; Fellowships
+                </h4>
+                <ul className="flex flex-wrap gap-x-6 gap-y-2">
+                  {doctor.education?.length > 0 ? (
+                    doctor.education.map((edu, idx) => (
+                      <li key={idx} className="text-[12px] font-bold text-slate-700 flex items-center gap-1.5">
+                        <GraduationCap size={13} className="text-slate-400" />
+                        <span>{edu}</span>
                       </li>
-                    )}
-                  </ul>
-
-                  <div className="flex items-center gap-3 pt-4 border-t border-slate-100">
-                    <a 
-                      href={`tel:${doctor.phone}`}
-                      className="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:text-[var(--hover-color)] hover:border-[var(--hover-color)] transition-all"
-                      style={{ '--hover-color': brandAccent }}
-                      title="Call Doctor"
-                    >
-                      <Phone size={14} />
-                    </a>
-                    <a 
-                      href={`https://wa.me/${doctor.whatsapp}?text=Hello%20${encodeURIComponent(doctor.name)}%2C%20I%20would%20like%20to%20book%20an%20appointment.`}
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:text-emerald-500 hover:border-emerald-500 transition-all"
-                      title="WhatsApp Chat"
-                    >
-                      <MessageCircle size={14} />
-                    </a>
-                    <a 
-                      href="mailto:info@srikarahospitals.com"
-                      className="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:text-[var(--hover-color)] hover:border-[var(--hover-color)] transition-all"
-                      style={{ '--hover-color': brandAccent }}
-                      title="Email Inquiry"
-                    >
-                      <Mail size={14} />
-                    </a>
-                  </div>
-
+                    ))
+                  ) : (
+                    <li className="text-[12px] font-bold text-slate-700 flex items-center gap-1.5">
+                      <GraduationCap size={13} className="text-slate-400" />
+                      <span>{doctor.sub}</span>
+                    </li>
+                  )}
+                </ul>
+              </div>
+              <div className="flex flex-col md:items-end justify-center text-slate-700">
+                <div className="flex items-center gap-2.5 text-[12px] font-bold">
+                  <Clock size={13} className="text-slate-400" />
+                  <span>Available for Consultations: {doctor.availability}</span>
                 </div>
-
-                <div className="flex flex-col">
-                  <h4 
-                    className="text-[10px] font-black uppercase tracking-[0.25em] mb-4"
-                    style={{ color: brandAccent }}
-                  >
-                    Experience & Location
-                  </h4>
-                  <div className="space-y-3 mb-6 text-[13px] font-bold text-slate-800 flex-1">
-                    <div className="flex items-start gap-2">
-                      <Award size={14} className="text-slate-400 mt-0.5 shrink-0" />
-                      <div>
-                        <p className="text-slate-800 leading-none">{doctor.exp}</p>
-                        <p className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase mt-1">Clinical Excellence</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <MapPin size={14} className="text-slate-400 mt-0.5 shrink-0" />
-                      <div>
-                        <p className="text-slate-800 leading-none">Srikara {doctor.branch}</p>
-                        <p className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase mt-1">Primary Practice location</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <Clock size={14} className="text-slate-400 mt-0.5 shrink-0" />
-                      <div>
-                        <p className="text-slate-800 leading-none">{doctor.availability}</p>
-                        <p className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase mt-1">Consultation Schedule</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 pt-4 border-t border-slate-100">
-                    <div 
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-amber-600 bg-amber-50"
-                      title={`Top Rated Doctor: ${doctor.rating}/5`}
-                    >
-                      <Star size={15} className="fill-amber-500/20" />
-                    </div>
-                    <div 
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-rose-600 bg-rose-50"
-                      title="Cardiac/Surgical Specialist Care"
-                    >
-                      <Heart size={15} />
-                    </div>
-                    <div 
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-blue-600 bg-blue-50"
-                      title="Multilingual Consultation Available"
-                    >
-                      <Globe size={15} />
-                    </div>
-                    <div 
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-emerald-600 bg-emerald-50"
-                      title="Certified Patient Safety Protocols"
-                    >
-                      <Shield size={15} />
-                    </div>
-                  </div>
+                <div className="text-[9px] text-slate-500 font-bold uppercase tracking-wider mt-1.5 flex items-center gap-1">
+                  <MapPin size={11} className="text-slate-400" /> Primary Practice: Srikara {doctor.branch}
                 </div>
-              </motion.div>
-
-              <motion.div 
-                variants={fadeInUpVariants}
-                className="flex flex-wrap gap-4 mt-4"
-              >
-                <MagneticButton 
-                  onClick={() => navigate(`/book/${doctor.slug}`)}
-                  className="bg-[#2D3A4A] hover:bg-[#1A2330] text-white px-8 py-3.5 rounded-full font-bold text-[11px] uppercase tracking-widest shadow-md transition-all duration-300 flex items-center gap-2"
-                >
-                  <Calendar size={13} /> Book Appointment
-                </MagneticButton>
-                
-                <MagneticButton
-                  onClick={() => window.location.href = `tel:${doctor.phone}`}
-                  className="border border-slate-200 hover:border-slate-800 text-slate-700 hover:text-slate-900 px-8 py-3.5 rounded-full font-bold text-[11px] uppercase tracking-widest transition-all duration-300 flex items-center gap-2 bg-white"
-                >
-                  <Phone size={13} /> Call Reception
-                </MagneticButton>
-              </motion.div>
-
-            </motion.div>
+              </div>
+            </div>
 
           </div>
+        </div>
 
-          {/* ── SCROLL-BASED ADDITIONAL DETAILS (INTERACTIVE ACCORDION & KINETIC SCROLL REVEAL) ── */}
-          <div className="mt-28 space-y-28 border-t border-slate-100 pt-20">
+        {/* ── SCROLL-BASED ADDITIONAL DETAILS (INTERACTIVE ACCORDION & KINETIC SCROLL REVEAL) ── */}
+        <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16 mt-28 space-y-28 border-t border-slate-100 pt-20">
             
+            {/* Section 3: Interactive Blogs & Video Lectures Showcase */}
+            <InteractiveBlogsAndVideos slug={doctor.slug} name={doctor.name} brandAccent={brandAccent} />
+
             {/* Section 1: Clinical Specialties & Milestones (Awwwards Hover Accordion Layout) */}
             <motion.section 
               initial="hidden"
@@ -1195,12 +1441,23 @@ function DoctorProfilePageContent() {
               </div>
             </motion.section>
 
-            {/* Section 3: Interactive Blogs & Video Lectures Showcase */}
-            <InteractiveBlogsAndVideos slug={doctor.slug} name={doctor.name} brandAccent={brandAccent} />
+            {/* Back to Doctors Button at the bottom */}
+            <div className="mt-16 flex justify-center">
+              <motion.button 
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                onClick={() => navigate('/doctors')} 
+                className="inline-flex items-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-500 hover:text-slate-900 px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-[0.2em] transition-all hover:scale-[1.03] shadow-sm cursor-pointer"
+              >
+                <ArrowLeft size={12} /> Back to Doctors
+              </motion.button>
+            </div>
 
           </div>
 
-          <div className="mt-20 pt-8 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+          <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16 mt-20 pt-8 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
             <div>
               © 2026 Srikara Hospitals | Healing Hands, Caring Hearts
             </div>

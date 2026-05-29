@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 
 export default defineConfig({
-  base: '/sri/',
+  base: process.env.NETLIFY ? '/' : '/sri/',
   plugins: [react()],
   resolve: {
     alias: {
