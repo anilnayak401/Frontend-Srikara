@@ -353,11 +353,15 @@ export function SpecialtyDetailPage() {
 
   // Filter and sort doctors matching specialty, showing current branch's doctors first
   const sortedDoctors = (() => {
+    const normalize = (s) => s ? s.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
     const matchingDocs = ALL_DOCTORS.filter(doc => doc.specialtyId === specialtyId)
     return [...matchingDocs].sort((a, b) => {
-      if (a.branch === currentBranchName && b.branch !== currentBranchName) return -1
-      if (a.branch !== currentBranchName && b.branch === currentBranchName) return 1
-      return 0
+      const normA = normalize(a.branch);
+      const normB = normalize(b.branch);
+      const normCurr = normalize(currentBranchName);
+      if (normA === normCurr && normB !== normCurr) return -1;
+      if (normA !== normCurr && normB === normCurr) return 1;
+      return 0;
     })
   })()
 

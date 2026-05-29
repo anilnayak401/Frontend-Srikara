@@ -14,6 +14,7 @@ import { StickyNavbar } from '@/components/layout/StickyNavbar'
 import { Footer } from '@/components/layout/Footer'
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
 import { AlphabetDiseaseSearch } from '@/components/sections/AlphabetDiseaseSearch'
+import { PremiumDoctorFinder } from '@/components/sections/PremiumDoctorFinder'
 import { assetUrl } from '@/lib/assetUrl'
 
 // Brand palette for this dark-bg page
@@ -629,6 +630,7 @@ export function SpecialtiesPage() {
 
         </main>
 
+        <PremiumDoctorFinder isGlobal={true} />
         <Footer />
         <MobileBottomNav />
       </div>

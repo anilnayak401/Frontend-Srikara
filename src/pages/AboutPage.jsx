@@ -6,6 +6,7 @@ import { StickyNavbar } from '@/components/layout/StickyNavbar'
 import { Footer } from '@/components/layout/Footer'
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
 import { TimelineSection } from '@/components/sections/TimelineSection'
+import { PremiumDoctorFinder } from '@/components/sections/PremiumDoctorFinder'
 
 // --- PREMIUM ABOUT PAGE DESIGN TOKENS ---
 const ABO_STYLES = `
@@ -229,6 +230,7 @@ export function AboutPage() {
         </section>
 
         <TimelineSection />
+        <PremiumDoctorFinder isGlobal={true} />
         <Footer />
         <MobileBottomNav />
       </div>

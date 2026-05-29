@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Shield, Heart, Phone, MessageSquare, Mail, Share2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Shield, Heart, Phone, MessageSquare, Mail, Share2, MapPin } from 'lucide-react';
 import { ALL_DOCTORS } from '@/data/doctors';
 
 const CAROUSEL_TRANSITION = {
@@ -108,7 +108,7 @@ function DoctorCard({ doctor, isActive, transitionEnabled, onClick, getHasDragge
           borderRadius: isActive ? 32 : 24
         }}
         transition={currentCardTransition}
-        className="relative w-full overflow-hidden flex items-center justify-center flex-shrink-0"
+        className="relative w-full overflow-hidden flex items-end justify-center flex-shrink-0"
       >
         {/* Backgroundless Transparent Portrait Backdrops (smooth cross-fade opacity) */}
         <div 
@@ -123,7 +123,7 @@ function DoctorCard({ doctor, isActive, transitionEnabled, onClick, getHasDragge
         <img
           src={doctor.image}
           alt={doctor.name}
-          className="relative z-10 w-full h-full object-contain object-bottom transition-transform duration-700"
+          className="relative z-10 w-auto max-w-[95%] h-[88%] object-contain object-bottom transition-transform duration-700"
           onError={e => { if (doctor.fallback) e.target.src = doctor.fallback; }}
         />
       </motion.div>
@@ -230,9 +230,10 @@ function DoctorCard({ doctor, isActive, transitionEnabled, onClick, getHasDragge
   );
 }
 
-export const PremiumDoctorFinder = ({ branchTitle = 'ECIL', branchId = 'ECIL' }) => {
+export const PremiumDoctorFinder = ({ branchTitle = 'ECIL', branchId = 'ECIL', isGlobal = false, allowBranchSwitch = false }) => {
   const navigate = useNavigate();
   const [isMobile, setIsMobile] = useState(false);
+  const [selectedBranch, setSelectedBranch] = useState(isGlobal ? 'ECIL' : (branchId || branchTitle || 'ECIL'));
 
   useEffect(() => {
     const handleResize = () => {
@@ -243,10 +244,11 @@ export const PremiumDoctorFinder = ({ branchTitle = 'ECIL', branchId = 'ECIL' })
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const normalize = (s) => s ? s.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+
   // Filter doctors for this specific branch
   const branchDoctors = ALL_DOCTORS.filter(doc => 
-    doc.branch.toLowerCase() === branchId.toLowerCase() || 
-    doc.branch.toLowerCase() === branchTitle.toLowerCase()
+    normalize(doc.branch) === normalize(selectedBranch)
   );
 
   const N = branchDoctors.length;
@@ -271,7 +273,7 @@ export const PremiumDoctorFinder = ({ branchTitle = 'ECIL', branchId = 'ECIL' })
     } else {
       setSlideIndex(N);
     }
-  }, [N]);
+  }, [N, selectedBranch]);
 
   // Auto-advance every 4.5 seconds (paused if user is interacting/dragging)
   useEffect(() => {
@@ -281,7 +283,7 @@ export const PremiumDoctorFinder = ({ branchTitle = 'ECIL', branchId = 'ECIL' })
       setSlideIndex((prev) => prev + 1);
     }, 4500);
     return () => clearInterval(timer);
-  }, [N, isPaused, isDragging]);
+  }, [N, isPaused, isDragging, selectedBranch]);
 
   const handlePrev = () => {
     setTransition(true);
@@ -400,11 +402,48 @@ export const PremiumDoctorFinder = ({ branchTitle = 'ECIL', branchId = 'ECIL' })
           {/* Subtitle description */}
           <div className="max-w-md md:text-right">
             <p className="text-slate-500 text-sm md:text-base font-semibold leading-relaxed">
-              From General Practitioners To Top Specialists at Srikara {branchTitle}, Our Doctors Are Dedicated To Your Health.
+              From General Practitioners To Top Specialists at Srikara {isGlobal || allowBranchSwitch ? selectedBranch : branchTitle}, Our Doctors Are Dedicated To Your Health.
             </p>
           </div>
         </div>
       </div>
+
+      {/* Location selector for global pages */}
+      {(isGlobal || allowBranchSwitch) && (
+        <div className="max-w-[1400px] mx-auto px-8 relative z-10 mb-12 flex flex-wrap justify-center md:justify-start gap-3">
+          {['ECIL', 'Miyapur', 'Peerzadiguda', 'L.B. Nagar', 'Kompally', 'Lakdikapul', 'Rajahmundry', 'RTC X Roads', 'Vijayawada'].map((branchName) => {
+            const isSelected = selectedBranch.toLowerCase() === branchName.toLowerCase();
+            return (
+              <button
+                key={branchName}
+                onClick={() => {
+                  if (isSelected) return;
+                  setSelectedBranch(branchName);
+                  setTransition(false);
+                  const matchingDocs = ALL_DOCTORS.filter(doc => 
+                    normalize(doc.branch) === normalize(branchName)
+                  );
+                  const newN = matchingDocs.length;
+                  if (newN > 1) {
+                    setSlideIndex(newN + 1);
+                  } else {
+                    setSlideIndex(newN);
+                  }
+                  setTimeout(() => setTransition(true), 50);
+                }}
+                className={`px-6 py-3 rounded-full text-[10px] font-extrabold uppercase tracking-widest transition-all duration-300 border flex items-center gap-2 hover:scale-105 active:scale-95 shadow-sm ${
+                  isSelected
+                    ? 'bg-[#8B1A4A] border-[#8B1A4A] text-white shadow-md shadow-[#8B1A4A]/25'
+                    : 'bg-white/90 border-slate-200 text-slate-600 hover:border-[#8B1A4A]/30 hover:text-[#8B1A4A]'
+                }`}
+              >
+                <MapPin size={11} className={isSelected ? 'text-white' : 'text-slate-400'} />
+                {branchName}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Centered Interactive Slider viewport */}
       <div className="relative w-full overflow-hidden py-4 z-10">
@@ -509,7 +548,7 @@ export const PremiumDoctorFinder = ({ branchTitle = 'ECIL', branchId = 'ECIL' })
             </div>
           </div>
         </div>
-        <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.6em]">SRIKARA {branchTitle.toUpperCase()} • CLINICAL REGISTRY FY24</p>
+        <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.6em]">SRIKARA {(isGlobal || allowBranchSwitch ? selectedBranch : branchTitle).toUpperCase()} • CLINICAL REGISTRY FY24</p>
       </div>
     </section>
   );

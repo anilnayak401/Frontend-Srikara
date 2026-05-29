@@ -76,13 +76,13 @@ function DoctorCard({ doctor, onView, onBook }) {
       {/* 1. PORTRAIT PHOTO CONTAINER WITH INTERACTIVE FADED BURGUNDY BACKGROUND (TALLER SIZE) */}
       <div 
         ref={cardRef}
-        className="relative w-full h-[340px] rounded-[24px] overflow-hidden transition-all duration-500 bg-[#E8EDF2] group-hover:bg-gradient-to-b group-hover:from-[#F5E8EF] group-hover:to-[#E8B4C8]"
+        className="relative w-full h-[340px] rounded-[24px] overflow-hidden transition-all duration-500 bg-[#E8EDF2] group-hover:bg-gradient-to-b group-hover:from-[#F5E8EF] group-hover:to-[#E8B4C8] flex items-end justify-center"
         style={{ transformStyle: 'preserve-3d' }}
       >
         <img 
           src={doctor.image} 
           alt={doctor.name}
-          className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
+          className="w-auto max-w-[95%] h-[88%] object-contain object-bottom transition-transform duration-700 ease-out group-hover:scale-105"
           onError={e => { if (doctor.fallback) e.target.src = doctor.fallback }} 
         />
         
@@ -628,6 +628,7 @@ export function DoctorsPage() {
   const [activeFilter, setActiveFilter] = useState(initialSpecialty)
   const [activeBranch, setActiveBranch] = useState('all')
   const tabsRef = useRef(null)
+  const branchTabsRef = useRef(null)
 
   // Sync if query param changes
   useEffect(() => {
@@ -662,6 +663,10 @@ export function DoctorsPage() {
 
   const scrollTabs = (dir) => {
     if (tabsRef.current) tabsRef.current.scrollLeft += dir * 180
+  }
+
+  const scrollBranchTabs = (dir) => {
+    if (branchTabsRef.current) branchTabsRef.current.scrollLeft += dir * 180
   }
 
   return (
@@ -934,20 +939,40 @@ export function DoctorsPage() {
                 {/* 1. Branches Row (Uses logo themed Slate #2D3A4A) */}
                 <div className="flex flex-col gap-2.5 w-full items-center">
                   <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#2D3A4A] shrink-0">Filter Branch</span>
-                  <div className="flex flex-wrap gap-2 w-full justify-center">
-                    {branches.map(b => (
-                      <button 
-                        key={b} 
-                        onClick={() => { setActiveBranch(b); setActiveFilter('all') }}
-                        className={`relative px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 border hover:-translate-y-0.5 active:scale-95 ${
-                          activeBranch === b 
-                            ? 'text-white border-[#2D3A4A] bg-[#2D3A4A] shadow-sm hover:shadow-md' 
-                            : 'text-slate-700 border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'
-                        }`}
-                      >
-                        {b === 'all' ? 'All Locations' : b}
-                      </button>
-                    ))}
+                  <div className="flex items-center gap-2 w-full">
+                    <button 
+                      onClick={() => scrollBranchTabs(-1)} 
+                      className="flex-shrink-0 w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center hover:bg-slate-50 hover:border-slate-300 transition-all text-slate-600"
+                    >
+                      <ChevronLeft size={14} />
+                    </button>
+                    
+                    <div 
+                      ref={branchTabsRef} 
+                      className="flex gap-2 overflow-x-auto scrollbar-hide scroll-smooth flex-1 py-1"
+                      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                    >
+                      {branches.map(b => (
+                        <button 
+                          key={b} 
+                          onClick={() => { setActiveBranch(b); setActiveFilter('all') }}
+                          className={`relative flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 border hover:-translate-y-0.5 active:scale-95 ${
+                            activeBranch === b 
+                              ? 'text-white border-[#2D3A4A] bg-[#2D3A4A] shadow-sm hover:shadow-md' 
+                              : 'text-slate-700 border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'
+                          }`}
+                        >
+                          {b === 'all' ? 'All Locations' : b}
+                        </button>
+                      ))}
+                    </div>
+                    
+                    <button 
+                      onClick={() => scrollBranchTabs(1)} 
+                      className="flex-shrink-0 w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center hover:bg-slate-50 hover:border-slate-300 transition-all text-slate-600"
+                    >
+                      <ChevronRight size={14} />
+                    </button>
                   </div>
                 </div>
 

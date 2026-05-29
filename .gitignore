@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Temporary doctor image folders
+public/doctors/downloaded
+public/doctors/raw
+

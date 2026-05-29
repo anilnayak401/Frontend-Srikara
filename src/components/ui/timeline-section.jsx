@@ -1,6 +1,14 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { DIcons } from "dicons";
+import { Shapes, Send, Check, Repeat, Download } from "lucide-react";
+
+const LucideIcons = {
+  Shapes,
+  Send,
+  Check,
+  Repeat,
+  Download
+};
 
 /**
  * @name Timeline Container
@@ -22,7 +30,7 @@ export function TimelineEvent({
   icon,
   isLast = false,
 }) {
-  const Icon = DIcons[icon.name];
+  const Icon = LucideIcons[icon.name];
   return (
     <div className="group relative -m-2 flex gap-4 border border-transparent p-2">
       <div className="relative">

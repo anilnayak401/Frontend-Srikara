@@ -17,6 +17,7 @@ import {
 import { Footer } from '@/components/layout/Footer'
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
 import { AlphabetDiseaseSearch } from '@/components/sections/AlphabetDiseaseSearch'
+import { PremiumDoctorFinder } from '@/components/sections/PremiumDoctorFinder'
 
 // Brand palette
 const STYLES = `
@@ -326,6 +327,7 @@ export function ServicesPage() {
 
         </main>
 
+        <PremiumDoctorFinder isGlobal={true} />
         <Footer />
         <MobileBottomNav />
       </div>
