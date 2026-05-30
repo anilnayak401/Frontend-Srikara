@@ -13,7 +13,9 @@ import { DepartmentSearch } from '@/components/sections/DepartmentSearch'
 import { PremiumLocation } from '@/components/sections/PremiumLocation'
 import { AchievementsSection } from '@/components/sections/AchievementsSection'
 import { DarkCentersOfExcellence } from '@/components/sections/DarkCentersOfExcellence'
+import { DoctorsGroupBanner } from '@/components/sections/DoctorsGroupBanner'
 import { UnevenDepartmentCollage } from '@/components/sections/UnevenDepartmentCollage'
+
 
 const SPECIALTY_IMAGES = [
   'https://images.unsplash.com/photo-1576091160550-217359f42f8c?auto=format&fit=crop&q=80',
@@ -90,8 +92,12 @@ export function PeerzadigudaPage() {
           {/* ── 1.5 DEPARTMENT SEARCH ── */}
           <DepartmentSearch />
 
+          {/* ── DOCTORS TEAM BANNER ── */}
+          <DoctorsGroupBanner />
+
           {/* ── 2. CENTERS OF EXCELLENCE ── */}
           <DarkCentersOfExcellence />
+
 
           {/* ── 3. CLINICAL SEARCH ── */}
           <section className="bg-surface-container-low border-y border-[#1A202C]/5">

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Shield, Heart, Phone, MessageSquare, Mail, Share2, MapPin } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Shield, Heart, Phone, MessageSquare, Mail, Share2, MapPin, User, Calendar } from 'lucide-react';
 import { ALL_DOCTORS } from '@/data/doctors';
 
 const CAROUSEL_TRANSITION = {
@@ -189,40 +189,42 @@ function DoctorCard({ doctor, isActive, transitionEnabled, onClick, getHasDragge
         <div 
           onClick={(e) => e.stopPropagation()} 
           onDoubleClick={(e) => e.stopPropagation()} 
-          className="flex items-center justify-center gap-2 pt-0.5 w-full flex-shrink-0"
+          className="flex items-center justify-center gap-3 pt-1 w-full flex-shrink-0"
         >
-          {/* Primary Filled Call Button */}
+          {/* Solid Profile Button */}
+          <button
+            onClick={() => navigate(`/doctors/${doctor.slug}`)}
+            title="View Profile"
+            className="w-10 h-10 rounded-full bg-[#8B1A4A] text-white flex items-center justify-center hover:bg-[#72123B] transition-all duration-300 shadow-md shadow-[#8B1A4A]/30 hover:scale-110 flex-shrink-0"
+          >
+            <User size={16} />
+          </button>
+
+          {/* Outlined Call Button */}
           <button
             onClick={handleCall}
             title="Call Doctor"
-            className="w-7 h-7 rounded-full bg-[#8B1A4A] text-white flex items-center justify-center hover:bg-[#72123B] transition-all duration-300 shadow-md shadow-[#8B1A4A]/20 hover:scale-110 flex-shrink-0"
+            className="w-10 h-10 rounded-full border border-slate-200 text-slate-500 bg-white flex items-center justify-center hover:bg-[#8B1A4A]/5 hover:text-[#8B1A4A] hover:border-[#8B1A4A]/30 transition-all duration-300 hover:scale-110 flex-shrink-0"
           >
-            <Phone size={11} className="fill-white" />
+            <Phone size={16} />
           </button>
 
-          {/* Secondary Outline Buttons */}
+          {/* Outlined Book Button */}
           <button
-            onClick={handleWhatsapp}
-            title="Chat on WhatsApp"
-            className="w-7 h-7 rounded-full border border-slate-200 text-slate-600 flex items-center justify-center hover:bg-[#8B1A4A]/5 hover:text-[#8B1A4A] hover:border-[#8B1A4A]/30 transition-all duration-300 hover:scale-110 flex-shrink-0"
+            onClick={() => navigate(`/book/${doctor.slug}`)}
+            title="Book Appointment"
+            className="w-10 h-10 rounded-full border border-slate-200 text-slate-500 bg-white flex items-center justify-center hover:bg-[#8B1A4A]/5 hover:text-[#8B1A4A] hover:border-[#8B1A4A]/30 transition-all duration-300 hover:scale-110 flex-shrink-0"
           >
-            <MessageSquare size={11} />
+            <Calendar size={16} />
           </button>
 
-          <button
-            onClick={handleEmail}
-            title="Send Email"
-            className="w-7 h-7 rounded-full border border-slate-200 text-slate-600 flex items-center justify-center hover:bg-[#8B1A4A]/5 hover:text-[#8B1A4A] hover:border-[#8B1A4A]/30 transition-all duration-300 hover:scale-110 flex-shrink-0"
-          >
-            <Mail size={11} />
-          </button>
-
+          {/* Outlined Share Button */}
           <button
             onClick={handleShare}
             title="Share Profile"
-            className="w-7 h-7 rounded-full border border-slate-200 text-slate-600 flex items-center justify-center hover:bg-[#8B1A4A]/5 hover:text-[#8B1A4A] hover:border-[#8B1A4A]/30 transition-all duration-300 hover:scale-110 flex-shrink-0"
+            className="w-10 h-10 rounded-full border border-slate-200 text-slate-500 bg-white flex items-center justify-center hover:bg-[#8B1A4A]/5 hover:text-[#8B1A4A] hover:border-[#8B1A4A]/30 transition-all duration-300 hover:scale-110 flex-shrink-0"
           >
-            <Share2 size={11} />
+            <Share2 size={16} />
           </button>
         </div>
       </motion.div>

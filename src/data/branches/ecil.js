@@ -41,5 +41,5 @@ export const ecil = {
   branchLogo: 'https://i.ibb.co/jv5vnNF5/Whats-App-Image-2026-04-06-at-5-00-35-AM.jpg',
   googleRating: 4.7,
   googleReviewCount: '5.2K+',
-  googleMapEmbed: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3806.012!2d78.565378!3d17.474917!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb9da5dde7c717%3A0x27510f786b65e18!2sSrikara%20Hospitals%20-%20ECIL!5e0!3m2!1sen!2sin!4v1712361903632!5m2!1sen!2sin",
+  googleMapEmbed: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3806.012!2d78.565378!3d17.474917!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb9da5dde7c717%3A0x27510f786b65e18!2sSrikara%20Hospitals%20-%20ECIL!5e0!3m2!1sen!2sin!4v1712361938632!5m2!1sen!2sin",
 }

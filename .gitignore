@@ -27,3 +27,5 @@ dist-ssr
 public/doctors/downloaded
 public/doctors/raw
 
+# Anatomy frame sequence source directories
+public/anatomy_frames_*

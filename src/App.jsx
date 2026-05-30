@@ -20,6 +20,7 @@ const SpecialtyDetailPage = lazy(() => import('./pages/SpecialtyDetailPage').the
 const ServicesPage      = lazy(() => import('./pages/ServicesPage').then(m => ({ default: m.ServicesPage })))
 const AboutPage         = lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })))
 const PlaceholderPage   = lazy(() => import('./pages/PlaceholderPage').then(m => ({ default: m.PlaceholderPage })))
+const AnatomyExplorerPage = lazy(() => import('./pages/AnatomyExplorerPage').then(m => ({ default: m.AnatomyExplorerPage })))
 
 import { lbNagar, kompally, lakdikapul, ecil, miyapur, vijayawada, rajahmundry, rtcXRoads } from './data/branches'
 
@@ -60,6 +61,7 @@ function App() {
             <Route path="/doctors/:slug" element={<DoctorProfilePage />} />
             <Route path="/specialties"  element={<SpecialtiesPage />} />
             <Route path="/specialties/:specialtyId" element={<SpecialtyDetailPage />} />
+            <Route path="/anatomy-explorer" element={<AnatomyExplorerPage />} />
             <Route path="/services"     element={<ServicesPage />} />
             <Route path="/about"        element={<AboutPage />} />
             <Route path="/book"          element={<BookAppointmentPage />} />

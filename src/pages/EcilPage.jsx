@@ -9,12 +9,14 @@ import { AppointmentWidget } from '@/components/sections/AppointmentWidget'
 import { VideoHero } from '@/components/sections/VideoHero'
 import { PremiumDiseasesSearch } from '@/components/sections/PremiumDiseasesSearch'
 import { LuxuryCentersOfExcellence } from '@/components/sections/LuxuryCentersOfExcellence'
+import { DoctorsGroupBanner } from '@/components/sections/DoctorsGroupBanner'
 import { PremiumDoctorFinder } from '@/components/sections/PremiumDoctorFinder'
 import { PremiumCaseStudies } from '@/components/sections/PremiumCaseStudies'
 import { PremiumLocation } from '@/components/sections/PremiumLocation'
 import { DepartmentSearch } from '@/components/sections/DepartmentSearch'
 import { UnevenDepartmentCollage } from '@/components/sections/UnevenDepartmentCollage'
 import { ecil as branch } from '@/data/branches/ecil'
+
 
 export function EcilPage() {
   const navigate = useNavigate()
@@ -65,9 +67,12 @@ export function EcilPage() {
 
           {/* 1.5 DEPARTMENT SEARCH */}
           <DepartmentSearch />
+          {/* ── DOCTORS TEAM BANNER ── */}
+          <DoctorsGroupBanner />
 
           {/* 2. CENTERS OF EXCELLENCE */}
           <LuxuryCentersOfExcellence />
+
 
           {/* 3. CLINICAL ENCYCLOPEDIA */}
           <section className="pt-12 pb-0 px-8">

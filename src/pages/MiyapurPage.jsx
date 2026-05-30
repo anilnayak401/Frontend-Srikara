@@ -8,12 +8,14 @@ import { AppointmentWidget } from '@/components/sections/AppointmentWidget'
 import { VideoHero } from '@/components/sections/VideoHero'
 import { MiyapurDiseasesSearch } from '@/components/sections/MiyapurDiseasesSearch'
 import { DarkCentersOfExcellence } from '@/components/sections/DarkCentersOfExcellence'
+import { DoctorsGroupBanner } from '@/components/sections/DoctorsGroupBanner'
 import { DepartmentSearch } from '@/components/sections/DepartmentSearch'
 import { PremiumDoctorFinder } from '@/components/sections/PremiumDoctorFinder'
 import { PremiumCaseStudies } from '@/components/sections/PremiumCaseStudies'
 import { PremiumLocation } from '@/components/sections/PremiumLocation'
 import { UnevenDepartmentCollage } from '@/components/sections/UnevenDepartmentCollage'
 import { miyapur as branch } from '@/data/branches/miyapur'
+
 
 export function MiyapurPage() {
   const navigate = useNavigate()
@@ -64,9 +66,12 @@ export function MiyapurPage() {
 
           {/* 1.5 DEPARTMENT SEARCH */}
           <DepartmentSearch />
+          {/* ── DOCTORS TEAM BANNER ── */}
+          <DoctorsGroupBanner />
 
           {/* 2. DARK CENTERS OF EXCELLENCE */}
           <DarkCentersOfExcellence />
+
 
           {/* 3. DISEASE SEARCH */}
           <section className="pt-12 pb-0 px-8">

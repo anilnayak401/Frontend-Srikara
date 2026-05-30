@@ -557,6 +557,40 @@ export function SpecialtiesPage() {
             </div>
           </div>
 
+          {/* Interactive 3D Anatomy Entry Banner */}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
+            className="mb-20 relative overflow-hidden rounded-[32px] border border-[#8B1A4A]/10 bg-gradient-to-br from-[#FFF9FA] via-white to-[#EBF3F5] p-8 md:p-12 shadow-[0_15px_40px_rgba(139,26,74,0.03)] flex flex-col lg:flex-row items-center justify-between gap-8"
+          >
+            {/* Glowing ambient lights */}
+            <div className="absolute top-0 right-0 w-[300px] h-[300px] rounded-full blur-[80px] bg-[#8B1A4A]/5 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-[250px] h-[250px] rounded-full blur-[70px] bg-sky-500/5 pointer-events-none" />
+
+            <div className="relative z-10 max-w-3xl text-left flex flex-col items-start gap-4">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest bg-[#8B1A4A]/10 text-[#8B1A4A] border border-[#8B1A4A]/15 shadow-sm">
+                <Sparkles size={11} className="animate-pulse" /> New Interactive Simulator
+              </span>
+              <h2 className="font-headline text-3xl md:text-4xl font-black uppercase tracking-tight text-slate-800 leading-tight">
+                Interactive 3D Anatomy
+                <br />
+                <span className="text-[#8B1A4A]">& Specialty Explorer</span>
+              </h2>
+              <p className="text-xs md:text-sm text-slate-500 font-medium leading-relaxed max-w-xl">
+                Embark on an immersive, scroll-controlled visual journey through the human body. Rotate high-definition 3D organs, pinpoint clinical landmarks, and see how Srikara’s medical experts deliver world-class surgical and therapeutic precision.
+              </p>
+            </div>
+            
+            <button 
+              onClick={() => navigate('/anatomy-explorer')}
+              className="relative z-10 shrink-0 h-[58px] px-8 bg-[#8B1A4A] hover:bg-[#2D3A4A] text-white rounded-full font-bold uppercase tracking-[0.1em] text-[11px] flex items-center gap-3 transition-all duration-300 shadow-[0_10px_25px_rgba(139,26,74,0.2)] hover:shadow-[0_15px_30px_rgba(45,58,74,0.25)] group hover:scale-[1.02]"
+            >
+              Launch 3D Explorer
+              <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+            </button>
+          </motion.div>
+
           {/* Department grid */}
           <div className="space-y-24">
             <AnimatePresence mode="wait">

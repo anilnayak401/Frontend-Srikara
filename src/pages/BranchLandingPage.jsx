@@ -10,6 +10,7 @@ import { VideoHero } from '@/components/sections/VideoHero'
 import { AlphabetDiseaseSearch } from '@/components/sections/AlphabetDiseaseSearch'
 import { PremiumDiseasesSearch } from '@/components/sections/PremiumDiseasesSearch'
 import { LuxuryCentersOfExcellence } from '@/components/sections/LuxuryCentersOfExcellence'
+import { DoctorsGroupBanner } from '@/components/sections/DoctorsGroupBanner'
 import { PremiumDoctorFinder } from '@/components/sections/PremiumDoctorFinder'
 import { PremiumCaseStudies } from '@/components/sections/PremiumCaseStudies'
 import { PremiumLocation } from '@/components/sections/PremiumLocation'
@@ -87,9 +88,12 @@ export function BranchLandingPage({ branch }) {
               </div>
             </div>
           </VideoHero>
+          {/* ── DOCTORS TEAM BANNER ── */}
+          <DoctorsGroupBanner />
 
           {/* ── 2. CENTERS OF EXCELLENCE (Luxury Gallery) ── */}
           <LuxuryCentersOfExcellence />
+
 
           {/* ── 3. Find by Alphabet (Top Placement) ── */}
           <section className="pt-12 pb-16 px-8">
