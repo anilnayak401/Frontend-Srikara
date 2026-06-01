@@ -18,6 +18,7 @@ const CLINICAL_STORYLINE = [
     title: 'NEURO-ENDOVASCULAR PRECISION',
     accentColor: '#7c3aed', // Purple
     desc: 'Unlocking the complexities of the human brain. Srikara’s Stroke and Neuro-Endovascular clinic delivers ultra-rapid micro-surgical interventions for brain tumors, spinal corrections, and critical neurological anomalies, restoring vital functions with microscopic accuracy.',
+    shortDesc: 'Srikara’s Stroke and Neuro-Endovascular clinic delivers ultra-rapid micro-surgical interventions for brain tumors, spinal corrections, and neurological anomalies with microscopic accuracy.',
     stats: [
       { label: 'Critical Recoveries', value: '98.6%' },
       { label: 'Specialists', value: '14+' },
@@ -29,27 +30,12 @@ const CLINICAL_STORYLINE = [
     ]
   },
   {
-    specialtyId: 'cardio',
-    name: 'Cardiology',
-    title: 'CARDIOVASCULAR LIFELINES',
-    accentColor: '#dc2626', // Red
-    desc: 'Engineering the rhythm of life. Srikara’s Cardiovascular Excellence Center pioneers beating-heart CABG, robotic valve replacements, structural heart repairs, and round-the-clock primary angioplasties. We ensure cardiac survival through cutting-edge diagnostics.',
-    stats: [
-      { label: 'Successful Procedures', value: '15,000+' },
-      { label: 'Cardiac Surgeons', value: '18+' },
-      { label: 'Angioplasty Success', value: '99.4%' }
-    ],
-    hotspots: [
-      { top: '48%', left: '52%', label: 'Left Ventricle (Pumping Chamber)' },
-      { top: '41%', left: '48%', label: 'Aorta (Main Blood Highway)' }
-    ]
-  },
-  {
     specialtyId: 'pulmo',
     name: 'Pulmonology',
     title: 'ADVANCED RESPIRATORY CARE',
     accentColor: '#0d9488', // Teal
     desc: 'Breathing vitality back into compromised lungs. From interstitial lung diseases to complex respiratory failure, Srikara’s Pulmonology team deploys advanced endobronchial ultrasound (EBUS), rigid bronchoscopy, and customized lung rehabilitation protocols.',
+    shortDesc: 'From interstitial lung diseases to complex respiratory failure, our team deploys advanced endobronchial ultrasound and customized lung rehabilitation.',
     stats: [
       { label: 'Lungs Treated', value: '12,000+' },
       { label: 'Surgical Success', value: '97.8%' },
@@ -61,11 +47,29 @@ const CLINICAL_STORYLINE = [
     ]
   },
   {
+    specialtyId: 'cardio',
+    name: 'Cardiology',
+    title: 'CARDIOVASCULAR LIFELINES',
+    accentColor: '#dc2626', // Red
+    desc: 'Engineering the rhythm of life. Srikara’s Cardiovascular Excellence Center pioneers beating-heart CABG, robotic valve replacements, structural heart repairs, and round-the-clock primary angioplasties. We ensure cardiac survival through cutting-edge diagnostics.',
+    shortDesc: 'Our Cardiovascular Excellence Center pioneers beating-heart CABG, robotic valve replacements, structural heart repairs, and round-the-clock primary angioplasties.',
+    stats: [
+      { label: 'Successful Procedures', value: '15,000+' },
+      { label: 'Cardiac Surgeons', value: '18+' },
+      { label: 'Angioplasty Success', value: '99.4%' }
+    ],
+    hotspots: [
+      { top: '48%', left: '52%', label: 'Left Ventricle (Pumping Chamber)' },
+      { top: '41%', left: '48%', label: 'Aorta (Main Blood Highway)' }
+    ]
+  },
+  {
     specialtyId: 'physician',
     name: 'Gastroenterology',
     title: 'GASTROINTESTINAL EXCELLENCE',
     accentColor: '#2563eb', // Blue
     desc: 'Nurturing the core of digestive vitality. Our Advanced GI Sciences team provides cutting-edge diagnostic and therapeutic endoscopy, ERCP, and comprehensive hepatobiliary interventions, ensuring early detection and transplant management.',
+    shortDesc: 'Our Advanced GI Sciences team provides cutting-edge diagnostic and therapeutic endoscopy, ERCP, and comprehensive hepatobiliary interventions.',
     stats: [
       { label: 'Endoscopies Run', value: '22,000+' },
       { label: 'GI Specialists', value: '15+' },
@@ -82,6 +86,7 @@ const CLINICAL_STORYLINE = [
     title: 'RENAL CARE & DIALYSIS',
     accentColor: '#0891b2', // Cyan
     desc: 'Pioneering kidney resilience and longevity. Srikara’s Renal Sciences Center provides advanced hemodialysis, peritoneal dialysis, and clinical nephrology programs, coupled with an active, highly successful kidney transplant program.',
+    shortDesc: 'Srikara’s Renal Sciences Center provides advanced dialysis programs, clinical nephrology, and an active, highly successful kidney transplant program.',
     stats: [
       { label: 'Transplants Completed', value: '350+' },
       { label: 'Dialysis Machines', value: '45+' },
@@ -98,6 +103,7 @@ const CLINICAL_STORYLINE = [
     title: 'ROBOTIC JOINT REPLACEMENT',
     accentColor: '#1a56db', // Indigo/Blue
     desc: 'Reconstructing mobility, restoring freedom. As a national leader in Orthopaedics, Srikara utilizes high-precision robotic joint replacements (TKR/THR), advanced sports injury reconstruction, and rapid recovery clinical pathways.',
+    shortDesc: 'As a national leader in Orthopaedics, Srikara utilizes high-precision robotic joint replacements and rapid recovery clinical pathways.',
     stats: [
       { label: 'Robotic Replacements', value: '25,000+' },
       { label: 'Joint Surgeons', value: '25+' },
@@ -117,9 +123,74 @@ export function AnatomyExplorerPage() {
   const [scrollProgress, setScrollProgress] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [activeHotspot, setActiveHotspot] = useState(null)
+  const [videoSrc, setVideoSrc] = useState(null)
+  const [downloadProgress, setDownloadProgress] = useState(0)
   
   const targetTimeRef = useRef(0)
   const currentTimeRef = useRef(0)
+
+  // Pre-fetch the 3D video as a blob to enable 100% butter-smooth local scroll scrubbing
+  useEffect(() => {
+    let active = true
+    const videoUrl = assetUrl('anatomy.mp4')
+    let objectUrl = null
+
+    const prefetchVideo = async () => {
+      try {
+        const response = await fetch(videoUrl)
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
+        
+        const contentLength = response.headers.get('content-length')
+        const totalBytes = contentLength ? parseInt(contentLength, 10) : 0
+        
+        if (totalBytes === 0) {
+          const blob = await response.blob()
+          if (active) {
+            objectUrl = URL.createObjectURL(blob)
+            setVideoSrc(objectUrl)
+          }
+          return
+        }
+
+        const reader = response.body.getReader()
+        let loadedBytes = 0
+        const chunks = []
+
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          
+          if (value) {
+            chunks.push(value)
+            loadedBytes += value.length
+            if (active) {
+              setDownloadProgress(Math.min(Math.round((loadedBytes / totalBytes) * 100), 100))
+            }
+          }
+        }
+
+        const blob = new Blob(chunks, { type: 'video/mp4' })
+        if (active) {
+          objectUrl = URL.createObjectURL(blob)
+          setVideoSrc(objectUrl)
+        }
+      } catch (err) {
+        console.error('Failed to pre-fetch video blob, falling back to direct streaming:', err)
+        if (active) {
+          setVideoSrc(videoUrl)
+        }
+      }
+    }
+
+    prefetchVideo()
+
+    return () => {
+      active = false
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl)
+      }
+    }
+  }, [])
 
   // Track page scroll to drive the background video
   useEffect(() => {
@@ -240,9 +311,11 @@ export function AnatomyExplorerPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4 }}
-                className="text-xs font-bold uppercase tracking-[0.25em] text-[#8B1A4A]/60"
+                className="text-xs font-bold uppercase tracking-[0.25em] text-[#8B1A4A]"
               >
-                Loading 1,440 Anatomy Frames...
+                {downloadProgress > 0 && downloadProgress < 100 
+                  ? `PRE-LOADING ANATOMY ENGINES: ${downloadProgress}%`
+                  : 'Booting 3D Anatomy Simulator...'}
               </motion.p>
             </motion.div>
           )}
@@ -266,48 +339,50 @@ export function AnatomyExplorerPage() {
             {/* Pinned background video frame player, aligned below header with contrast filters to eliminate compression borders */}
             <video
               ref={videoRef}
-              src={assetUrl('anatomy.mp4')}
+              src={videoSrc}
               muted
               playsInline
               preload="auto"
               onLoadedMetadata={handleVideoLoaded}
               onCanPlayThrough={handleVideoLoaded}
-              className="absolute top-[64px] bottom-0 left-0 right-0 w-full h-[calc(100vh-64px)] object-contain mix-blend-multiply transition-opacity duration-1000 z-0 opacity-100 pointer-events-none"
+              className="absolute top-[60px] lg:top-[64px] bottom-auto lg:bottom-0 left-0 right-0 w-full h-[75vh] lg:h-[calc(100vh-64px)] object-contain object-[center_15%] lg:object-contain mix-blend-multiply transition-opacity duration-1000 z-0 opacity-100 pointer-events-none"
               style={{ filter: 'contrast(1.04) brightness(1.03)' }}
             />
 
 
             {/* HUD Dashboard Overlays (HUD elements: back button, scroll progress) */}
-            <div className="absolute inset-x-8 top-28 z-30 flex justify-between items-start pointer-events-auto max-w-[1400px] mx-auto">
+            <div className="absolute inset-x-4 lg:inset-x-8 top-20 lg:top-28 z-30 flex justify-between items-start pointer-events-auto max-w-[1400px] mx-auto">
               {/* Sleek Floating Back Button */}
               <button
-                onClick={() => navigate('/specialties')}
-                className="flex items-center gap-2 px-4 py-2 bg-white/70 hover:bg-slate-900 border border-slate-200/80 hover:border-slate-900 text-slate-700 hover:text-white rounded-full text-[10px] font-black uppercase tracking-widest transition-all duration-300 shadow-sm"
+                onClick={() => navigate('/')}
+                className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-white/80 hover:bg-slate-900 border border-slate-200/80 hover:border-slate-900 text-slate-700 hover:text-white rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all duration-300 shadow-sm"
               >
-                <ArrowLeft size={12} /> Back to Specialties
+                <ArrowLeft size={11} /> 
+                <span className="hidden sm:inline">Back to Home</span>
+                <span className="sm:hidden">Home</span>
               </button>
 
               {/* HUD Frame / Scrub Indicator */}
-              <div className="text-right flex flex-col items-end gap-1">
-                <span className="text-[10px] font-black uppercase tracking-widest text-[#8B1A4A]">Srikara Clinical Engine</span>
-                <span className="font-mono text-[11px] font-bold text-slate-400 bg-slate-100/80 px-2.5 py-1 rounded-md border border-slate-200/50">
+              <div className="text-right flex flex-col items-end gap-0.5 sm:gap-1">
+                <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-[#8B1A4A]">Srikara Clinical Engine</span>
+                <span className="font-mono text-[9px] sm:text-[11px] font-bold text-slate-400 bg-slate-100/80 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md border border-slate-200/50">
                   FRAME: {String(Math.min(Math.floor(scrollProgress * 1440), 1440)).padStart(4, '0')} / SEC: {String(Math.min(Math.floor(targetTime), 48)).padStart(2, '0')}.0
                 </span>
               </div>
             </div>
 
-            {/* Cinematic Scrollytelling Narrative Text Layers (Fixed Left/Center overlay) */}
-            <div className="absolute inset-y-0 left-10 md:left-24 lg:left-32 z-30 flex flex-col justify-center pointer-events-none max-w-[1400px] mx-auto w-full pt-20">
-              <div className="w-full max-w-xl text-left pointer-events-auto pr-8">
+            {/* Cinematic Scrollytelling Narrative Text Layers (Fixed Left/Center overlay on desktop, glassmorphic bottom sheet on mobile) */}
+            <div className="absolute inset-x-0 bottom-24 lg:inset-x-auto lg:bottom-auto lg:inset-y-0 lg:left-32 lg:w-auto lg:justify-start lg:px-0 lg:pt-[190px] z-30 flex flex-col justify-end pointer-events-none max-w-[1400px] mx-auto w-full px-4 sm:px-6">
+              <div className="w-full max-w-xl text-left pointer-events-auto lg:pr-8 bg-white/85 backdrop-blur-md border border-slate-200/50 p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] shadow-xl lg:bg-transparent lg:backdrop-blur-none lg:border-none lg:p-0 lg:rounded-none lg:shadow-none transition-all duration-500">
                 
                 {/* Visual Specialty Vertical Indicator (HUD style) */}
-                <div className="flex items-center gap-3 mb-6">
+                <div className="flex items-center gap-2 mb-2 sm:mb-4 lg:mb-6">
                   <div 
                     className="w-1.5 h-1.5 rounded-full animate-ping"
                     style={{ backgroundColor: activeData.accentColor }}
                   />
                   <span 
-                    className="text-[10px] font-black uppercase tracking-[0.25em]"
+                    className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.20em] sm:tracking-[0.25em]"
                     style={{ color: activeData.accentColor }}
                   >
                     Medical Specialty {activeIndex + 1} of {CLINICAL_STORYLINE.length}
@@ -317,33 +392,34 @@ export function AnatomyExplorerPage() {
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeIndex}
-                    initial={{ opacity: 0, y: 30, filter: 'blur(8px)', letterSpacing: '0.01em' }}
+                    initial={{ opacity: 0, y: 15, filter: 'blur(4px)', letterSpacing: '0.01em' }}
                     animate={{ opacity: 1, y: 0, filter: 'blur(0px)', letterSpacing: '0.04em' }}
-                    exit={{ opacity: 0, y: -30, filter: 'blur(8px)' }}
-                    transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-                    className="flex flex-col gap-5"
+                    exit={{ opacity: 0, y: -15, filter: 'blur(4px)' }}
+                    transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                    className="flex flex-col gap-2 sm:gap-4 lg:gap-5"
                   >
                     {/* Cinematic Accent-colored Headline */}
-                    <h1 className="font-headline font-black text-[32px] md:text-[40px] leading-tight text-slate-900 uppercase tracking-tight">
+                    <h1 className="font-headline font-black text-base sm:text-2xl md:text-3xl lg:text-[40px] leading-tight text-slate-900 uppercase tracking-tight">
                       {activeData.title}
                     </h1>
 
-                    {/* Clean pure-text narrative - absolutely no background cards */}
-                    <p className="text-[13px] md:text-[14px] text-slate-500 font-medium leading-[1.8] max-w-lg mb-4">
-                      {activeData.desc}
+                    {/* Clean pure-text narrative - absolutely no background cards on desktop, responsive spacing */}
+                    <p className="text-[10px] sm:text-xs md:text-sm text-slate-500 font-medium leading-relaxed max-w-lg mb-1 sm:mb-3 lg:mb-4">
+                      <span className="lg:hidden">{activeData.shortDesc}</span>
+                      <span className="hidden lg:inline">{activeData.desc}</span>
                     </p>
 
                     {/* Stats details, clean direct labels */}
-                    <div className="grid grid-cols-3 gap-6 pt-4 border-t border-slate-100 max-w-md">
+                    <div className="grid grid-cols-3 gap-1 sm:gap-4 lg:gap-6 pt-1.5 sm:pt-3 lg:pt-4 border-t border-slate-100 max-w-md">
                       {activeData.stats.map((stat, i) => (
                         <div key={i} className="flex flex-col">
                           <span 
-                            className="font-headline font-black text-2xl leading-none transition-colors duration-300"
+                            className="font-headline font-black text-xs sm:text-lg md:text-2xl leading-none transition-colors duration-300"
                             style={{ color: activeData.accentColor }}
                           >
                             {stat.value}
                           </span>
-                          <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 mt-2 leading-tight">
+                          <span className="text-[6.5px] sm:text-[9px] font-black uppercase tracking-wider sm:tracking-widest text-slate-400 mt-0.5 sm:mt-2 leading-tight">
                             {stat.label}
                           </span>
                         </div>
@@ -351,13 +427,13 @@ export function AnatomyExplorerPage() {
                     </div>
 
                     {/* Interactive CTAs linked to corresponding specialists */}
-                    <div className="flex flex-wrap items-center gap-4 mt-8">
+                    <div className="flex items-center gap-2 sm:gap-4 mt-2 sm:mt-6 lg:mt-8 w-full sm:w-auto">
                       <button
                         onClick={() => navigate(`/doctors?specialty=${activeData.specialtyId}`)}
-                        className="h-[48px] px-8 text-white rounded-full font-bold uppercase tracking-[0.1em] text-[11px] transition-all duration-300 shadow-md hover:scale-[1.02]"
+                        className="flex-1 sm:flex-initial h-[34px] sm:h-[44px] lg:h-[48px] px-2 sm:px-8 text-white rounded-full font-bold uppercase tracking-[0.05em] sm:tracking-[0.1em] text-[8.5px] sm:text-[11px] transition-all duration-300 shadow-md hover:scale-[1.02] flex items-center justify-center"
                         style={{ 
                           backgroundColor: activeData.accentColor,
-                          boxShadow: `0 10px 20px -5px ${activeData.accentColor}50`
+                          boxShadow: `0 8px 16px -4px ${activeData.accentColor}40`
                         }}
                       >
                         Consult Specialists
@@ -365,9 +441,19 @@ export function AnatomyExplorerPage() {
                       
                       <button
                         onClick={() => navigate('/book')}
-                        className="h-[48px] px-8 bg-slate-900 hover:bg-slate-800 text-white rounded-full font-bold uppercase tracking-[0.1em] text-[11px] transition-all duration-300 hover:scale-[1.02] shadow-md"
+                        className="flex-1 sm:flex-initial h-[34px] sm:h-[44px] lg:h-[48px] px-2 sm:px-8 bg-slate-900 hover:bg-slate-800 text-white rounded-full font-bold uppercase tracking-[0.05em] sm:tracking-[0.1em] text-[8.5px] sm:text-[11px] transition-all duration-300 hover:scale-[1.02] shadow-md flex items-center justify-center"
                       >
                         Book Appointment
+                      </button>
+                    </div>
+
+                    {/* Quick Access Link to Manual Specialties Grid */}
+                    <div className="mt-2.5 flex items-center justify-center sm:justify-start">
+                      <button
+                        onClick={() => navigate('/specialties-list')}
+                        className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-[#8B1A4A]/80 hover:text-[#8B1A4A] underline decoration-[#8B1A4A]/30 transition-all pointer-events-auto flex items-center gap-1"
+                      >
+                        <span>View Text-Only Specialties Grid →</span>
                       </button>
                     </div>
                   </motion.div>
@@ -375,8 +461,8 @@ export function AnatomyExplorerPage() {
               </div>
             </div>
 
-            {/* Vertical HUD Dot Progress Indicator (Right Side margin) */}
-            <div className="absolute right-12 top-1/2 -translate-y-1/2 z-30 flex flex-col gap-6 items-center pointer-events-auto">
+            {/* Vertical HUD Dot Progress Indicator (Right Side margin - Hidden on mobile) */}
+            <div className="hidden lg:flex absolute right-12 top-1/2 -translate-y-1/2 z-30 flex flex-col gap-6 items-center pointer-events-auto">
               <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 rotate-90 origin-center mb-8">
                 Scroll Progress
               </span>
@@ -425,13 +511,13 @@ export function AnatomyExplorerPage() {
               </div>
             </div>
 
-            {/* Clean bottom HUD Chevron scroll indicator */}
+            {/* Clean bottom HUD Chevron scroll indicator (Adjusted position on mobile to prevent overlapping - Hidden on mobile) */}
             {scrollProgress <= 0.05 && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ repeat: Infinity, repeatType: "reverse", duration: 1.5 }}
-                className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-1.5 text-slate-400 pointer-events-none"
+                className="hidden lg:flex absolute bottom-[220px] lg:bottom-8 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-1.5 text-slate-400 pointer-events-none"
               >
                 <span className="text-[9px] font-black uppercase tracking-widest">Scroll to Rotate Anatomy</span>
                 <ChevronDown size={14} className="text-[#8B1A4A] stroke-[3]" />
@@ -486,7 +572,7 @@ export function AnatomyExplorerPage() {
                   Schedule Consultation
                 </button>
                 <button
-                  onClick={() => navigate('/specialties')}
+                  onClick={() => navigate('/specialties-list')}
                   className="h-[58px] px-12 bg-white border border-[#8B1A4A]/20 hover:border-[#8B1A4A]/40 text-[#4A4A4A] hover:text-[#1A202C] rounded-full font-bold uppercase tracking-[0.1em] text-[12px] hover:scale-[1.02] transition-all duration-300"
                 >
                   Explore Specialties Grid

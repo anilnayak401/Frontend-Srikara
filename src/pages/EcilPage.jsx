@@ -8,7 +8,6 @@ import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
 import { AppointmentWidget } from '@/components/sections/AppointmentWidget'
 import { VideoHero } from '@/components/sections/VideoHero'
 import { PremiumDiseasesSearch } from '@/components/sections/PremiumDiseasesSearch'
-import { LuxuryCentersOfExcellence } from '@/components/sections/LuxuryCentersOfExcellence'
 import { DoctorsGroupBanner } from '@/components/sections/DoctorsGroupBanner'
 import { PremiumDoctorFinder } from '@/components/sections/PremiumDoctorFinder'
 import { PremiumCaseStudies } from '@/components/sections/PremiumCaseStudies'
@@ -70,8 +69,8 @@ export function EcilPage() {
           {/* ── DOCTORS TEAM BANNER ── */}
           <DoctorsGroupBanner />
 
-          {/* 2. CENTERS OF EXCELLENCE */}
-          <LuxuryCentersOfExcellence />
+          {/* 2. CENTERS OF EXCELLENCE (Uneven Department Collage) */}
+          <UnevenDepartmentCollage />
 
 
           {/* 3. CLINICAL ENCYCLOPEDIA */}
@@ -80,10 +79,6 @@ export function EcilPage() {
               <PremiumDiseasesSearch />
             </div>
           </section>
-
-
-          {/* Centers of Excellence Asymmetric Collage */}
-          <UnevenDepartmentCollage />
 
           {/* 5. PREMIUM DOCTOR FINDER */}
           <PremiumDoctorFinder branchTitle={branch.title} branchId={branch.title} />

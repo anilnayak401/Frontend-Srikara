@@ -7,7 +7,6 @@ import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
 import { AppointmentWidget } from '@/components/sections/AppointmentWidget'
 import { VideoHero } from '@/components/sections/VideoHero'
 import { MiyapurDiseasesSearch } from '@/components/sections/MiyapurDiseasesSearch'
-import { DarkCentersOfExcellence } from '@/components/sections/DarkCentersOfExcellence'
 import { DoctorsGroupBanner } from '@/components/sections/DoctorsGroupBanner'
 import { DepartmentSearch } from '@/components/sections/DepartmentSearch'
 import { PremiumDoctorFinder } from '@/components/sections/PremiumDoctorFinder'
@@ -69,8 +68,8 @@ export function MiyapurPage() {
           {/* ── DOCTORS TEAM BANNER ── */}
           <DoctorsGroupBanner />
 
-          {/* 2. DARK CENTERS OF EXCELLENCE */}
-          <DarkCentersOfExcellence />
+          {/* 2. CENTERS OF EXCELLENCE (Uneven Department Collage) */}
+          <UnevenDepartmentCollage />
 
 
           {/* 3. DISEASE SEARCH */}
@@ -79,9 +78,6 @@ export function MiyapurPage() {
               <MiyapurDiseasesSearch />
             </div>
           </section>
-
-          {/* Centers of Excellence Asymmetric Collage */}
-          <UnevenDepartmentCollage />
 
           {/* 5. DOCTOR FINDER */}
           <PremiumDoctorFinder branchTitle={branch.title} branchId={branch.title} />

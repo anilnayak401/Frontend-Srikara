@@ -89,15 +89,28 @@ export function StickyNavbar({ currentBranch }) {
             Home
           </NavLink>
 
-          {/* Specialties dropdown */}
-          <div ref={specRef} className="relative h-full flex items-center">
-            <DropButton
-              label="Specialties"
-              isOpen={specOpen}
-              active={isActive('/specialties')}
-              isWhite={isWhite}
+          {/* Specialties dropdown split (Text goes directly to 3D page, Chevron toggles dropdown menu) */}
+          <div ref={specRef} className="relative h-full flex items-center group/spec">
+            <Link
+              to="/specialties"
+              className="h-full flex items-center pl-4 pr-1 text-[13.5px] font-semibold uppercase tracking-wide transition-colors duration-200"
+              style={{ color: specOpen || isActive('/specialties') ? ACCENT : (isWhite ? '#222' : '#fff') }}
+            >
+              Specialties
+            </Link>
+            <button
               onClick={() => setSpecOpen(p => !p)}
-            />
+              className="h-full flex items-center pl-1 pr-4 outline-none transition-colors duration-200"
+              aria-label="Toggle Specialties Dropdown"
+            >
+              <ChevronDown size={13}
+                className={`transition-transform duration-300 ${specOpen ? 'rotate-180' : ''}`}
+                style={{ color: specOpen || isActive('/specialties') ? ACCENT : (isWhite ? '#888' : 'rgba(255,255,255,0.6)') }} />
+            </button>
+            <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[2.5px] rounded-full transition-all duration-300"
+              style={{ backgroundColor: ACCENT, width: (specOpen || isActive('/specialties')) ? '65%' : '0%' }} />
+            <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[2.5px] rounded-full w-0 group-hover/spec:w-[65%] transition-all duration-300"
+              style={{ backgroundColor: ACCENT, opacity: 0.55 }} />
             <AnimatePresence>
               {specOpen && (
                 <motion.div
@@ -108,11 +121,12 @@ export function StickyNavbar({ currentBranch }) {
                   className="absolute top-[calc(100%+4px)] left-1/2 -translate-x-1/2 w-[220px] bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.14)] border border-black/5 overflow-hidden z-50 py-2"
                 >
                   {[
-                    { to: '/specialties', label: 'All Specialties' },
-                    { to: '/specialties?f=SURGICAL', label: 'Orthopaedics & Robotic' },
-                    { to: '/specialties?f=MEDICAL', label: 'Cardiology & Neurology' },
-                    { to: '/specialties?f=WOMEN_CHILD', label: 'Women & Child Care' },
-                    { to: '/specialties?f=EMERGENCY', label: 'Emergency & ICU' },
+                    { to: '/specialties', label: '3D Anatomy Explorer' },
+                    { to: '/specialties-list', label: 'All Specialties List' },
+                    { to: '/specialties-list?f=SURGICAL', label: 'Orthopaedics & Robotic' },
+                    { to: '/specialties-list?f=MEDICAL', label: 'Cardiology & Neurology' },
+                    { to: '/specialties-list?f=WOMEN_CHILD', label: 'Women & Child Care' },
+                    { to: '/specialties-list?f=EMERGENCY', label: 'Emergency & ICU' },
                   ].map(item => (
                     <Link key={item.to} to={item.to} onClick={() => setSpecOpen(false)}
                       className="flex items-center gap-3 px-4 py-3 text-[13px] font-semibold text-gray-700 hover:text-[#8B1A4A] hover:bg-[#8B1A4A]/5 transition-all">
@@ -316,7 +330,8 @@ export function StickyNavbar({ currentBranch }) {
                   { label: 'Home', to: '/branches/ecil' },
                   { label: 'Find Hospitals', to: '/branches' },
                   { label: 'Doctors', to: '/doctors' },
-                  { label: 'Specialties', to: '/specialties' },
+                  { label: 'Specialties (3D)', to: '/specialties' },
+                  { label: 'Specialties List', to: '/specialties-list' },
                   { label: 'Discover Srikara', to: '/about' },
                   { label: 'Blogs', to: '/blogs' },
                 ].map(lnk => (

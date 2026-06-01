@@ -12,10 +12,8 @@ import { PremiumDoctorFinder } from '@/components/sections/PremiumDoctorFinder'
 import { DepartmentSearch } from '@/components/sections/DepartmentSearch'
 import { PremiumLocation } from '@/components/sections/PremiumLocation'
 import { AchievementsSection } from '@/components/sections/AchievementsSection'
-import { DarkCentersOfExcellence } from '@/components/sections/DarkCentersOfExcellence'
 import { DoctorsGroupBanner } from '@/components/sections/DoctorsGroupBanner'
 import { UnevenDepartmentCollage } from '@/components/sections/UnevenDepartmentCollage'
-
 
 const SPECIALTY_IMAGES = [
   'https://images.unsplash.com/photo-1576091160550-217359f42f8c?auto=format&fit=crop&q=80',
@@ -95,8 +93,8 @@ export function PeerzadigudaPage() {
           {/* ── DOCTORS TEAM BANNER ── */}
           <DoctorsGroupBanner />
 
-          {/* ── 2. CENTERS OF EXCELLENCE ── */}
-          <DarkCentersOfExcellence />
+          {/* ── 2. CENTERS OF EXCELLENCE (Uneven Department Collage) ── */}
+          <UnevenDepartmentCollage />
 
 
           {/* ── 3. CLINICAL SEARCH ── */}
@@ -152,9 +150,6 @@ export function PeerzadigudaPage() {
 
           <AppointmentWidget currentBranch={branch} />
         </div>{/* end xl:pl-16 */}
-
-        {/* Centers of Excellence Asymmetric Collage */}
-        <UnevenDepartmentCollage />
 
         {/* ── DOCTOR SLIDER ── */}
         <PremiumDoctorFinder branchTitle={branch.title} branchId={branch.title} />

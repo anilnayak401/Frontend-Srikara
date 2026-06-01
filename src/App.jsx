@@ -59,9 +59,10 @@ function App() {
             <Route path="/branches"     element={<BranchesIndex />} />
             <Route path="/doctors"      element={<DoctorsPage />} />
             <Route path="/doctors/:slug" element={<DoctorProfilePage />} />
-            <Route path="/specialties"  element={<SpecialtiesPage />} />
+            <Route path="/specialties"  element={<AnatomyExplorerPage />} />
             <Route path="/specialties/:specialtyId" element={<SpecialtyDetailPage />} />
-            <Route path="/anatomy-explorer" element={<AnatomyExplorerPage />} />
+            <Route path="/specialties-list" element={<SpecialtiesPage />} />
+            <Route path="/anatomy-explorer" element={<Navigate to="/specialties" replace />} />
             <Route path="/services"     element={<ServicesPage />} />
             <Route path="/about"        element={<AboutPage />} />
             <Route path="/book"          element={<BookAppointmentPage />} />

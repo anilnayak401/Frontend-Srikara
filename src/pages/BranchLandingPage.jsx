@@ -9,7 +9,6 @@ import { AppointmentWidget } from '@/components/sections/AppointmentWidget'
 import { VideoHero } from '@/components/sections/VideoHero'
 import { AlphabetDiseaseSearch } from '@/components/sections/AlphabetDiseaseSearch'
 import { PremiumDiseasesSearch } from '@/components/sections/PremiumDiseasesSearch'
-import { LuxuryCentersOfExcellence } from '@/components/sections/LuxuryCentersOfExcellence'
 import { DoctorsGroupBanner } from '@/components/sections/DoctorsGroupBanner'
 import { PremiumDoctorFinder } from '@/components/sections/PremiumDoctorFinder'
 import { PremiumCaseStudies } from '@/components/sections/PremiumCaseStudies'
@@ -91,8 +90,8 @@ export function BranchLandingPage({ branch }) {
           {/* ── DOCTORS TEAM BANNER ── */}
           <DoctorsGroupBanner />
 
-          {/* ── 2. CENTERS OF EXCELLENCE (Luxury Gallery) ── */}
-          <LuxuryCentersOfExcellence />
+          {/* ── 2. CENTERS OF EXCELLENCE (Uneven Department Collage) ── */}
+          <UnevenDepartmentCollage />
 
 
           {/* ── 3. Find by Alphabet (Top Placement) ── */}
@@ -141,8 +140,6 @@ export function BranchLandingPage({ branch }) {
             </section>
           )}
 
-          {/* ── 4.5 CENTERS OF EXCELLENCE DEPARTMENT COLLAGE ── */}
-          <UnevenDepartmentCollage />
 
           {/* ── 5. PREMIUM DOCTOR FINDER ── */}
           <PremiumDoctorFinder branchTitle={branch.title} branchId={branch.title} />
