@@ -130,6 +130,16 @@ export function AnatomyExplorerPage() {
   const targetTimeRef = useRef(0)
   const currentTimeRef = useRef(0)
 
+  const [activeIndex, setActiveIndex] = useState(0)
+  const activeIndexRef = useRef(0)
+  const hudRef = useRef(null)
+  const progressBarRef = useRef(null)
+  const isLoadingRef = useRef(isLoading)
+
+  useEffect(() => {
+    isLoadingRef.current = isLoading
+  }, [isLoading])
+
   // Pre-fetch the 3D video as a blob to enable 100% butter-smooth local scroll scrubbing
   useEffect(() => {
     let active = true
@@ -196,26 +206,31 @@ export function AnatomyExplorerPage() {
   // Track page scroll to drive the background video
   useEffect(() => {
     const handleScroll = () => {
+      const maxScrollytellingScroll = 9 * window.innerHeight
       const totalHeight = document.documentElement.scrollHeight - window.innerHeight
       if (totalHeight <= 0) return
       
-      const progress = Math.min(Math.max(window.scrollY / totalHeight, 0), 1)
+      let scrollY = window.scrollY
+
+      // Prevent user from scrolling past the scrollytelling section until video catches up
+      const video = videoRef.current
+      if (video && !isLoadingRef.current && video.readyState >= 2 && scrollY > maxScrollytellingScroll) {
+        const videoProgress = video.currentTime / 47.9
+        if (videoProgress < 0.98) {
+          window.scrollTo(0, maxScrollytellingScroll)
+          scrollY = maxScrollytellingScroll
+        }
+      }
+      
+      const progress = Math.min(Math.max(scrollY / maxScrollytellingScroll, 0), 1)
       setScrollProgress(progress)
     }
 
-    window.addEventListener('scroll', handleScroll, { passive: true })
+    window.addEventListener('scroll', handleScroll)
     // Fire once initially
     handleScroll()
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
-
-  // Map the scroll progress [0, 0.90] (scrollytelling range) to active section indices
-  const activeIndex = useMemo(() => {
-    // 0.90 marks the end of scrollytelling. After 0.90, the CTA/Footer scroll in naturally.
-    const scrollyProgress = Math.min(scrollProgress / 0.90, 1)
-    const index = Math.min(Math.floor(scrollyProgress * CLINICAL_STORYLINE.length), CLINICAL_STORYLINE.length - 1)
-    return index
-  }, [scrollProgress])
 
   const activeData = useMemo(() => {
     return CLINICAL_STORYLINE[activeIndex]
@@ -223,9 +238,9 @@ export function AnatomyExplorerPage() {
 
   // Calculate video target time based on active segment
   const targetTime = useMemo(() => {
-    const scrollyProgress = Math.min(scrollProgress / 0.90, 1)
+    // scrollProgress goes from 0 to 1 for the scrollytelling range
     // 48.0s is the full compiled video duration (1440 frames / 30fps)
-    return scrollyProgress * 47.9
+    return scrollProgress * 47.9
   }, [scrollProgress])
 
   // Feed targetTime into the lerp loop
@@ -243,11 +258,40 @@ export function AnatomyExplorerPage() {
     const smoothScrub = () => {
       if (video.readyState >= 2) {
         const diff = targetTimeRef.current - video.currentTime
-        // If difference is small, snap to target time to avoid micro-jitters
+        const step = diff * 0.15 // Glides smoothly to target
+        const maxStep = 0.20 // Limits step per frame to ensure intermediate frames render and prevent skips
+        const clampedStep = Math.sign(step) * Math.min(Math.abs(step), maxStep)
+
         if (Math.abs(diff) > 0.01) {
-          video.currentTime += diff * 0.12 // Easing factor: 0.12 provides smooth cinematic gliding
+          video.currentTime += clampedStep
         } else {
           video.currentTime = targetTimeRef.current
+        }
+
+        // Direct DOM update of HUD Frame/Seconds counters
+        if (hudRef.current) {
+          const currentFrame = Math.min(Math.floor((video.currentTime / 47.9) * 1440), 1440)
+          const currentSec = Math.min(Math.floor(video.currentTime), 48)
+          hudRef.current.textContent = `FRAME: ${String(currentFrame).padStart(4, '0')} / SEC: ${String(currentSec).padStart(2, '0')}.0`
+        }
+
+        // Direct DOM update of vertical HUD progress bar height
+        if (progressBarRef.current) {
+          const videoProgress = video.currentTime / 47.9
+          progressBarRef.current.style.height = `${Math.min(videoProgress, 1) * 100}%`
+        }
+
+        // Calculate and transition active specialty section based on actual video frame
+        const videoProgress = video.currentTime / 47.9
+        const scrollyProgress = Math.min(videoProgress, 1)
+        const computedIndex = Math.min(
+          Math.floor(scrollyProgress * CLINICAL_STORYLINE.length), 
+          CLINICAL_STORYLINE.length - 1
+        )
+
+        if (computedIndex !== activeIndexRef.current) {
+          activeIndexRef.current = computedIndex
+          setActiveIndex(computedIndex)
         }
       }
       animationFrameId = requestAnimationFrame(smoothScrub)
@@ -366,8 +410,11 @@ export function AnatomyExplorerPage() {
               {/* HUD Frame / Scrub Indicator */}
               <div className="hidden lg:flex text-right flex-col items-end gap-0.5 sm:gap-1">
                 <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-[#8B1A4A]">Srikara Clinical Engine</span>
-                <span className="font-mono text-[9px] sm:text-[11px] font-bold text-slate-400 bg-slate-100/80 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md border border-slate-200/50">
-                  FRAME: {String(Math.min(Math.floor(scrollProgress * 1440), 1440)).padStart(4, '0')} / SEC: {String(Math.min(Math.floor(targetTime), 48)).padStart(2, '0')}.0
+                <span 
+                  ref={hudRef}
+                  className="font-mono text-[9px] sm:text-[11px] font-bold text-slate-400 bg-slate-100/80 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md border border-slate-200/50"
+                >
+                  FRAME: 0000 / SEC: 00.0
                 </span>
               </div>
             </div>
@@ -472,8 +519,9 @@ export function AnatomyExplorerPage() {
                 {/* Progress bar line */}
                 <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[2px] bg-slate-100" />
                 <div 
-                  className="absolute top-0 left-1/2 -translate-x-1/2 w-[2px] bg-[#8B1A4A] transition-all duration-500" 
-                  style={{ height: `${Math.min(scrollProgress / 0.90, 1) * 100}%` }}
+                  ref={progressBarRef}
+                  className="absolute top-0 left-1/2 -translate-x-1/2 w-[2px] bg-[#8B1A4A]" 
+                  style={{ height: '0%' }}
                 />
 
                 {CLINICAL_STORYLINE.map((item, idx) => {
@@ -483,10 +531,10 @@ export function AnatomyExplorerPage() {
                     <button
                       key={idx}
                       onClick={() => {
-                        const targetScroll = (idx / CLINICAL_STORYLINE.length) * 0.90
-                        const totalHeight = document.documentElement.scrollHeight - window.innerHeight
+                        const maxScrollytellingScroll = 9 * window.innerHeight
+                        const targetScroll = (idx / CLINICAL_STORYLINE.length) * maxScrollytellingScroll
                         window.scrollTo({
-                          top: targetScroll * totalHeight,
+                          top: targetScroll,
                           behavior: 'smooth'
                         })
                       }}

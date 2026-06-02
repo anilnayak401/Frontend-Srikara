@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { useLocation, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Calendar, X } from 'lucide-react'
+import { Sparkles, MessageSquare, Send, X, Calendar, MapPin, Phone } from 'lucide-react'
 import { branches } from '@/data/branches'
 
 const getGreetingMessage = (pathname, currentBranch) => {
@@ -62,64 +62,107 @@ const getGreetingMessage = (pathname, currentBranch) => {
   return "Hi! Welcome to Srikara Hospitals. Chat with us on WhatsApp for any queries! 👋"
 }
 
-const getPrefilledMessage = (pathname, currentBranch) => {
-  const cleanPath = pathname.replace(/\/$/, '')
+const getAIResponse = (userQuery) => {
+  const query = userQuery.toLowerCase().trim()
   
-  if (!cleanPath) {
-    return "Hi, I am visiting Srikara Hospitals Home Page and have a query."
-  }
-  
-  if (cleanPath.startsWith('/branches/')) {
-    let branchName = ''
-    if (currentBranch?.title) {
-      branchName = currentBranch.title
-    } else {
-      const parts = cleanPath.split('/')
-      const slug = parts[parts.length - 1]
-      branchName = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+  if (query.includes('book') || query.includes('appoint') || query.includes('schedule') || query.includes('consult') || query.includes('form') || query.includes('request')) {
+    return {
+      text: "I can help you request a consultation! You can open and fill out our Srikara Appointment Request Form right here in this window by clicking the button below, or visit the Bookings page.",
+      action: "open_booking",
+      actionLabel: "Open Appointment Form"
     }
-    return `Hi, I am visiting the Srikara ${branchName} branch page and have a query.`
   }
   
-  if (cleanPath === '/branches') {
-    return "Hi, I am looking for Srikara Hospital branch locations and need help."
+  if (query.includes('cardio') || query.includes('heart') || query.includes('beat') || query.includes('valve') || query.includes('angioplasty')) {
+    return {
+      text: "Srikara's Cardiology Excellence Center pioneers beating-heart CABG, robotic valve replacements, and 24/7 emergency primary angioplasties. You can browse our cardiology specialists on the Doctors Directory page.",
+      action: "view_doctors",
+      actionLabel: "Find a Cardiologist",
+      link: "/doctors?specialty=cardio"
+    }
   }
   
-  if (cleanPath === '/doctors') {
-    return "Hi, I am looking at Srikara doctors list and need help finding a specialist."
+  if (query.includes('neuro') || query.includes('brain') || query.includes('spine') || query.includes('stroke') || query.includes('tumor')) {
+    return {
+      text: "Srikara's Stroke and Neuro-Endovascular clinic delivers microscopic, ultra-rapid interventions for brain tumors, spinal corrections, and neurological anomalies. Explore the 3D Anatomy simulator to visualize the brain and nervous systems.",
+      action: "view_specialties",
+      actionLabel: "Anatomy Explorer",
+      link: "/specialties"
+    }
   }
   
-  if (cleanPath.startsWith('/doctors/')) {
-    return "Hi, I am interested in booking an appointment with one of your doctors."
+  if (query.includes('ortho') || query.includes('joint') || query.includes('knee') || query.includes('hip') || query.includes('bone') || query.includes('robotic replacement') || query.includes('sports')) {
+    return {
+      text: "Srikara is a national leader in Orthopaedics, utilizing high-precision robotic joint replacements (TKR/THR) and rapid-recovery sports reconstructions. Would you like to check our orthopaedics specialists?",
+      action: "view_doctors",
+      actionLabel: "Find Joint Specialists",
+      link: "/doctors?specialty=ortho"
+    }
   }
   
-  if (cleanPath.startsWith('/specialties')) {
-    return "Hi, I am exploring your clinical specialties and need more information."
+  if (query.includes('doctor') || query.includes('specialist') || query.includes('surgeon') || query.includes('physician') || query.includes('find doctor')) {
+    return {
+      text: "We have over 50+ world-class surgeons and specialists across our branches. You can search by branch or specialty on our Doctors Directory page.",
+      action: "view_doctors",
+      actionLabel: "Browse Doctors Directory",
+      link: "/doctors"
+    }
   }
   
-  if (cleanPath === '/services') {
-    return "Hi, I have a query regarding Srikara hospital services."
+  if (query.includes('branch') || query.includes('location') || query.includes('where') || query.includes('center') || query.includes('hospital') || query.includes('miyapur') || query.includes('ecil') || query.includes('nagar') || query.includes('kompally') || query.includes('lakdikapul') || query.includes('rtc') || query.includes('peerzadiguda') || query.includes('vijayawada') || query.includes('rajahmundry') || query.includes('secunderabad')) {
+    return {
+      text: "Srikara has 9 state-of-the-art hospitals: ECIL, LB Nagar, Miyapur, Kompally, Lakdikapul, Peerzadiguda, RTC X Roads, Vijayawada, and Rajahmundry. You can view addresses, phones, and maps on our Centers page.",
+      action: "view_branches",
+      actionLabel: "Browse Centers Page",
+      link: "/branches"
+    }
   }
   
-  if (cleanPath === '/about') {
-    return "Hi, I would like to learn more about Srikara Hospitals."
+  if (query.includes('hi') || query.includes('hello') || query.includes('hey') || query.includes('greeting') || query.includes('welcome')) {
+    return {
+      text: "Hello! I am Srikara's AI Clinical Assistant. How can I help you today with finding a doctor, locating a branch, or scheduling an appointment?"
+    }
+  }
+
+  if (query.includes('rate') || query.includes('success') || query.includes('stat') || query.includes('percent')) {
+    return {
+      text: "Srikara Hospitals maintains elite clinical standards: a 98.6% critical recovery rate in neurology, over 25,000+ successful robotic joint replacements, and a sub-30 minute emergency cardiac response time."
+    }
   }
   
-  if (cleanPath.startsWith('/book')) {
-    return "Hi, I need help booking an appointment with Srikara Hospitals."
+  if (query.includes('thanks') || query.includes('thank you') || query.includes('cool') || query.includes('nice') || query.includes('great') || query.includes('bye')) {
+    return {
+      text: "You're very welcome! It's my pleasure to assist. Let me know if you have any other questions about Srikara Hospitals. Have a healthy day!"
+    }
   }
   
-  if (cleanPath === '/blogs') {
-    return "Hi, I am reading the Srikara wellness blogs."
+  return {
+    text: "Srikara Hospitals is dedicated to high-precision medicine and surgical excellence. I can help you search for specialists, check branch contact details, or request an appointment. What would you like to explore?",
+    suggestions: ["Book an Appointment", "Find a Cardiologist", "Browse Locations", "Orthopaedics Robot Surgery"]
   }
-  
-  return "Hi, I have a query about Srikara Hospitals."
 }
 
 export function AppointmentWidget({ currentBranch }) {
   const location = useLocation()
   const [open, setOpen] = useState(false)
   const [showGreeting, setShowGreeting] = useState(false)
+  const [isChatOpen, setIsChatOpen] = useState(false)
+  const [inputText, setInputText] = useState('')
+  const [isTyping, setIsTyping] = useState(false)
+  const [messages, setMessages] = useState([
+    {
+      sender: 'ai',
+      text: getGreetingMessage(location.pathname, currentBranch),
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }
+  ])
+  const [suggestions, setSuggestions] = useState([
+    "Book an Appointment",
+    "Browse Locations",
+    "Find a Doctor",
+    "Robotic Ortho Surgery"
+  ])
+
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -127,40 +170,98 @@ export function AppointmentWidget({ currentBranch }) {
     specialty: '',
   })
 
+  const messagesEndRef = useRef(null)
+
   useEffect(() => {
-    // Show the greeting automatically after 1.5 seconds if they haven't closed it in this session
-    const isDismissed = sessionStorage.getItem('wa_greeting_dismissed') === 'true'
+    // Show the greeting automatically after 2 seconds if not dismissed
+    const isDismissed = sessionStorage.getItem('ai_greeting_dismissed') === 'true'
     
-    if (!isDismissed) {
+    if (!isDismissed && !isChatOpen) {
       const timer = setTimeout(() => {
         setShowGreeting(true)
-      }, 1500)
+      }, 2000)
       
       return () => clearTimeout(timer)
     }
-  }, [location.pathname])
+  }, [location.pathname, isChatOpen])
+
+  useEffect(() => {
+    // Reset messages when current branch shifts, to keep page-context correct
+    setMessages([
+      {
+        sender: 'ai',
+        text: getGreetingMessage(location.pathname, currentBranch),
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }
+    ])
+  }, [location.pathname, currentBranch])
+
+  useEffect(() => {
+    // Scroll to bottom of message list on updates
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [messages, isTyping])
+
+  const handleSend = (textToSend) => {
+    const text = textToSend || inputText
+    if (!text.trim()) return
+
+    // Add user message
+    const userMsg = {
+      sender: 'user',
+      text: text,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }
+    setMessages(prev => [...prev, userMsg])
+    setInputText('')
+    setIsTyping(true)
+
+    // Simulate AI thinking and typing delay
+    setTimeout(() => {
+      const aiReply = getAIResponse(text)
+      const aiMsg = {
+        sender: 'ai',
+        text: aiReply.text,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        action: aiReply.action,
+        actionLabel: aiReply.actionLabel,
+        link: aiReply.link
+      }
+      setMessages(prev => [...prev, aiMsg])
+      setIsTyping(false)
+
+      if (aiReply.suggestions) {
+        setSuggestions(aiReply.suggestions)
+      } else {
+        setSuggestions([
+          "Book an Appointment",
+          "Browse Locations",
+          "Explore 3D Anatomy",
+          "Cardiac Center Info"
+        ])
+      }
+    }, 1000)
+  }
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    alert('Appointment request submitted! We will contact you shortly.')
+    alert(`Appointment request submitted successfully for ${formData.name}! Our coordinator will contact you at ${formData.phone} shortly.`)
     setOpen(false)
     setFormData({ name: '', phone: '', branch: currentBranch?.slug || '', specialty: '' })
   }
 
-  const prefilledText = getPrefilledMessage(location.pathname, currentBranch)
-  const greetingText = getGreetingMessage(location.pathname, currentBranch)
-
   return (
     <>
-      {/* Dynamic WhatsApp Greeting Bubble */}
+      {/* Dynamic AI Greeting Bubble */}
       <AnimatePresence>
-        {showGreeting && (
+        {showGreeting && !isChatOpen && (
           <motion.div
             initial={{ opacity: 0, y: 15, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
-            className="fixed bottom-[160px] lg:bottom-[96px] right-4 lg:right-8 z-40 w-[260px] sm:w-[280px] bg-white border border-slate-100/80 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.12)] p-4 select-none font-sans"
+            className="fixed bottom-[160px] lg:bottom-[96px] right-4 lg:right-8 z-40 w-[260px] sm:w-[290px] bg-white border border-slate-100/80 rounded-2xl shadow-[0_12px_45px_rgba(0,0,0,0.12)] p-4 select-none font-sans"
           >
             {/* Speech bubble tail */}
             <div className="absolute bottom-[-6px] right-5 w-3 h-3 bg-white rotate-45 border-r border-b border-slate-100/80" />
@@ -168,17 +269,19 @@ export function AppointmentWidget({ currentBranch }) {
             <div className="flex items-start justify-between">
               <div className="flex flex-col">
                 <div className="flex items-center gap-1.5 mb-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#25D366] animate-pulse" />
-                  <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">WhatsApp Support</span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#8B1A4A] animate-pulse" />
+                  <span className="text-[9px] font-black uppercase text-[#8B1A4A] tracking-wider flex items-center gap-1">
+                    <Sparkles size={9} className="animate-spin-slow" /> Srikara AI Assistant
+                  </span>
                 </div>
                 <p className="text-[11px] text-slate-700 font-bold leading-normal pr-4">
-                  {greetingText}
+                  {messages[0]?.text}
                 </p>
               </div>
               <button
                 onClick={() => {
                   setShowGreeting(false)
-                  sessionStorage.setItem('wa_greeting_dismissed', 'true')
+                  sessionStorage.setItem('ai_greeting_dismissed', 'true')
                 }}
                 className="text-slate-400 hover:text-slate-600 transition-colors p-0.5 rounded-full hover:bg-slate-50 flex items-center justify-center shrink-0"
                 aria-label="Dismiss greeting"
@@ -187,58 +290,190 @@ export function AppointmentWidget({ currentBranch }) {
               </button>
             </div>
             
-            {/* Quick Chat Link inside the bubble */}
             <div className="mt-2.5 pt-2 border-t border-slate-50 flex justify-end">
-              <a
-                href={`https://wa.me/914068324800?text=${encodeURIComponent(prefilledText)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[9px] font-black uppercase tracking-wider text-[#25D366] hover:text-[#1ebd59] flex items-center gap-1"
+              <button
+                onClick={() => {
+                  setIsChatOpen(true)
+                  setShowGreeting(false)
+                }}
+                className="text-[9px] font-black uppercase tracking-wider text-[#8B1A4A] hover:text-[#5E0F30] flex items-center gap-1"
               >
-                Chat Now →
-              </a>
+                Start Chat →
+              </button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Floating WhatsApp Button */}
-      <a
-        href={`https://wa.me/914068324800?text=${encodeURIComponent(prefilledText)}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="fixed bottom-24 lg:bottom-8 right-4 lg:right-8 z-40 bg-[#25D366] text-white rounded-full p-4 shadow-[0_10px_30px_rgba(37,211,102,0.4)] hover:scale-110 transition-transform duration-300 flex items-center justify-center"
-        aria-label="Chat on WhatsApp"
-      >
-        <svg 
-          viewBox="0 0 24 24" 
-          className="w-6 h-6 fill-current"
-          xmlns="http://www.w3.org/2000/svg"
+      {/* Floating AI Bot Action Button */}
+      {!isChatOpen && (
+        <button
+          onClick={() => {
+            setIsChatOpen(true)
+            setShowGreeting(false)
+          }}
+          className="fixed bottom-24 lg:bottom-8 right-4 lg:right-8 z-40 bg-gradient-to-br from-[#8B1A4A] to-[#2D3A4A] text-white rounded-full p-4 shadow-[0_12px_30px_rgba(139,26,74,0.35)] hover:scale-105 transition-all duration-300 flex items-center justify-center group"
+          aria-label="Srikara AI Assistant"
         >
-          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-        </svg>
-      </a>
+          <div className="relative">
+            <MessageSquare className="w-6 h-6 group-hover:scale-95 transition-transform duration-200" />
+            <Sparkles size={11} className="absolute -top-1.5 -right-1.5 text-pink-300 animate-pulse" />
+          </div>
+        </button>
+      )}
 
-      {/* Dialog */}
+      {/* Interactive AI Chat Panel */}
+      <AnimatePresence>
+        {isChatOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 30, scale: 0.95 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            className="fixed bottom-24 lg:bottom-8 right-4 lg:right-8 z-50 w-[320px] sm:w-[360px] h-[450px] sm:h-[500px] bg-white/95 backdrop-blur-md border border-slate-200/80 rounded-2xl shadow-[0_24px_60px_rgba(0,0,0,0.18)] flex flex-col font-sans overflow-hidden"
+          >
+            {/* Header */}
+            <div className="bg-gradient-to-r from-[#8B1A4A] to-[#2D3A4A] px-4 py-3 text-white flex items-center justify-between shadow-md shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="relative p-1.5 bg-white/10 rounded-xl">
+                  <Sparkles size={16} className="text-pink-300 animate-pulse" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs font-black uppercase tracking-wider leading-none">Srikara AI Care</span>
+                  <span className="text-[9px] text-pink-200/80 font-bold mt-0.5 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Online Assistant
+                  </span>
+                </div>
+              </div>
+              
+              <button 
+                onClick={() => setIsChatOpen(false)}
+                className="p-1 rounded-lg hover:bg-white/10 transition-colors text-white/90 hover:text-white"
+                aria-label="Close Chat"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Message Area */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#FAFAFD]/50">
+              {messages.map((msg, index) => (
+                <div 
+                  key={index}
+                  className={`flex flex-col max-w-[82%] ${msg.sender === 'user' ? 'ml-auto items-end' : 'mr-auto items-start'}`}
+                >
+                  <div 
+                    className={`px-3.5 py-2.5 rounded-2xl text-[11px] sm:text-xs leading-relaxed font-medium ${
+                      msg.sender === 'user' 
+                        ? 'bg-[#8B1A4A] text-white rounded-tr-none shadow-sm' 
+                        : 'bg-white border border-slate-100 text-slate-800 rounded-tl-none shadow-sm'
+                    }`}
+                  >
+                    <p>{msg.text}</p>
+                    
+                    {/* Render action trigger in chat */}
+                    {msg.action === 'open_booking' && (
+                      <button
+                        onClick={() => setOpen(true)}
+                        className="mt-3 w-full py-2 px-3 bg-[#8B1A4A] hover:bg-[#5E0F30] text-white font-bold text-[9px] uppercase tracking-widest rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 shadow-md"
+                      >
+                        <Calendar size={10} /> {msg.actionLabel}
+                      </button>
+                    )}
+                    
+                    {/* Render Router page navigation links in chat */}
+                    {msg.link && (
+                      <Link 
+                        to={msg.link}
+                        onClick={() => setIsChatOpen(false)}
+                        className="mt-3 w-full py-2 px-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-[9px] uppercase tracking-widest rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 shadow-md"
+                      >
+                        {msg.actionLabel} →
+                      </Link>
+                    )}
+                  </div>
+                  <span className="text-[8px] text-slate-400 mt-1 px-1 font-semibold">{msg.time}</span>
+                </div>
+              ))}
+
+              {/* Typing indicator */}
+              {isTyping && (
+                <div className="flex flex-col mr-auto max-w-[80%] items-start">
+                  <div className="px-3.5 py-3 bg-white border border-slate-100 rounded-2xl rounded-tl-none flex items-center gap-1 shadow-sm">
+                    <div className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '0s' }} />
+                    <div className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '0.15s' }} />
+                    <div className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '0.3s' }} />
+                  </div>
+                </div>
+              )}
+
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Suggestions scrollbar */}
+            <div className="px-3 py-2 bg-slate-50/70 border-t border-slate-100 overflow-x-auto flex gap-1.5 shrink-0 select-none custom-scrollbar">
+              {suggestions.map((sug, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleSend(sug)}
+                  className="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-200/60 rounded-full text-[9px] font-bold text-slate-600 hover:text-[#8B1A4A] whitespace-nowrap transition-all duration-200 shrink-0"
+                >
+                  {sug}
+                </button>
+              ))}
+            </div>
+
+            {/* Input area */}
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault()
+                handleSend()
+              }}
+              className="p-3 bg-white border-t border-slate-100 flex gap-2 items-center shrink-0"
+            >
+              <Input
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                placeholder="Ask AI Clinical Assistant..."
+                disabled={isTyping}
+                className="flex-1 text-xs h-[36px] bg-slate-50/50 border-slate-200/80 focus-visible:ring-[#8B1A4A]"
+              />
+              <button 
+                type="submit"
+                disabled={!inputText.trim() || isTyping}
+                className="h-[36px] w-[36px] rounded-full bg-[#8B1A4A] hover:bg-[#5E0F30] text-white flex items-center justify-center shrink-0 transition-colors disabled:opacity-40 disabled:hover:bg-[#8B1A4A]"
+                aria-label="Send message"
+              >
+                <Send size={14} className="stroke-[2.5]" />
+              </button>
+            </form>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Dialog Form for Booking */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent onClose={() => setOpen(false)}>
           <DialogHeader>
-            <DialogTitle>Book an Appointment</DialogTitle>
+            <DialogTitle className="text-[#8B1A4A] uppercase tracking-widest text-sm font-black flex items-center gap-1.5">
+              <Calendar size={16} /> Request Srikara Appointment
+            </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4 font-sans text-xs">
             <div>
-              <label className="block text-sm font-medium text-on-surface mb-2">
+              <label className="block text-slate-600 font-bold uppercase tracking-wider text-[9px] mb-1.5">
                 Full Name
               </label>
               <Input
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Enter your name"
+                placeholder="Enter patient full name"
+                className="text-xs focus-visible:ring-[#8B1A4A]"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-on-surface mb-2">
+              <label className="block text-slate-600 font-bold uppercase tracking-wider text-[9px] mb-1.5">
                 Phone Number
               </label>
               <Input
@@ -246,19 +481,21 @@ export function AppointmentWidget({ currentBranch }) {
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="Enter your phone"
+                placeholder="Enter contact number"
+                className="text-xs focus-visible:ring-[#8B1A4A]"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-on-surface mb-2">
+              <label className="block text-slate-600 font-bold uppercase tracking-wider text-[9px] mb-1.5">
                 Select Branch
               </label>
               <Select
                 required
                 value={formData.branch}
                 onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
+                className="text-xs focus-visible:ring-[#8B1A4A]"
               >
-                <option value="">Choose a branch</option>
+                <option value="">Choose Srikara Branch</option>
                 {branches.map(branch => (
                   <option key={branch.slug} value={branch.slug}>
                     {branch.title}
@@ -267,24 +504,26 @@ export function AppointmentWidget({ currentBranch }) {
               </Select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-on-surface mb-2">
-                Specialty
+              <label className="block text-slate-600 font-bold uppercase tracking-wider text-[9px] mb-1.5">
+                Clinical Specialty
               </label>
               <Select
                 required
                 value={formData.specialty}
                 onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
+                className="text-xs focus-visible:ring-[#8B1A4A]"
               >
-                <option value="">Choose a specialty</option>
-                <option value="cardiology">Cardiology</option>
-                <option value="orthopedics">Orthopedics</option>
-                <option value="neurosciences">Neurosciences</option>
-                <option value="general">General Medicine</option>
-                <option value="pediatrics">Pediatrics</option>
+                <option value="">Choose Clinical Department</option>
+                <option value="cardiology">Cardiology (Cardiac Care)</option>
+                <option value="orthopedics">Orthopedics (Joint & Robotics)</option>
+                <option value="neurosciences">Neurosciences (Neuro-Endovascular)</option>
+                <option value="gastroenterology">Gastroenterology (GI & Liver)</option>
+                <option value="nephrology">Nephrology (Renal Care)</option>
+                <option value="pulmonology">Pulmonology (Respiratory)</option>
               </Select>
             </div>
-            <Button type="submit" className="w-full">
-              Submit Request
+            <Button type="submit" className="w-full bg-[#8B1A4A] hover:bg-[#5E0F30] text-white font-bold uppercase tracking-wider text-xs py-5 rounded-full mt-6 shadow-md transition-all duration-300">
+              Submit Request Form
             </Button>
           </form>
         </DialogContent>
