@@ -723,8 +723,7 @@ export function DoctorsPage() {
             >
               {/* Giant Organic Wave Backdrops (matches the soft framing wave of the second image) */}
               <div className="absolute -top-20 -left-20 w-[600px] h-[600px] rounded-[45%_55%_30%_70%_/_50%_60%_40%_50%] bg-[#F0F7FF] opacity-90 blur-2xl pointer-events-none z-0" />
-              {/* Actual 3D Real-Time Rotating Volumetric Knee Musculoskeletal Model Render */}
-              <VolumetricKnee3D />
+
 
 
               <div className="max-w-7xl mx-auto relative z-10 w-full px-6 lg:px-8">

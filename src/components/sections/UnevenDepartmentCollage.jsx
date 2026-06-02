@@ -172,11 +172,11 @@ function GlassmorphicTiltCard({ dept, index, onClick }) {
   )
 }
 
-export function UnevenDepartmentCollage() {
+export function UnevenDepartmentCollage({ branchName }) {
   const navigate = useNavigate()
 
   // Detect current branch from the URL hash/path
-  const currentBranchName = (() => {
+  const currentBranchName = branchName || (() => {
     const href = window.location.href.toLowerCase()
     if (href.includes('ecil')) return 'ECIL'
     if (href.includes('miyapur')) return 'Miyapur'
@@ -184,6 +184,9 @@ export function UnevenDepartmentCollage() {
     if (href.includes('lb-nagar')) return 'L.B. Nagar'
     if (href.includes('kompally')) return 'Kompally'
     if (href.includes('lakdikapul')) return 'Lakdikapul'
+    if (href.includes('vijayawada')) return 'Vijayawada'
+    if (href.includes('rajahmundry')) return 'Rajahmundry'
+    if (href.includes('rtc-x-roads')) return 'RTC X Roads'
     return ''
   })()
 
@@ -327,8 +330,8 @@ export function UnevenDepartmentCollage() {
               Srikara Core Pillars
             </span>
             <h2 className="editorial-title text-3xl md:text-[44px] font-black tracking-tight leading-tight mb-4">
-              <span className="block text-[#2D3A4A]">Centers of</span>
-              <span className="block text-[#8B1A4A] mt-2">Specialty Care</span>
+              <span className="block text-[#2D3A4A]">Centers of Specialty Care</span>
+              <span className="block text-[#8B1A4A] mt-2">{currentBranchName ? `at Srikara ${currentBranchName}` : 'at Srikara'}</span>
             </h2>
             <div className="w-16 h-[2px] bg-[#8B1A4A]/25 mb-6" />
           </div>

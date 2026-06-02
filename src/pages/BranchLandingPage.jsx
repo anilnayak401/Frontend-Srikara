@@ -91,7 +91,7 @@ export function BranchLandingPage({ branch }) {
           <DoctorsGroupBanner />
 
           {/* ── 2. CENTERS OF EXCELLENCE (Uneven Department Collage) ── */}
-          <UnevenDepartmentCollage />
+          <UnevenDepartmentCollage branchName={branch.title} />
 
 
           {/* ── 3. Find by Alphabet (Top Placement) ── */}
@@ -161,12 +161,20 @@ export function BranchLandingPage({ branch }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                   {branch.infrastructure.map((item, i) => (
                     <div key={i} className="group relative rounded-3xl overflow-hidden h-80">
-                      <img
+                      <video
                         src={i === 0
+                          ? 'https://assets.mixkit.co/videos/preview/mixkit-doctor-analysing-a-brain-mri-on-a-screen-40032-large.mp4'
+                          : 'https://assets.mixkit.co/videos/preview/mixkit-surgeons-performing-a-surgery-with-a-surgical-monitor-35515-large.mp4'
+                        }
+                        poster={i === 0
                           ? 'https://lh3.googleusercontent.com/aida-public/AB6AXuCsy4QyvBAKqMc5jm3QR4_8UqR5L8nBrBgSREo9VuccfjCP3HBJs0ziEeXOzXDxHo0B3FHdgZ94q_LEkHTkaduFMpK7zhxxI5IWdcvN-1EW4X966vG-PKPso_lzppnnHlGyDyIMsO28rwYH6wDicKFOGBFapr15cRMuWLdd7kHDCSeiZIIlZVlSJHQkqMo4S7-j0KlCMmDIP3hLCOb2cYxW_Hg7zw1YIrLHAd8sA7shqELw9iCyfi6M_vOzb255-_fJs3YgQtG8S1g'
                           : 'https://lh3.googleusercontent.com/aida-public/AB6AXuBkocaQxiMvMjVnD-a1ILZHkSv0qki-DziBAXey5cwaDbJPVJvUPjnQjskOai_Q8_37liZrGjoFcMZ8_ODtSqXvJiNU2tF5rt-YivEOSUkYsCfTRhxw7tIRSaqIU_zuodeWQLdnc0uAaaD3izQ6GubO1gO8RfpQyAGriwKDkRABilUPTxf1BlBpDfHmSA4rKljqGXmFIZu_9LwdTZcG6j84B2RphtdSEII3i5Oc5ICvuC_nANM4MerXxn9dvzbIe4fwaYrRonxFrbs'
                         }
-                        alt={item.title}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        preload="auto"
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
                       <div className={`absolute inset-0 bg-gradient-to-t ${item.gradient} to-transparent flex flex-col justify-end p-8`}>

@@ -17,6 +17,7 @@ import {
   CardCurtainRevealTitle,
   CardCurtain 
 } from '@/components/ui/card-curtain-reveal';
+import { assetUrl } from '@/lib/assetUrl';
 
 const cases = [
   {
@@ -28,8 +29,8 @@ const cases = [
     stat: '98% Recovery Rate',
     icon: Zap,
     color: 'from-blue-500/20 to-indigo-500/20',
-    frontImage: 'https://picsum.photos/seed/neuro/800/600',
-    revealImage: 'https://picsum.photos/seed/scan/800/600'
+    frontImage: assetUrl('images/specialties/neuro.png'),
+    revealImage: assetUrl('images/neuro_procedure.png')
   },
   {
     id: 2,
@@ -40,8 +41,8 @@ const cases = [
     stat: '12 Years of Excellence',
     icon: Activity,
     color: 'from-purple-500/20 to-rose-500/20',
-    frontImage: 'https://picsum.photos/seed/surgery/800/600',
-    revealImage: 'https://picsum.photos/seed/robot/800/600'
+    frontImage: assetUrl('images/specialties/robotic.png'),
+    revealImage: assetUrl('images/robotic_joint.png')
   },
   {
     id: 3,
@@ -52,8 +53,8 @@ const cases = [
     stat: 'Precision-Led Outcomes',
     icon: Target,
     color: 'from-emerald-500/20 to-teal-500/20',
-    frontImage: 'https://picsum.photos/seed/spine/800/600',
-    revealImage: 'https://picsum.photos/seed/anatomy/800/600'
+    frontImage: assetUrl('images/specialties/ortho.png'),
+    revealImage: assetUrl('images/spine_navigation.png')
   }
 ];
 

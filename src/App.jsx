@@ -3,6 +3,7 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 
 // Eagerly loaded (critical path)
+import { HomePage } from './pages/HomePage'
 import { BranchLandingPage } from './pages/BranchLandingPage'
 import { PeerzadigudaPage } from './pages/PeerzadigudaPage'
 import { EcilPage } from './pages/EcilPage'
@@ -39,8 +40,8 @@ function App() {
       <HashRouter>
         <Suspense fallback={<PageLoader />}>
           <Routes>
-            {/* Homepage → ECIL */}
-            <Route path="/" element={<Navigate to="/branches/ecil" replace />} />
+            {/* Dedicated Homepage */}
+            <Route path="/" element={<HomePage />} />
 
             {/* Peerzadiguda — custom page */}
             <Route path="/branches/peerzadiguda" element={<PeerzadigudaPage />} />

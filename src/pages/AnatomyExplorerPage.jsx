@@ -10,6 +10,7 @@ import { StickyNavbar } from '@/components/layout/StickyNavbar'
 import { Footer } from '@/components/layout/Footer'
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
 import { assetUrl } from '@/lib/assetUrl'
+import { UnevenDepartmentCollage } from '@/components/sections/UnevenDepartmentCollage'
 
 const CLINICAL_STORYLINE = [
   {
@@ -345,7 +346,7 @@ export function AnatomyExplorerPage() {
               preload="auto"
               onLoadedMetadata={handleVideoLoaded}
               onCanPlayThrough={handleVideoLoaded}
-              className="absolute top-[60px] lg:top-[64px] bottom-auto lg:bottom-0 left-0 right-0 w-full h-[75vh] lg:h-[calc(100vh-64px)] object-contain object-[center_15%] lg:object-contain mix-blend-multiply transition-opacity duration-1000 z-0 opacity-100 pointer-events-none"
+              className="absolute top-[60px] lg:top-[64px] bottom-auto lg:bottom-0 left-0 right-0 w-full h-[75vh] lg:h-[calc(100vh-64px)] object-contain object-[center_15%] lg:object-contain scale-[1.35] origin-top lg:scale-100 lg:origin-center mix-blend-multiply transition-opacity duration-1000 z-0 opacity-100 pointer-events-none"
               style={{ filter: 'contrast(1.04) brightness(1.03)' }}
             />
 
@@ -363,7 +364,7 @@ export function AnatomyExplorerPage() {
               </button>
 
               {/* HUD Frame / Scrub Indicator */}
-              <div className="text-right flex flex-col items-end gap-0.5 sm:gap-1">
+              <div className="hidden lg:flex text-right flex-col items-end gap-0.5 sm:gap-1">
                 <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-[#8B1A4A]">Srikara Clinical Engine</span>
                 <span className="font-mono text-[9px] sm:text-[11px] font-bold text-slate-400 bg-slate-100/80 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md border border-slate-200/50">
                   FRAME: {String(Math.min(Math.floor(scrollProgress * 1440), 1440)).padStart(4, '0')} / SEC: {String(Math.min(Math.floor(targetTime), 48)).padStart(2, '0')}.0
@@ -373,7 +374,7 @@ export function AnatomyExplorerPage() {
 
             {/* Cinematic Scrollytelling Narrative Text Layers (Fixed Left/Center overlay on desktop, glassmorphic bottom sheet on mobile) */}
             <div className="absolute inset-x-0 bottom-24 lg:inset-x-auto lg:bottom-auto lg:inset-y-0 lg:left-32 lg:w-auto lg:justify-start lg:px-0 lg:pt-[190px] z-30 flex flex-col justify-end pointer-events-none max-w-[1400px] mx-auto w-full px-4 sm:px-6">
-              <div className="w-full max-w-xl text-left pointer-events-auto lg:pr-8 bg-white/85 backdrop-blur-md border border-slate-200/50 p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] shadow-xl lg:bg-transparent lg:backdrop-blur-none lg:border-none lg:p-0 lg:rounded-none lg:shadow-none transition-all duration-500">
+              <div className="w-full max-w-xl text-left pointer-events-auto lg:pr-8 bg-transparent backdrop-blur-none border-none shadow-none p-3.5 sm:p-6 rounded-2xl sm:rounded-[32px] lg:p-0 transition-all duration-500">
                 
                 {/* Visual Specialty Vertical Indicator (HUD style) */}
                 <div className="flex items-center gap-2 mb-2 sm:mb-4 lg:mb-6">
@@ -404,7 +405,7 @@ export function AnatomyExplorerPage() {
                     </h1>
 
                     {/* Clean pure-text narrative - absolutely no background cards on desktop, responsive spacing */}
-                    <p className="text-[10px] sm:text-xs md:text-sm text-slate-500 font-medium leading-relaxed max-w-lg mb-1 sm:mb-3 lg:mb-4">
+                    <p className="hidden lg:block text-[10px] sm:text-xs md:text-sm text-slate-500 font-medium leading-relaxed max-w-lg mb-1 sm:mb-3 lg:mb-4">
                       <span className="lg:hidden">{activeData.shortDesc}</span>
                       <span className="hidden lg:inline">{activeData.desc}</span>
                     </p>
@@ -540,6 +541,9 @@ export function AnatomyExplorerPage() {
 
         {/* Final CTA & Footer wrapper that overlays and scrolls up natively at progress > 0.85 */}
         <div className="relative z-40 bg-white border-t border-slate-100">
+          
+          {/* Centers of Specialty Care Section */}
+          <UnevenDepartmentCollage />
           
           {/* Immersive Dark/Light Contrast CTA Panel */}
           <section className="py-32 px-8 max-w-[1400px] mx-auto text-center relative overflow-hidden bg-[#FFF9FA]">

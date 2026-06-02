@@ -94,7 +94,7 @@ export function PeerzadigudaPage() {
           <DoctorsGroupBanner />
 
           {/* ── 2. CENTERS OF EXCELLENCE (Uneven Department Collage) ── */}
-          <UnevenDepartmentCollage />
+          <UnevenDepartmentCollage branchName={branch.title} />
 
 
           {/* ── 3. CLINICAL SEARCH ── */}

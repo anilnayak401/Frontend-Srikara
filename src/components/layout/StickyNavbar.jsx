@@ -85,7 +85,7 @@ export function StickyNavbar({ currentBranch }) {
 
 
           {/* Home */}
-          <NavLink to="/branches/ecil" active={location.pathname === '/' || location.pathname.startsWith('/branches/ecil')} isWhite={isWhite}>
+          <NavLink to="/" active={location.pathname === '/'} isWhite={isWhite}>
             Home
           </NavLink>
 
@@ -140,7 +140,7 @@ export function StickyNavbar({ currentBranch }) {
           </div>
 
           {/* Find Hospitals dropdown */}
-          <div ref={hospitalsRef} className="relative h-full flex items-center">
+          <div ref={hospitalsRef} className="h-full flex items-center">
             <DropButton
               label="Find Hospitals"
               isOpen={hospitalsOpen}
@@ -151,41 +151,87 @@ export function StickyNavbar({ currentBranch }) {
             <AnimatePresence>
               {hospitalsOpen && (
                 <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.97 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 8, scale: 0.97 }}
-                  transition={{ duration: 0.18, ease: 'easeOut' }}
-                  className="absolute top-[calc(100%+4px)] left-1/2 -translate-x-1/2 w-[460px] bg-white rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] border border-black/5 overflow-hidden z-50"
+                  initial={{ opacity: 0, y: 15, scale: 0.95, rotateX: -5 }}
+                  animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95, rotateX: -5 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                  style={{ transformOrigin: 'top center' }}
+                  className="absolute top-[calc(100%+8px)] left-0 right-0 mx-auto w-[1160px] bg-slate-100 border border-slate-200 rounded-[28px] shadow-[0_30px_70px_rgba(0,0,0,0.18)] overflow-hidden z-50 p-4 flex flex-col"
                 >
-                  <div className="px-5 py-4 flex items-center justify-between"
-                    style={{ background: `linear-gradient(135deg, ${ACCENT}, #5E0F30)` }}>
+                  {/* Rounded Header */}
+                  <div 
+                    className="px-5 py-4 flex items-center justify-between rounded-2xl shadow-md mb-3"
+                    style={{ background: `linear-gradient(135deg, rgba(139, 26, 74, 0.95), rgba(94, 15, 48, 0.95))` }}
+                  >
                     <div>
-                      <p className="text-white font-bold text-sm uppercase tracking-widest">Our Hospitals</p>
-                      <p className="text-white/55 text-[10px] mt-0.5">{branches.length} Locations · AP & Telangana</p>
+                      <p className="text-white font-headline font-black text-sm uppercase tracking-widest">Our Hospitals</p>
+                      <p className="text-white/60 text-[10px] font-bold mt-0.5">{branches.length} Locations · AP & Telangana</p>
                     </div>
                     <Link to="/branches" onClick={() => setHospitalsOpen(false)}
-                      className="text-[10px] font-bold text-white/80 hover:text-white uppercase tracking-wider border border-white/30 px-3 py-1.5 rounded-full hover:border-white transition-colors">
+                      className="text-[10px] font-bold text-white uppercase tracking-wider border border-white/30 px-4 py-2 rounded-full hover:bg-white hover:text-[#8B1A4A] transition-all duration-300 shadow-sm">
                       View All →
                     </Link>
                   </div>
-                  <div className="p-3 grid grid-cols-2 gap-1 max-h-[320px] overflow-y-auto">
+
+                  {/* Staggered Grid of Horizontally Elongated Rounded Glassmorphic Cards (3 columns) */}
+                  <motion.div 
+                    variants={{
+                      hidden: { opacity: 0 },
+                      show: {
+                        opacity: 1,
+                        transition: {
+                          staggerChildren: 0.04,
+                          delayChildren: 0.05
+                        }
+                      }
+                    }}
+                    initial="hidden"
+                    animate="show"
+                    className="p-1 grid grid-cols-3 gap-3 max-h-[380px] overflow-y-auto custom-scrollbar"
+                  >
                     {branches.map(b => (
-                      <Link key={b.slug} to={`/branches/${b.slug}`} onClick={() => setHospitalsOpen(false)}
-                        className="group flex items-start gap-3 p-3 rounded-xl hover:bg-[#8B1A4A]/5 transition-all">
-                        <div className="w-8 h-8 flex-shrink-0 rounded-lg bg-[#8B1A4A]/10 flex items-center justify-center mt-0.5 group-hover:bg-[#8B1A4A]/20 transition-colors">
-                          <MapPin className="w-4 h-4 text-[#8B1A4A]" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="font-bold text-sm text-[#8B1A4A] truncate">{b.title}</p>
-                          <p className="text-[11px] text-gray-500 truncate">{b.subtitle}</p>
-                        </div>
-                      </Link>
+                      <motion.div
+                        key={b.slug}
+                        variants={{
+                          hidden: { opacity: 0, y: 15, scale: 0.95 },
+                          show: { 
+                            opacity: 1, 
+                            y: 0, 
+                            scale: 1,
+                            transition: { type: "spring", stiffness: 260, damping: 20 } 
+                          }
+                        }}
+                        whileHover={{ scale: 1.02, y: -2 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <Link to={`/branches/${b.slug}`} onClick={() => setHospitalsOpen(false)}
+                          className="group flex flex-row items-center gap-4 p-4 rounded-2xl bg-white/50 backdrop-blur-md border border-white/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:bg-[#8B1A4A]/5 hover:border-[#8B1A4A]/25 transition-all duration-300 min-h-[96px] text-left w-full"
+                        >
+                          {/* MapPin Icon Container on Left */}
+                          <div className="w-10 h-10 flex-shrink-0 rounded-xl bg-[#8B1A4A]/10 flex items-center justify-center mt-0.5 group-hover:bg-[#8B1A4A] group-hover:text-white transition-all duration-300 shadow-sm">
+                            <MapPin className="w-5 h-5 text-[#8B1A4A] group-hover:text-white transition-colors duration-300 group-hover:animate-bounce" />
+                          </div>
+
+                          {/* Details on Right */}
+                          <div className="min-w-0 flex-1">
+                            <p className="font-headline font-black text-[15px] text-[#8B1A4A] group-hover:text-[#5E0F30] transition-colors truncate">{b.title}</p>
+                            <p className="text-[11px] text-[#2D3A4A] font-bold mt-0.5 truncate leading-relaxed">{b.subtitle}</p>
+                            <p className="text-[10px] text-gray-500 font-medium mt-1.5 line-clamp-1 leading-normal group-hover:text-gray-700 transition-colors">
+                              📍 {b.address}
+                            </p>
+                          </div>
+                        </Link>
+                      </motion.div>
                     ))}
-                  </div>
-                  <div className="px-5 py-3 bg-gray-50 border-t border-black/5 flex items-center justify-between">
-                    <p className="text-[11px] text-gray-500">🚨 <span className="font-bold text-[#8B1A4A]">040-68324800</span></p>
+                  </motion.div>
+
+                  {/* Rounded Footer */}
+                  <div className="px-5 py-4 bg-slate-100 border-t border-slate-200 rounded-2xl flex items-center justify-between mt-3">
+                    <p className="text-[11px] text-gray-600 font-bold flex items-center gap-1.5">
+                      🚨 Hotline: <span className="font-black text-[#8B1A4A] text-xs">040-68324800</span>
+                    </p>
                     <button onClick={() => { navigate('/book'); setHospitalsOpen(false) }}
-                      className="text-[10px] font-bold text-white bg-[#8B1A4A] px-4 py-1.5 rounded-full hover:opacity-90 transition-opacity">
+                      className="text-[10px] font-black text-white bg-[#8B1A4A] px-5 py-2.5 rounded-full hover:bg-[#5E0F30] transition-colors shadow-md shadow-[#8B1A4A]/20 hover:shadow-lg uppercase tracking-wider">
                       Book Now
                     </button>
                   </div>
@@ -327,7 +373,7 @@ export function StickyNavbar({ currentBranch }) {
             >
               <nav className="flex flex-col gap-0.5">
                 {[
-                  { label: 'Home', to: '/branches/ecil' },
+                  { label: 'Home', to: '/' },
                   { label: 'Find Hospitals', to: '/branches' },
                   { label: 'Doctors', to: '/doctors' },
                   { label: 'Specialties (3D)', to: '/specialties' },

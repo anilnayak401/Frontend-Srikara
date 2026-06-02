@@ -395,8 +395,8 @@ export const PremiumDoctorFinder = ({ branchTitle = 'ECIL', branchId = 'ECIL', i
             
             {/* Title */}
             <h2 className="editorial-title text-3xl md:text-4xl lg:text-[44px] font-black tracking-tight leading-[1.1] mb-4">
-              <span className="block text-[#2D3A4A]">Meet Our Specialized</span>
-              <span className="block text-[#8B1A4A] mt-2">Medical Team</span>
+              <span className="block text-[#2D3A4A]">Meet Our Specialized Medical Team</span>
+              <span className="block text-[#8B1A4A] mt-2">at Srikara {isGlobal || allowBranchSwitch ? selectedBranch : branchTitle}</span>
             </h2>
             <div className="w-16 h-[2px] bg-[#8B1A4A]/25 mb-6" />
           </div>

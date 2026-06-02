@@ -69,7 +69,7 @@ export function MiyapurPage() {
           <DoctorsGroupBanner />
 
           {/* 2. CENTERS OF EXCELLENCE (Uneven Department Collage) */}
-          <UnevenDepartmentCollage />
+          <UnevenDepartmentCollage branchName={branch.title} />
 
 
           {/* 3. DISEASE SEARCH */}
