@@ -364,8 +364,8 @@ function InteractiveMilestones({ milestones, brandAccent }) {
                   animate={{ x: isActive ? 0 : -10, opacity: isActive ? 1 : 0 }}
                   className="w-8 h-8 rounded-full border flex items-center justify-center transition-colors"
                   style={{ 
-                    borderColor: isActive ? brandAccent : 'transparent',
-                    color: isActive ? brandAccent : 'transparent' 
+                    borderColor: isActive ? brandAccent : 'rgba(0, 0, 0, 0)',
+                    color: isActive ? brandAccent : 'rgba(0, 0, 0, 0)' 
                   }}
                 >
                   <ChevronRight size={14} />

@@ -87,11 +87,11 @@ export function PeerzadigudaPage() {
             </div>
           </VideoHero>
 
-          {/* ── 1.5 DEPARTMENT SEARCH ── */}
+           {/* ── 1.5 DEPARTMENT SEARCH ── */}
           <DepartmentSearch />
 
           {/* ── DOCTORS TEAM BANNER ── */}
-          <DoctorsGroupBanner />
+          <DoctorsGroupBanner branchName={branch.title} />
 
           {/* ── 2. CENTERS OF EXCELLENCE (Uneven Department Collage) ── */}
           <UnevenDepartmentCollage branchName={branch.title} />

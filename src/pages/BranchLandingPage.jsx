@@ -88,7 +88,7 @@ export function BranchLandingPage({ branch }) {
             </div>
           </VideoHero>
           {/* ── DOCTORS TEAM BANNER ── */}
-          <DoctorsGroupBanner />
+          <DoctorsGroupBanner branchName={branch.title} />
 
           {/* ── 2. CENTERS OF EXCELLENCE (Uneven Department Collage) ── */}
           <UnevenDepartmentCollage branchName={branch.title} />

@@ -1,5 +1,5 @@
-import { lazy, Suspense } from 'react'
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { lazy, Suspense, useEffect } from 'react'
+import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 
 // Eagerly loaded (critical path)
@@ -34,10 +34,49 @@ function PageLoader() {
   )
 }
 
+// Reset scroll position on route change
+function ScrollToTop() {
+  const { pathname, hash } = useLocation()
+
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual'
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!hash) {
+      // Temporarily disable smooth scroll on html element
+      const html = document.documentElement
+      const originalScrollBehavior = html.style.scrollBehavior
+      html.style.scrollBehavior = 'auto'
+      
+      // Scroll instantly to top
+      window.scrollTo(0, 0)
+      
+      // Use requestAnimationFrame for async layout/rendering safety
+      const rAF = requestAnimationFrame(() => {
+        window.scrollTo(0, 0)
+        html.style.scrollBehavior = originalScrollBehavior
+      })
+
+      return () => cancelAnimationFrame(rAF)
+    } else {
+      const element = document.getElementById(hash.slice(1))
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' })
+      }
+    }
+  }, [pathname, hash])
+
+  return null
+}
+
 function App() {
   return (
     <HelmetProvider>
-      <HashRouter>
+      <HashRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <ScrollToTop />
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {/* Dedicated Homepage */}

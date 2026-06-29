@@ -7,6 +7,7 @@ import { Footer } from '@/components/layout/Footer'
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
 import { TimelineSection } from '@/components/sections/TimelineSection'
 import { PremiumDoctorFinder } from '@/components/sections/PremiumDoctorFinder'
+import { ScrollSequence } from '@/components/sections/ScrollSequence'
 
 // --- PREMIUM ABOUT PAGE DESIGN TOKENS ---
 const ABO_STYLES = `
@@ -56,34 +57,8 @@ export function AboutPage() {
       <div className="min-h-screen bg-[#FFF9FA] text-[#1A202C] selection:bg-[#8B1A4A] selection:text-white">
         <StickyNavbar />
 
-        {/* Cinematic Hero */}
-        <section className="relative pt-40 pb-32 overflow-hidden">
-          <div className="absolute inset-0 z-0">
-             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] bg-[#8B1A4A]/5 blur-[160px] rounded-full opacity-60" />
-             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/light-paper-fibers.png')] opacity-10" />
-          </div>
-
-          <div className="relative z-10 max-w-7xl mx-auto px-8">
-            <motion.div 
-               initial={{ opacity: 0, y: 30 }}
-               animate={{ opacity: 1, y: 0 }}
-               className="flex flex-col items-center text-center"
-            >
-               <span className="px-6 py-2 rounded-full border border-[#8B1A4A]/30 text-[#8B1A4A] text-[10px] font-black uppercase tracking-[0.4em] mb-10 bg-[#8B1A4A]/5">
-                 Established 2013
-               </span>
-               <h1 className="font-garamond text-6xl md:text-8xl font-bold mb-10 leading-[0.95] tracking-tight">
-                 <span className="text-[#1A202C]">A Legacy of</span>
-                 <br />
-                 <span className="hero-gradient-text italic">Clinical Mastery</span>
-               </h1>
-               <div className="w-24 h-px bg-gradient-to-r from-transparent via-[#8B1A4A] to-transparent mb-12" />
-               <p className="max-w-2xl text-[#4A4A4A] text-xl font-medium leading-relaxed">
-                 SRIKARA Hospitals is synonymous with quality, expertise, and innovation — blending global healthcare standards with compassionate, affordable care.
-               </p>
-            </motion.div>
-          </div>
-        </section>
+        {/* Interactive Scroll Sequence Hero */}
+        <ScrollSequence />
 
         {/* Global Stats Grid */}
         <section className="pb-32 relative z-10">

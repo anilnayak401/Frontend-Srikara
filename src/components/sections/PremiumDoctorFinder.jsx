@@ -139,12 +139,13 @@ function DoctorCard({ doctor, isActive, transitionEnabled, onClick, getHasDragge
             ? '0 12px 25px rgba(139, 26, 74, 0.12)' 
             : 'none',
           borderWidth: isActive ? 1 : 0,
-          borderColor: isActive ? 'rgba(255, 255, 255, 0.5)' : 'transparent',
+          borderColor: isActive ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0)',
           x: isActive ? (isMobile ? 3 : 6) : 0,
           width: isActive ? 'calc(100% - 6px)' : '100%'
         }}
         transition={currentDetailsTransition}
-        className={`relative z-10 flex flex-col justify-between flex-grow ${isActive ? 'backdrop-blur-md border shadow-lg' : ''}`}
+        style={{ borderStyle: 'solid' }}
+        className={`relative z-10 flex flex-col justify-between flex-grow ${isActive ? 'backdrop-blur-md shadow-lg' : ''}`}
       >
         <div className="w-full">
           <h4 className="text-xs sm:text-sm font-bold text-slate-800 text-center leading-tight mb-0.5 group-hover:text-[#8B1A4A] transition-colors duration-300">

@@ -8,7 +8,7 @@ import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
 import { AppointmentWidget } from '@/components/sections/AppointmentWidget'
 import { VideoHero } from '@/components/sections/VideoHero'
 import { PremiumDiseasesSearch } from '@/components/sections/PremiumDiseasesSearch'
-import { DoctorsGroupBanner } from '@/components/sections/DoctorsGroupBanner'
+import { FounderChairmanCard } from '@/components/sections/FounderChairmanCard'
 import { PremiumDoctorFinder } from '@/components/sections/PremiumDoctorFinder'
 import { PremiumCaseStudies } from '@/components/sections/PremiumCaseStudies'
 import { PremiumLocation } from '@/components/sections/PremiumLocation'
@@ -65,8 +65,8 @@ export function HomePage() {
 
           {/* 1.5 DEPARTMENT SEARCH */}
           <DepartmentSearch />
-          {/* ── DOCTORS TEAM BANNER ── */}
-          <DoctorsGroupBanner />
+          {/* ── FOUNDER & CHAIRMAN SPOTLIGHT ── */}
+          <FounderChairmanCard />
 
           {/* 2. CENTERS OF EXCELLENCE (Uneven Department Collage) */}
           <UnevenDepartmentCollage />

@@ -12,6 +12,7 @@ import { Footer } from '@/components/layout/Footer'
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
 import { branches } from '@/data/branches'
 import { assetUrl } from '@/lib/assetUrl'
+import { ALL_DOCTORS } from '@/data/doctors'
 
 // Professional Luxury Tokens
 const COLORS = {
@@ -22,14 +23,28 @@ const COLORS = {
   border: 'rgba(212, 175, 55, 0.2)',
 }
 
-const SPECIALTIES = [
-  { id: 'ortho', name: 'Orthopedics', icon: Bone, count: 12 },
-  { id: 'cardio', name: 'Cardiology', icon: Heart, count: 8 },
-  { id: 'neuro', name: 'Neurology', icon: Brain, count: 6 },
-  { id: 'gynaec', name: 'Gynecology', icon: Baby, count: 9 },
-  { id: 'general', name: 'Gen. Medicine', icon: Stethoscope, count: 18 },
-  { id: 'urology', name: 'Urology', icon: ShieldCheck, count: 7 },
-]
+const ICON_MAP = {
+  ortho: Bone,
+  cardio: Heart,
+  neuro: Brain,
+  neurosurg: Brain,
+  spine: Brain,
+  gyn: Baby,
+  physician: Stethoscope,
+  urology: ShieldCheck,
+  nephro: ShieldCheck,
+  onco: Activity,
+  pulmo: Activity,
+  general: Activity,
+  peds: Baby,
+  ent: Stethoscope,
+  dermo: Stethoscope,
+  dental: Stethoscope,
+  psych: Brain,
+  radio: Activity,
+  physio: Activity,
+  anesthesia: ShieldCheck,
+}
 
 export function BookAppointmentPage() {
   const navigate = useNavigate()
@@ -39,25 +54,58 @@ export function BookAppointmentPage() {
   const [isBookingOpen, setIsBookingOpen] = useState(false)
   const [selectedDoc, setSelectedDoc] = useState(null)
 
+  // Dynamic specialties based on selected branch
+  const specialties = useMemo(() => {
+    if (!selectedBranch) return []
+    const normalize = (s) => s ? s.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+    const normBranch = normalize(selectedBranch.title)
+    
+    const specMap = {}
+    ALL_DOCTORS.forEach(doc => {
+      if (normalize(doc.branch) === normBranch) {
+        const specId = doc.specialtyId
+        if (!specMap[specId]) {
+          specMap[specId] = {
+            id: specId,
+            name: doc.specialty,
+            icon: ICON_MAP[specId] || Stethoscope,
+            count: 0
+          }
+        }
+        specMap[specId].count++
+      }
+    })
+    
+    // Sort: Ortho first, then alphabetically
+    return Object.values(specMap).sort((a, b) => {
+      if (a.id === 'ortho') return -1
+      if (b.id === 'ortho') return 1
+      return a.name.localeCompare(b.name)
+    })
+  }, [selectedBranch])
+
   // Filtered doctors based on branch + specialty
   const filteredDoctors = useMemo(() => {
-    if (!selectedBranch) return []
-    // Pulling actual chairman image as the face of quality
-    const mainDoc = {
-      name: 'Dr. Akhil Dadi',
-      role: 'Chief Surgeon',
-      image: assetUrl('doctors/akhil-dadi.png'),
-      experience: '15+ Years',
-      skills: ['Robotic Surgery', 'Joint Replacement'],
-      rating: 4.9
-    }
+    if (!selectedBranch || !selectedSpec) return []
+    const normalize = (s) => s ? s.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+    const normBranch = normalize(selectedBranch.title)
+    const specId = selectedSpec.id
     
-    return [
-      { ...mainDoc, id: 'd-1', name: 'Dr. Akhil Dadi', role: 'Chairman & Chief Surgeon' },
-      { ...mainDoc, id: 'd-2', name: 'Dr. Sameer V', role: 'Associate Director' },
-      { ...mainDoc, id: 'd-3', name: 'Dr. Priyanka R', role: 'Senior Lead Surgeon' },
-    ]
-  }, [selectedBranch])
+    return ALL_DOCTORS.filter(doc => 
+      normalize(doc.branch) === normBranch && 
+      doc.specialtyId === specId
+    ).map(doc => ({
+      id: doc.id,
+      name: doc.name,
+      role: doc.label || doc.sub || 'Specialist',
+      image: doc.image,
+      fallback: doc.fallback,
+      experience: doc.exp,
+      skills: doc.expertise || [],
+      rating: parseFloat(doc.rating) || 4.8,
+      slug: doc.slug
+    }))
+  }, [selectedBranch, selectedSpec])
 
   const steps = [
     { id: 1, label: 'Choose Location' },
@@ -152,7 +200,7 @@ export function BookAppointmentPage() {
                    className="max-w-4xl mx-auto"
                  >
                    <div className="flex flex-wrap justify-center gap-6">
-                      {SPECIALTIES.map((s) => (
+                      {specialties.map((s) => (
                         <button
                           key={s.id}
                           onClick={() => { setSelectedSpec(s); setStep(3); }}
@@ -168,7 +216,7 @@ export function BookAppointmentPage() {
                             <s.icon size={28} />
                           </div>
                           <h4 className={`font-bold text-xl mb-1 ${selectedSpec?.id === s.id ? 'text-white' : 'text-[#1A202C]'}`}>{s.name}</h4>
-                          <p className={`text-xs font-semibold ${selectedSpec?.id === s.id ? 'text-white/70' : 'text-[#94A3B8]'}`}>{s.count} Clinical Units</p>
+                          <p className={`text-xs font-semibold ${selectedSpec?.id === s.id ? 'text-white/70' : 'text-[#94A3B8]'}`}>{s.count} Consultants</p>
                         </button>
                       ))}
                    </div>

@@ -67,7 +67,7 @@ export function EcilPage() {
           {/* 1.5 DEPARTMENT SEARCH */}
           <DepartmentSearch />
           {/* ── DOCTORS TEAM BANNER ── */}
-          <DoctorsGroupBanner />
+          <DoctorsGroupBanner branchName="ECIL" />
 
           {/* 2. CENTERS OF EXCELLENCE (Uneven Department Collage) */}
           <UnevenDepartmentCollage branchName={branch.title} />

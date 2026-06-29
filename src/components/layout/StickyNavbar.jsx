@@ -23,7 +23,7 @@ export function StickyNavbar({ currentBranch }) {
   const location = useLocation()
 
   useEffect(() => {
-    const unsub = scrollY.onChange(y => {
+    const unsub = scrollY.on("change", y => {
       setHideBar(false)
       setScrolled(y > 50)
       lastScrollY.current = y
