@@ -272,6 +272,11 @@ export function StickyNavbar({ currentBranch }) {
             Blogs
           </NavLink>
 
+          {/* 9. Careers */}
+          <NavLink to="/careers" active={isActive('/careers')} isWhite={isWhite}>
+            Careers
+          </NavLink>
+
           {/* 7. Search Toggle - removed */}
 
           {/* Book Appointment button */}
@@ -380,6 +385,7 @@ export function StickyNavbar({ currentBranch }) {
                   { label: 'Specialties List', to: '/specialties-list' },
                   { label: 'Discover Srikara', to: '/about' },
                   { label: 'Blogs', to: '/blogs' },
+                  { label: 'Careers', to: '/careers' },
                 ].map(lnk => (
                   <Link key={lnk.label} to={lnk.to} onClick={() => setMobileOpen(false)}
                     className="flex items-center justify-between py-2.5 px-4 rounded-xl font-bold text-xs uppercase tracking-wider transition-all duration-300"

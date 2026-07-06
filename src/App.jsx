@@ -22,6 +22,7 @@ const ServicesPage      = lazy(() => import('./pages/ServicesPage').then(m => ({
 const AboutPage         = lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })))
 const PlaceholderPage   = lazy(() => import('./pages/PlaceholderPage').then(m => ({ default: m.PlaceholderPage })))
 const AnatomyExplorerPage = lazy(() => import('./pages/AnatomyExplorerPage').then(m => ({ default: m.AnatomyExplorerPage })))
+const CareersPage       = lazy(() => import('./pages/CareersPage').then(m => ({ default: m.CareersPage })))
 
 import { lbNagar, kompally, lakdikapul, ecil, miyapur, vijayawada, rajahmundry, rtcXRoads } from './data/branches'
 
@@ -108,6 +109,7 @@ function App() {
             <Route path="/book"          element={<BookAppointmentPage />} />
             <Route path="/book/:slug"    element={<IndividualBookingPage />} />
             <Route path="/blogs"         element={<BlogsPage />} />
+            <Route path="/careers"       element={<CareersPage />} />
 
             <Route path="*" element={<PlaceholderPage title="Page Not Found" />} />
           </Routes>

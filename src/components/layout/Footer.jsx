@@ -44,6 +44,11 @@ export function Footer() {
         <div>
           <h4 className="font-bold text-[#8B1A4A] mb-6 uppercase text-xs tracking-widest">Resources</h4>
           <ul className="space-y-4">
+            <li>
+              <Link to="/careers" className="text-[#4A4A4A] hover:text-[#2D3A4A] text-sm transition-colors">
+                Careers & Fellowship
+              </Link>
+            </li>
             {["Chairman's Message", 'Privacy Policy', 'Patient Guide', 'International Patients'].map(item => (
               <li key={item}>
                 <Link to="#" className="text-[#4A4A4A] hover:text-[#2D3A4A] text-sm transition-colors">
