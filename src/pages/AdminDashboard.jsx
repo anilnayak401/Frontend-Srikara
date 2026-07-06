@@ -136,6 +136,7 @@ export function AdminDashboard() {
   
   // Roster lists
   const [analyticsData, setAnalyticsData] = useState(MOCK_ANALYTICS)
+  const [deviceData, setDeviceData] = useState(MOCK_DEVICE_DATA)
   const [clickLogs, setClickLogs] = useState(MOCK_CLICKS)
   const [doctors, setDoctors] = useState(MOCK_DOCTORS)
   const [jobs, setJobs] = useState(MOCK_JOBS)
