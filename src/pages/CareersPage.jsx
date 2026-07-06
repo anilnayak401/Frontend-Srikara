@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Helmet } from 'react-helmet-async'
 import { StickyNavbar } from '@/components/layout/StickyNavbar'
 import { Footer } from '@/components/layout/Footer'
@@ -18,7 +18,8 @@ import {
   Globe, 
   Percent, 
   Send,
-  Briefcase
+  Briefcase,
+  HelpCircle
 } from 'lucide-react'
 
 // Styles for colourful glassmorphic elements matching the Srikara website's guidelines
@@ -241,7 +242,8 @@ export function CareersPage() {
     seats: 2,
     fees: FEES,
     refunds: REFUNDS,
-    postponementCharge: '₹10,000'
+    postponementCharge: '₹10,000',
+    faqs: []
   })
 
   // 1. Fetch Dynamic Data from database if Firebase is initialized
@@ -265,9 +267,11 @@ export function CareersPage() {
         // Fetch Job Openings
         const jobSnap = await getDocs(collection(db, 'job_openings'))
         const jobList = jobSnap.docs.map(d => ({ id: d.id, ...d.data() }))
-        setJobOpenings(jobList)
+        // Filter out closed openings
+        const activeJobs = jobList.filter(j => j.status === 'Active')
+        setJobOpenings(activeJobs)
       } catch (err) {
-        console.warn('Firebase config offline. Rendering career details in static mode.')
+        console.warn('Firebase config offline. Operating in static mode.')
       }
     }
     fetchCMSData()
@@ -538,7 +542,6 @@ export function CareersPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto items-stretch">
               {fellowshipDetails.fees.map((item, idx) => {
-                // Fetch dynamic layouts if specified or use defaults
                 const defaultStyles = FEES[idx] || FEES[FEES.length - 1]
                 return (
                   <motion.div
@@ -615,22 +618,25 @@ export function CareersPage() {
               
               {/* Refund percentages */}
               <div className="lg:col-span-7 grid grid-cols-2 gap-5">
-                {REFUNDS.map((r, idx) => (
-                  <div 
-                    key={idx} 
-                    style={r.style}
-                    className="glass-card-colorful rounded-2xl p-6 flex flex-col justify-between"
-                  >
-                    <div>
-                      <p className="text-xs text-gray-500 font-semibold">{r.timeline}</p>
-                      <p className={`font-garamond ${r.textColor} text-xl font-bold mt-2`}>{r.pct}</p>
+                {fellowshipDetails.refunds.map((r, idx) => {
+                  const defaultRef = REFUNDS[idx] || REFUNDS[REFUNDS.length - 1]
+                  return (
+                    <div 
+                      key={idx} 
+                      style={defaultRef.style}
+                      className="glass-card-colorful rounded-2xl p-6 flex flex-col justify-between"
+                    >
+                      <div>
+                        <p className="text-xs text-gray-500 font-semibold">{r.timeline}</p>
+                        <p className={`font-garamond ${defaultRef.textColor} text-xl font-bold mt-2`}>{r.pct}</p>
+                      </div>
+                      <div className="mt-6 pt-3 border-t border-black/5 flex items-center justify-between">
+                        <span className="text-[10px] uppercase font-black tracking-widest text-[#8B1A4A]">Returns</span>
+                        <span className={`text-sm font-black ${defaultRef.textColor}`}>{r.amt}</span>
+                      </div>
                     </div>
-                    <div className="mt-6 pt-3 border-t border-black/5 flex items-center justify-between">
-                      <span className="text-[10px] uppercase font-black tracking-widest text-[#8B1A4A]">Returns</span>
-                      <span className={`text-sm font-black ${r.textColor}`}>{r.amt}</span>
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
 
               {/* Postponement rules */}
@@ -664,7 +670,25 @@ export function CareersPage() {
             </div>
           </section>
 
-          {/* ══════════════ DYNAMIC ACTIVE JOB OPENINGS (NEW) ══════════════ */}
+          {/* ══════════════ FREQUENTLY ASKED QUESTIONS (DYNAMIC FAQ ACCORDIONS) ══════════════ */}
+          {fellowshipDetails.faqs && fellowshipDetails.faqs.length > 0 && (
+            <section className="mb-24 max-w-4xl mx-auto">
+              <div className="text-center mb-16">
+                <h2 className="font-garamond text-3xl md:text-4xl font-bold mb-4 flex items-center justify-center gap-3">
+                  <HelpCircle className="w-7 h-7 text-[#8B1A4A]" /> Frequently Asked Questions
+                </h2>
+                <div className="w-16 h-[2.5px] bg-[#8B1A4A]/30 mx-auto mt-4" />
+              </div>
+
+              <div className="space-y-4">
+                {fellowshipDetails.faqs.map((faq, idx) => (
+                  <FAQAccordionItem key={idx} question={faq.question} answer={faq.answer} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* ══════════════ DYNAMIC ACTIVE JOB OPENINGS ══════════════ */}
           {jobOpenings.length > 0 && (
             <section className="mb-24">
               <div className="text-center mb-16">
@@ -892,5 +916,45 @@ export function CareersPage() {
         <MobileBottomNav />
       </div>
     </>
+  )
+}
+
+// ══════════════ ACCORDION FAQ ITEM HELPER ══════════════
+function FAQAccordionItem({ question, answer }) {
+  const [isOpen, setIsOpen] = useState(false)
+  return (
+    <div 
+      style={{
+        '--glass-border': 'rgba(139, 26, 74, 0.12)',
+        '--glass-border-hover': 'rgba(139, 26, 74, 0.25)',
+        '--glass-shadow': 'rgba(139, 26, 74, 0.02)'
+      }}
+      className="glass-card-colorful rounded-2xl overflow-hidden"
+    >
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full p-6 text-left flex justify-between items-center gap-4 hover:bg-[#8B1A4A]/[0.02] transition-colors outline-none"
+      >
+        <span className="font-headline font-bold text-sm text-[#2D3A4A]">{question}</span>
+        <span className="text-lg font-black text-[#8B1A4A] transition-transform duration-300" style={{ transform: isOpen ? 'rotate(45deg)' : 'none' }}>
+          ＋
+        </span>
+      </button>
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="border-t border-slate-100/50 bg-white/30"
+          >
+            <p className="p-6 text-xs text-[#4A4A4A] leading-relaxed font-light whitespace-pre-line">
+              {answer}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   )
 }
