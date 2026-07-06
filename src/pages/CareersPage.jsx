@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Helmet } from 'react-helmet-async'
 import { StickyNavbar } from '@/components/layout/StickyNavbar'
@@ -17,7 +17,8 @@ import {
   Activity, 
   Globe, 
   Percent, 
-  Send 
+  Send,
+  Briefcase
 } from 'lucide-react'
 
 // Styles for colourful glassmorphic elements matching the Srikara website's guidelines
@@ -39,11 +40,11 @@ const CAREER_STYLES = `
     border-color: var(--glass-border-hover, rgba(139, 26, 74, 0.25));
     box-shadow: 0 20px 40px -10px var(--glass-shadow-hover, rgba(139, 26, 74, 0.15)),
                 inset 0 0 0 1px rgba(255, 255, 255, 0.9);
-    background: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.85);
   }
 
   .dark-glass-card {
-    background: rgba(45, 58, 74, 0.9);
+    background: rgba(45, 58, 74, 0.95);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -54,8 +55,8 @@ const CAREER_STYLES = `
     animation: pulse 6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
   @keyframes pulse {
-    0%, 100% { opacity: 0.1; transform: scale(1); }
-    50% { opacity: 0.2; transform: scale(1.08); }
+    0%, 100% { opacity: 0.12; transform: scale(1); }
+    50% { opacity: 0.22; transform: scale(1.08); }
   }
 `
 
@@ -230,10 +231,51 @@ export function CareersPage() {
   const [candidateName, setCandidateName] = useState('')
   const [candidateQualification, setCandidateQualification] = useState('MS (Orthopedics)')
   const [emailCopied, setEmailCopied] = useState(false)
+  const [targetApplication, setTargetApplication] = useState('Arthroplasty Fellowship')
 
-  const subject = encodeURIComponent(`Application for Arthroplasty Fellowship - ${candidateQualification}`)
+  // Dynamic CMS States
+  const [jobOpenings, setJobOpenings] = useState([])
+  const [fellowshipDetails, setFellowshipDetails] = useState({
+    duration: '1 Month',
+    eligibility: 'MS (Orthopedics) / D.Ortho',
+    seats: 2,
+    fees: FEES,
+    refunds: REFUNDS,
+    postponementCharge: '₹10,000'
+  })
+
+  // 1. Fetch Dynamic Data from database if Firebase is initialized
+  useEffect(() => {
+    const fetchCMSData = async () => {
+      try {
+        const firebaseLib = await import('@/lib/firebase')
+        const db = firebaseLib.db
+        if (!db) return
+
+        const firestoreModule = await import('firebase/firestore')
+        const { doc, getDoc, collection, getDocs } = firestoreModule
+
+        // Fetch Fellowship Settings
+        const fellRef = doc(db, 'fellowship_details', 'arthroplasty')
+        const fellSnap = await getDoc(fellRef)
+        if (fellSnap.exists()) {
+          setFellowshipDetails(prev => ({ ...prev, ...fellSnap.data() }))
+        }
+
+        // Fetch Job Openings
+        const jobSnap = await getDocs(collection(db, 'job_openings'))
+        const jobList = jobSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+        setJobOpenings(jobList)
+      } catch (err) {
+        console.warn('Firebase config offline. Rendering career details in static mode.')
+      }
+    }
+    fetchCMSData()
+  }, [])
+
+  const subject = encodeURIComponent(`Application for ${targetApplication} - ${candidateQualification}`)
   const body = encodeURIComponent(
-    `Respected HR Team,\n\nI am writing to apply for the Arthroplasty Fellowship at Srikara Hospitals.\n\nHere are my application details:\n- Name: ${candidateName || '[Your Name]'}\n- Qualification: ${candidateQualification}\n- Preferred Slot: ${selectedMonth}\n\nI have attached my academic credentials and curriculum vitae for your kind perusal.\n\nThank you.\n\nWarm regards,\n${candidateName || '[Your Name]'}`
+    `Respected HR Team,\n\nI am writing to apply for the ${targetApplication} position at Srikara Hospitals.\n\nHere are my application details:\n- Name: ${candidateName || '[Your Name]'}\n- Qualification: ${candidateQualification}\n- Preferred Starting: ${selectedMonth}\n\nI have attached my academic credentials and curriculum vitae for your kind perusal.\n\nThank you.\n\nWarm regards,\n${candidateName || '[Your Name]'}`
   )
 
   const handleApplyClick = () => {
@@ -246,13 +288,21 @@ export function CareersPage() {
     setTimeout(() => setEmailCopied(false), 2000)
   }
 
+  const selectJobForApplication = (jobTitle) => {
+    setTargetApplication(jobTitle)
+    const element = document.getElementById('apply-portal')
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
+
   return (
     <>
       <Helmet>
         <title>Careers & Arthroplasty Fellowship | Srikara Hospitals</title>
         <meta 
           name="description" 
-          content="Accelerate your orthopedic career with Srikara Hospitals' highly sought-after Arthroplasty Fellowship. Hands-on training with light colourful glassmorphic interfaces." 
+          content="Accelerate your orthopedic career with Srikara Hospitals' highly sought-after Arthroplasty Fellowship. Explore dynamic job openings." 
         />
         <style>{CAREER_STYLES}</style>
       </Helmet>
@@ -265,7 +315,6 @@ export function CareersPage() {
         <div className="absolute top-[120px] -left-[100px] w-[400px] h-[400px] rounded-full bg-[#8B1A4A] opacity-10 blur-[130px] pointer-events-none animate-pulse-slow" />
         <div className="absolute top-[500px] -right-[150px] w-[500px] h-[500px] rounded-full bg-[#2D3A4A] opacity-5 blur-[160px] pointer-events-none" />
         <div className="absolute bottom-[200px] left-[5%] w-[350px] h-[350px] rounded-full bg-[#8B1A4A] opacity-[0.06] blur-[110px] pointer-events-none animate-pulse-slow" />
-        <div className="absolute bottom-[600px] left-[50%] -translate-x-1/2 w-[400px] h-[400px] rounded-full bg-violet-400 opacity-[0.04] blur-[130px] pointer-events-none" />
 
         {/* Main Content Area */}
         <div className="max-w-7xl mx-auto px-6 pt-32 lg:pt-40 relative z-10">
@@ -337,18 +386,13 @@ export function CareersPage() {
                   style={item.style}
                   className="glass-card-colorful rounded-[28px] p-8 flex flex-col group relative overflow-hidden"
                 >
-                  {/* Inside glow background blob */}
                   <div className={`absolute top-0 right-0 w-24 h-24 blur-xl rounded-full translate-x-6 -translate-y-6 ${item.blobColor} transition-transform duration-700 group-hover:scale-150`} />
-                  
-                  {/* Colorful Icon Container */}
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-6 transition-all duration-500 shadow-sm ${item.iconBg} group-hover:scale-110`}>
                     <item.icon className="w-5 h-5" />
                   </div>
-                  
                   <h3 className="font-headline font-bold text-lg text-[#1A202C] mb-3 group-hover:text-[#8B1A4A] transition-colors duration-300">
                     {item.title}
                   </h3>
-                  
                   <p className="text-sm text-[#4A4A4A] leading-relaxed font-light">
                     {item.desc}
                   </p>
@@ -387,7 +431,7 @@ export function CareersPage() {
                     </div>
                     <div>
                       <p className="text-[10px] uppercase font-black tracking-widest text-[#2D3A4A]/60">Duration</p>
-                      <p className="font-bold text-base text-[#1A202C] mt-0.5">1 Month Course</p>
+                      <p className="font-bold text-base text-[#1A202C] mt-0.5">{fellowshipDetails.duration}</p>
                     </div>
                   </div>
 
@@ -397,7 +441,7 @@ export function CareersPage() {
                     </div>
                     <div>
                       <p className="text-[10px] uppercase font-black tracking-widest text-[#2D3A4A]/60">Eligibility</p>
-                      <p className="font-bold text-base text-[#1A202C] mt-0.5">MS (Orthopedics) / D.Ortho</p>
+                      <p className="font-bold text-base text-[#1A202C] mt-0.5">{fellowshipDetails.eligibility}</p>
                     </div>
                   </div>
 
@@ -418,7 +462,7 @@ export function CareersPage() {
                     </div>
                     <div>
                       <p className="text-[10px] uppercase font-black tracking-widest text-[#2D3A4A]/60">Capacity</p>
-                      <p className="font-bold text-base text-[#1A202C] mt-0.5">2 Seats / Month</p>
+                      <p className="font-bold text-base text-[#1A202C] mt-0.5">{fellowshipDetails.seats} Seats / Month</p>
                       <p className="text-[10px] text-rose-600 font-semibold mt-0.5">Strictly Limited</p>
                     </div>
                   </div>
@@ -493,50 +537,53 @@ export function CareersPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto items-stretch">
-              {FEES.map((item, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6, delay: idx * 0.1 }}
-                  style={item.style}
-                  className={`glass-card-colorful rounded-3xl p-8 flex flex-col justify-between relative overflow-hidden ${
-                    item.active 
-                    ? 'scale-105 z-10 border-[#8B1A4A]/40' 
-                    : 'opacity-85 hover:opacity-100'
-                  }`}
-                >
-                  {item.active && (
-                    <>
-                      {/* Luminous dynamic glow blob for active card */}
-                      <div className="absolute -top-12 -left-12 w-32 h-32 bg-[#8B1A4A]/10 blur-2xl rounded-full animate-pulse-slow" />
-                      <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#8B1A4A] text-white text-[9px] uppercase tracking-widest font-black px-4 py-1.5 rounded-full shadow-md">
-                        Current Cohort
-                      </div>
-                    </>
-                  )}
-                  
-                  <div>
-                    <span className={`text-[9px] font-black uppercase tracking-wider px-3 py-1 rounded-full ${item.badgeColor}`}>
-                      {item.badge}
-                    </span>
-                    <h4 className="font-headline font-bold text-base text-[#2D3A4A] mt-6 mb-2">{item.period}</h4>
-                    <p className="text-[10px] text-gray-500 font-medium">Fellowship Training Cost</p>
-                  </div>
+              {fellowshipDetails.fees.map((item, idx) => {
+                // Fetch dynamic layouts if specified or use defaults
+                const defaultStyles = FEES[idx] || FEES[FEES.length - 1]
+                return (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6, delay: idx * 0.1 }}
+                    style={defaultStyles.style}
+                    className={`glass-card-colorful rounded-3xl p-8 flex flex-col justify-between relative overflow-hidden ${
+                      item.active 
+                      ? 'scale-105 z-10 border-[#8B1A4A]/40' 
+                      : 'opacity-85 hover:opacity-100'
+                    }`}
+                  >
+                    {item.active && (
+                      <>
+                        <div className="absolute -top-12 -left-12 w-32 h-32 bg-[#8B1A4A]/10 blur-2xl rounded-full animate-pulse-slow" />
+                        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#8B1A4A] text-white text-[9px] uppercase tracking-widest font-black px-4 py-1.5 rounded-full shadow-md">
+                          Current Cohort
+                        </div>
+                      </>
+                    )}
+                    
+                    <div>
+                      <span className={`text-[9px] font-black uppercase tracking-wider px-3 py-1 rounded-full ${defaultStyles.badgeColor}`}>
+                        {item.active ? 'Active Cohort' : 'Past Cohorts'}
+                      </span>
+                      <h4 className="font-headline font-bold text-base text-[#2D3A4A] mt-6 mb-2">{item.period}</h4>
+                      <p className="text-[10px] text-gray-500 font-medium">Fellowship Training Cost</p>
+                    </div>
 
-                  <div className="my-8">
-                    <p className="text-3xl font-black text-[#8B1A4A] tracking-tight">{item.rate}</p>
-                    <p className="text-[10px] text-gray-400 mt-1">Paid monthly in advance</p>
-                  </div>
+                    <div className="my-8">
+                      <p className="text-3xl font-black text-[#8B1A4A] tracking-tight">{item.rate}</p>
+                      <p className="text-[10px] text-gray-400 mt-1">Paid monthly in advance</p>
+                    </div>
 
-                  <div className="border-t border-gray-200/50 pt-4">
-                    <p className="text-xs text-[#4A4A4A] leading-relaxed">
-                      Includes hospital rotation rights, theatre access, and documentation.
-                    </p>
-                  </div>
-                </motion.div>
-              ))}
+                    <div className="border-t border-gray-200/50 pt-4">
+                      <p className="text-xs text-[#4A4A4A] leading-relaxed">
+                        Includes hospital rotation rights, theatre access, and documentation.
+                      </p>
+                    </div>
+                  </motion.div>
+                )
+              })}
             </div>
 
             {/* Booking callout */}
@@ -609,13 +656,74 @@ export function CareersPage() {
                 
                 <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-[#8B1A4A] text-xs">
                   <p className="font-semibold leading-relaxed">
-                    🚨 Deferral Charge: Requests submitted less than 1 month before the fellowship start date will incur a ₹10,000 deferral fee.
+                    🚨 Late Requests: Requests submitted less than 1 month before the fellowship start date will incur a {fellowshipDetails.postponementCharge || '₹10,000'} deferral charge.
                   </p>
                 </div>
               </div>
 
             </div>
           </section>
+
+          {/* ══════════════ DYNAMIC ACTIVE JOB OPENINGS (NEW) ══════════════ */}
+          {jobOpenings.length > 0 && (
+            <section className="mb-24">
+              <div className="text-center mb-16">
+                <h2 className="font-garamond text-3xl md:text-4xl font-bold mb-4">Active Career Opportunities</h2>
+                <p className="text-[#4A4A4A] text-sm font-light max-w-xl mx-auto">
+                  Join our clinical team across various specialties and locations.
+                </p>
+                <div className="w-16 h-[2.5px] bg-[#8B1A4A]/30 mx-auto mt-4" />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                {jobOpenings.map((job) => (
+                  <motion.div
+                    key={job.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    style={{
+                      '--glass-border': 'rgba(45, 58, 74, 0.15)',
+                      '--glass-border-hover': 'rgba(139, 26, 74, 0.45)',
+                      '--glass-shadow': 'rgba(45, 58, 74, 0.05)',
+                      '--glass-shadow-hover': 'rgba(139, 26, 74, 0.15)',
+                    }}
+                    className="glass-card-colorful rounded-[28px] p-8 flex flex-col justify-between group transition-all"
+                  >
+                    <div>
+                      <div className="flex justify-between items-start gap-4 mb-4">
+                        <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-[#8B1A4A] shadow-sm">
+                          <Briefcase className="w-5 h-5" />
+                        </div>
+                        <span className="text-[9px] font-black uppercase tracking-wider px-3 py-1.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+                          {job.department}
+                        </span>
+                      </div>
+                      
+                      <h3 className="font-headline font-bold text-lg text-[#1A202C] mb-2 group-hover:text-[#8B1A4A] transition-colors">
+                        {job.title}
+                      </h3>
+                      
+                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-4">
+                        📍 {job.location} · 💼 {job.experience || 'Experience: Open'}
+                      </p>
+
+                      <p className="text-sm text-[#4A4A4A] leading-relaxed font-light mb-6 whitespace-pre-line">
+                        {job.description}
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => selectJobForApplication(job.title)}
+                      className="w-full h-12 rounded-xl border border-[#8B1A4A]/25 text-[#8B1A4A] hover:bg-[#8B1A4A] hover:text-white transition-all text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm"
+                    >
+                      Apply For This Position <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </motion.div>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* ══════════════ HOW TO APPLY (INTERACTIVE COMPONENT) ══════════════ */}
           <section id="apply-portal" className="max-w-4xl mx-auto mb-20">
@@ -636,7 +744,6 @@ export function CareersPage() {
               }}
               className="glass-card-colorful rounded-[32px] p-8 md:p-12 relative overflow-hidden"
             >
-              {/* Internal glow blobs */}
               <div className="absolute top-0 right-0 w-48 h-48 bg-violet-400/5 blur-2xl rounded-full translate-x-12 -translate-y-12" />
               <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#8B1A4A]/5 blur-2xl rounded-full -translate-x-12 translate-y-12" />
               
@@ -644,6 +751,16 @@ export function CareersPage() {
                 
                 {/* Inputs */}
                 <div className="space-y-6">
+                  <div>
+                    <label className="block text-[10px] uppercase font-black tracking-widest text-[#2D3A4A]/60 mb-2">Applying For</label>
+                    <input 
+                      type="text" 
+                      value={targetApplication}
+                      onChange={(e) => setTargetApplication(e.target.value)}
+                      className="w-full px-4 h-12 rounded-xl bg-white/70 border border-slate-200 focus:border-[#8B1A4A]/50 outline-none text-sm transition-all shadow-sm font-semibold"
+                    />
+                  </div>
+
                   <div>
                     <label className="block text-[10px] uppercase font-black tracking-widest text-[#2D3A4A]/60 mb-2">Your Full Name</label>
                     <input 
@@ -655,36 +772,38 @@ export function CareersPage() {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-[10px] uppercase font-black tracking-widest text-[#2D3A4A]/60 mb-2">Qualifications</label>
-                    <select 
-                      value={candidateQualification}
-                      onChange={(e) => setCandidateQualification(e.target.value)}
-                      className="w-full px-4 h-12 rounded-xl bg-white/70 border border-slate-200 focus:border-[#8B1A4A]/50 outline-none text-sm transition-all shadow-sm cursor-pointer"
-                    >
-                      <option>MS (Orthopedics)</option>
-                      <option>D.Ortho</option>
-                      <option>Other Equivalent</option>
-                    </select>
-                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] uppercase font-black tracking-widest text-[#2D3A4A]/60 mb-2">Qualifications</label>
+                      <select 
+                        value={candidateQualification}
+                        onChange={(e) => setCandidateQualification(e.target.value)}
+                        className="w-full px-3 h-12 rounded-xl bg-white/70 border border-slate-200 focus:border-[#8B1A4A]/50 outline-none text-sm transition-all shadow-sm cursor-pointer"
+                      >
+                        <option>MS (Orthopedics)</option>
+                        <option>D.Ortho</option>
+                        <option>Other Equivalent</option>
+                      </select>
+                    </div>
 
-                  <div>
-                    <label className="block text-[10px] uppercase font-black tracking-widest text-[#2D3A4A]/60 mb-2">Preferred Fellowship Month</label>
-                    <select 
-                      value={selectedMonth}
-                      onChange={(e) => setSelectedMonth(e.target.value)}
-                      className="w-full px-4 h-12 rounded-xl bg-white/70 border border-slate-200 focus:border-[#8B1A4A]/50 outline-none text-sm transition-all shadow-sm cursor-pointer"
-                    >
-                      <option>April 2026</option>
-                      <option>May 2026</option>
-                      <option>June 2026</option>
-                      <option>July 2026</option>
-                      <option>August 2026</option>
-                      <option>September 2026</option>
-                      <option>October 2026</option>
-                      <option>November 2026</option>
-                      <option>December 2026</option>
-                    </select>
+                    <div>
+                      <label className="block text-[10px] uppercase font-black tracking-widest text-[#2D3A4A]/60 mb-2">Preferred Slot</label>
+                      <select 
+                        value={selectedMonth}
+                        onChange={(e) => setSelectedMonth(e.target.value)}
+                        className="w-full px-3 h-12 rounded-xl bg-white/70 border border-slate-200 focus:border-[#8B1A4A]/50 outline-none text-sm transition-all shadow-sm cursor-pointer"
+                      >
+                        <option>April 2026</option>
+                        <option>May 2026</option>
+                        <option>June 2026</option>
+                        <option>July 2026</option>
+                        <option>August 2026</option>
+                        <option>September 2026</option>
+                        <option>October 2026</option>
+                        <option>November 2026</option>
+                        <option>December 2026</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
 
@@ -693,10 +812,10 @@ export function CareersPage() {
                   <span className="block text-[10px] uppercase font-black tracking-widest text-[#2D3A4A]/60 mb-2">Email Preview</span>
                   <div className="flex-1 p-5 rounded-2xl bg-white/50 border border-slate-100 shadow-sm text-xs font-mono text-[#2D3A4A] overflow-y-auto max-h-[230px] leading-relaxed relative">
                     <p className="text-slate-400 mb-2">To: hr@srikarahospitals.com</p>
-                    <p className="text-slate-400 mb-4 pb-2 border-b border-slate-200/50">Subject: Application for Arthroplasty Fellowship - {candidateQualification}</p>
+                    <p className="text-slate-400 mb-4 pb-2 border-b border-slate-200/50">Subject: Application for {targetApplication} - {candidateQualification}</p>
                     <p className="whitespace-pre-line text-[#4A4A4A]">
                       Respected HR Team,
-                      {"\n\n"}I am writing to apply for the Arthroplasty Fellowship at Srikara Hospitals.
+                      {"\n\n"}I am writing to apply for the {targetApplication} position at Srikara Hospitals.
                       {"\n\n"}Details:
                       {"\n"}- Name: {candidateName || 'Dr. [Your Name]'}
                       {"\n"}- Qualification: {candidateQualification}

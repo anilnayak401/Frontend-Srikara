@@ -23,7 +23,9 @@ const AboutPage         = lazy(() => import('./pages/AboutPage').then(m => ({ de
 const PlaceholderPage   = lazy(() => import('./pages/PlaceholderPage').then(m => ({ default: m.PlaceholderPage })))
 const AnatomyExplorerPage = lazy(() => import('./pages/AnatomyExplorerPage').then(m => ({ default: m.AnatomyExplorerPage })))
 const CareersPage       = lazy(() => import('./pages/CareersPage').then(m => ({ default: m.CareersPage })))
+const AdminDashboard    = lazy(() => import('./pages/AdminDashboard').then(m => ({ default: m.AdminDashboard })))
 
+import { VisitorTracker } from './components/shared/VisitorTracker'
 import { lbNagar, kompally, lakdikapul, ecil, miyapur, vijayawada, rajahmundry, rtcXRoads } from './data/branches'
 
 // Minimal page-level loading fallback
@@ -77,6 +79,7 @@ function App() {
   return (
     <HelmetProvider>
       <HashRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <VisitorTracker />
         <ScrollToTop />
         <Suspense fallback={<PageLoader />}>
           <Routes>
@@ -110,6 +113,7 @@ function App() {
             <Route path="/book/:slug"    element={<IndividualBookingPage />} />
             <Route path="/blogs"         element={<BlogsPage />} />
             <Route path="/careers"       element={<CareersPage />} />
+            <Route path="/admin"         element={<AdminDashboard />} />
 
             <Route path="*" element={<PlaceholderPage title="Page Not Found" />} />
           </Routes>
