@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { useNavigate } from 'react-router-dom'
 import { Star, MapPin } from 'lucide-react'
@@ -5,6 +6,8 @@ import { StickyNavbar } from '@/components/layout/StickyNavbar'
 import { BranchSideNav } from '@/components/layout/BranchSideNav'
 import { Footer } from '@/components/layout/Footer'
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
+import { db } from '@/lib/firebase'
+import { doc, getDoc } from 'firebase/firestore'
 import { AppointmentWidget } from '@/components/sections/AppointmentWidget'
 import { VideoHero } from '@/components/sections/VideoHero'
 import { AlphabetDiseaseSearch } from '@/components/sections/AlphabetDiseaseSearch'
@@ -32,8 +35,49 @@ const GALLERY_SPANS = [
   'md:col-span-2 md:row-span-2 col-span-1',
 ]
 
-export function BranchLandingPage({ branch }) {
+export function BranchLandingPage({ branch: initialBranch }) {
   const navigate = useNavigate()
+  const [branch, setBranch] = useState(initialBranch)
+
+  useEffect(() => {
+    setBranch(initialBranch)
+    const loadDynamicBranch = async () => {
+      try {
+        if (db) {
+          const docRef = doc(db, 'site_contents', 'pages')
+          const docSnap = await getDoc(docRef)
+          if (docSnap.exists()) {
+            const data = docSnap.data()
+            if (data.branches && data.branches[initialBranch.slug]) {
+              setBranch({
+                ...initialBranch,
+                ...data.branches[initialBranch.slug]
+              })
+              return // success
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Firestore branch load failed:', err)
+      }
+
+      try {
+        const cached = localStorage.getItem('srikara_cms_data')
+        if (cached) {
+          const parsed = JSON.parse(cached)
+          if (parsed.pageData && parsed.pageData.branches && parsed.pageData.branches[initialBranch.slug]) {
+            setBranch({
+              ...initialBranch,
+              ...parsed.pageData.branches[initialBranch.slug]
+            })
+          }
+        }
+      } catch (e) {
+        console.warn('Error loading dynamic branch data:', e)
+      }
+    }
+    loadDynamicBranch()
+  }, [initialBranch])
 
   const galleryItems = branch.specialtiesCards?.map((item, i) => ({
     id: i + 1,

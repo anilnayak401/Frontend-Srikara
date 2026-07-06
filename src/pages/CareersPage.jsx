@@ -272,6 +272,17 @@ export function CareersPage() {
         setJobOpenings(activeJobs)
       } catch (err) {
         console.warn('Firebase config offline. Operating in static mode.')
+        try {
+          const cached = localStorage.getItem('srikara_cms_data')
+          if (cached) {
+            const parsed = JSON.parse(cached)
+            if (parsed.jobs && parsed.jobs.length > 0) {
+              setJobOpenings(parsed.jobs.filter(j => j.status === 'Active'))
+            }
+          }
+        } catch (e) {
+          console.warn('Failed to parse cached jobs in CareersPage:', e)
+        }
       }
     }
     fetchCMSData()

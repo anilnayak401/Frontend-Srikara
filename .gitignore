@@ -29,3 +29,8 @@ public/doctors/raw
 
 # Anatomy frame sequence source directories
 public/anatomy_frames_*
+
+# Local environment configs
+.env
+.env.local
+.env.*.local

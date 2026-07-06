@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { useNavigate } from 'react-router-dom'
 import { StickyNavbar } from '@/components/layout/StickyNavbar'
@@ -13,11 +14,53 @@ import { PremiumDoctorFinder } from '@/components/sections/PremiumDoctorFinder'
 import { PremiumCaseStudies } from '@/components/sections/PremiumCaseStudies'
 import { PremiumLocation } from '@/components/sections/PremiumLocation'
 import { UnevenDepartmentCollage } from '@/components/sections/UnevenDepartmentCollage'
-import { miyapur as branch } from '@/data/branches/miyapur'
+import { miyapur as initialBranch } from '@/data/branches/miyapur'
+import { db } from '@/lib/firebase'
+import { doc, getDoc } from 'firebase/firestore'
 
 
 export function MiyapurPage() {
   const navigate = useNavigate()
+  const [branch, setBranch] = useState(initialBranch)
+
+  useEffect(() => {
+    const loadDynamicBranch = async () => {
+      try {
+        if (db) {
+          const docRef = doc(db, 'site_contents', 'pages')
+          const docSnap = await getDoc(docRef)
+          if (docSnap.exists()) {
+            const data = docSnap.data()
+            if (data.branches && data.branches[initialBranch.slug]) {
+              setBranch({
+                ...initialBranch,
+                ...data.branches[initialBranch.slug]
+              })
+              return // success
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Firestore branch load failed:', err)
+      }
+
+      try {
+        const cached = localStorage.getItem('srikara_cms_data')
+        if (cached) {
+          const parsed = JSON.parse(cached)
+          if (parsed.pageData && parsed.pageData.branches && parsed.pageData.branches[initialBranch.slug]) {
+            setBranch({
+              ...initialBranch,
+              ...parsed.pageData.branches[initialBranch.slug]
+            })
+          }
+        }
+      } catch (e) {
+        console.warn('Error loading dynamic branch data:', e)
+      }
+    }
+    loadDynamicBranch()
+  }, [])
 
   return (
     <>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
@@ -6,6 +6,8 @@ import { Calendar, Clock, ArrowRight, X } from 'lucide-react'
 import { StickyNavbar } from '@/components/layout/StickyNavbar'
 import { Footer } from '@/components/layout/Footer'
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
+import { db } from '@/lib/firebase'
+import { collection, getDocs } from 'firebase/firestore'
 
 const blogs = [
   {
@@ -118,7 +120,59 @@ export function BlogsPage() {
   const [activeCategory, setActiveCategory] = useState('All')
   const [selectedBlog, setSelectedBlog] = useState(null)
 
-  const filtered = activeCategory === 'All' ? blogs : blogs.filter(b => b.category === activeCategory)
+  const [allBlogs, setAllBlogs] = useState(blogs)
+
+  useEffect(() => {
+    const loadDynamicBlogs = async () => {
+      try {
+        if (db) {
+          const docSnap = await getDocs(collection(db, 'blogs'))
+          if (!docSnap.empty) {
+            const fbDocs = docSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+            const formatted = fbDocs.map(b => ({
+              ...b,
+              tag: b.tag || 'Clinical',
+              readTime: b.readTime || '5 min read',
+              image: b.image || 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=800',
+              content: b.body || b.content
+            }))
+            const filteredStatic = blogs.filter(sb => 
+              !formatted.some(fb => fb.title.toLowerCase() === sb.title.toLowerCase())
+            )
+            setAllBlogs([...filteredStatic, ...formatted])
+            return // success
+          }
+        }
+      } catch (err) {
+        console.warn('Firestore fetch failed in BlogsPage, falling back to local storage:', err)
+      }
+
+      try {
+        const cached = localStorage.getItem('srikara_cms_data')
+        if (cached) {
+          const parsed = JSON.parse(cached)
+          if (parsed.blogs && parsed.blogs.length > 0) {
+            const formatted = parsed.blogs.map(b => ({
+              ...b,
+              tag: b.tag || 'Clinical',
+              readTime: b.readTime || '5 min read',
+              image: b.image || 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=800',
+              content: b.body || b.content
+            }))
+            const filteredStatic = blogs.filter(sb => 
+              !formatted.some(fb => fb.title.toLowerCase() === sb.title.toLowerCase())
+            )
+            setAllBlogs([...filteredStatic, ...formatted])
+          }
+        }
+      } catch (e) {
+        console.warn('Error loading dynamic blogs in BlogsPage:', e)
+      }
+    }
+    loadDynamicBlogs()
+  }, [])
+
+  const filtered = activeCategory === 'All' ? allBlogs : allBlogs.filter(b => b.category === activeCategory)
 
   return (
     <>

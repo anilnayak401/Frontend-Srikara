@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { useNavigate } from 'react-router-dom'
 import { Star, MapPin } from 'lucide-react'
@@ -14,10 +15,52 @@ import { PremiumCaseStudies } from '@/components/sections/PremiumCaseStudies'
 import { PremiumLocation } from '@/components/sections/PremiumLocation'
 import { DepartmentSearch } from '@/components/sections/DepartmentSearch'
 import { UnevenDepartmentCollage } from '@/components/sections/UnevenDepartmentCollage'
-import { ecil as branch } from '@/data/branches/ecil'
+import { ecil as initialBranch } from '@/data/branches/ecil'
+import { db } from '@/lib/firebase'
+import { doc, getDoc } from 'firebase/firestore'
 
 export function HomePage() {
   const navigate = useNavigate()
+  const [branch, setBranch] = useState(initialBranch)
+
+  useEffect(() => {
+    const loadDynamicHomepage = async () => {
+      try {
+        if (db) {
+          const docRef = doc(db, 'site_contents', 'pages')
+          const docSnap = await getDoc(docRef)
+          if (docSnap.exists()) {
+            const data = docSnap.data()
+            if (data.homepage) {
+              setBranch({
+                ...initialBranch,
+                ...data.homepage
+              })
+              return // success
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Firestore homepage load failed:', err)
+      }
+
+      try {
+        const cached = localStorage.getItem('srikara_cms_data')
+        if (cached) {
+          const parsed = JSON.parse(cached)
+          if (parsed.pageData && parsed.pageData.homepage) {
+            setBranch({
+              ...initialBranch,
+              ...parsed.pageData.homepage
+            })
+          }
+        }
+      } catch (e) {
+        console.warn('Error loading dynamic homepage data:', e)
+      }
+    }
+    loadDynamicHomepage()
+  }, [])
 
   return (
     <>

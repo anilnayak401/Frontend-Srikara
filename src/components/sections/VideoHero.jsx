@@ -45,8 +45,9 @@ export function VideoHero({ branch, children }) {
     video.play().catch(() => setVideoFailed(true))
   }, [isMobile])
 
-  // Fallback image: prefer branch-specific hero, then poster
+  // Fallback image & video sources (prefer branch-specific values)
   const fallbackSrc = branch?.heroImage || POSTER_IMAGE
+  const videoSrc = branch?.heroVideo || VIDEO_SRC
 
   return (
     <section className="hero-section relative min-h-[520px] md:min-h-[600px] lg:min-h-[780px] flex items-center overflow-hidden bg-[#0a1628]">
@@ -75,7 +76,7 @@ export function VideoHero({ branch, children }) {
             {/* Poster shown while video loads or if it fails */}
             {videoFailed && (
               <img
-                src={POSTER_IMAGE}
+                src={fallbackSrc}
                 alt=""
                 aria-hidden="true"
                 className="absolute inset-0 w-full h-full object-cover object-center opacity-85"
@@ -84,8 +85,8 @@ export function VideoHero({ branch, children }) {
 
             <video
               ref={videoRef}
-              src={VIDEO_SRC}
-              poster={POSTER_IMAGE}
+              src={videoSrc}
+              poster={fallbackSrc}
               autoPlay
               muted
               loop

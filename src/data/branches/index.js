@@ -7,8 +7,9 @@ import { miyapur } from './miyapur'
 import { vijayawada } from './vijayawada'
 import { rajahmundry } from './rajahmundry'
 import { rtcXRoads } from './rtc-x-roads'
+import { secunderabad } from './secunderabad'
 
-export { lbNagar, peerzadiguda, kompally, lakdikapul, ecil, miyapur, vijayawada, rajahmundry, rtcXRoads }
+export { lbNagar, peerzadiguda, kompally, lakdikapul, ecil, miyapur, vijayawada, rajahmundry, rtcXRoads, secunderabad }
 
 export const branches = [
   ecil,
@@ -20,6 +21,7 @@ export const branches = [
   miyapur,
   vijayawada,
   rajahmundry,
+  secunderabad,
 ]
 
 export const getBranchBySlug = (slug) => branches.find(b => b.slug === slug)
