@@ -15,12 +15,17 @@ import {
 import { ALL_DOCTORS } from '@/data/doctors'
 
 // Import Firebase SDK safely
-import { auth, db, storage } from '@/lib/firebase'
-import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth'
-import { 
-  collection, getDocs, doc, getDoc, setDoc, addDoc, deleteDoc, query, orderBy, limit 
+import { auth, db, storage, firebaseConfig } from '@/lib/firebase'
+import { initializeApp, deleteApp } from 'firebase/app'
+import {
+  signInWithEmailAndPassword, signOut, onAuthStateChanged,
+  getAuth, createUserWithEmailAndPassword, sendPasswordResetEmail
+} from 'firebase/auth'
+import {
+  collection, getDocs, doc, getDoc, setDoc, addDoc, deleteDoc, query, orderBy, limit
 } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { MODULES, ROLES, MODULE_LABELS, ROLE_DEFAULT_PERMISSIONS, OVERRIDABLE_MODULES, getEffectivePermissions } from '@/lib/permissions'
 
 const DASH_STYLES = `
   .font-garamond { font-family: 'Cormorant Garamond', serif; }
@@ -236,9 +241,103 @@ const DEFAULT_SEO_DATA = {
   careers: { title: 'Careers & Fellowship at Srikara', desc: 'Join the leading team of orthopedic, cardiology, and pediatric care providers.', keywords: 'medical jobs hyderabad, hospital fellowships' }
 }
 
+// Fully custom themed dropdown — replaces native <select> entirely (including the
+// OS-rendered option list, which CSS can't restyle) with the same button-trigger +
+// floating panel pattern already used by the Branch/Doctor filter dropdowns elsewhere
+// in this file, so every dropdown in the admin panel looks and behaves identically.
+// `onChange` is called with a synthetic `{ target: { value } }` so existing call sites
+// written for native <select> (`e => setX(prev => ({ ...prev, field: e.target.value }))`)
+// work unchanged.
+function ThemedDropdown({ value, onChange, options, className = '', heightClass = 'h-11', placeholder = 'Select...' }) {
+  const [open, setOpen] = useState(false)
+  const normalized = options.map(o => (typeof o === 'object' && o !== null ? o : { value: o, label: String(o) }))
+  const selected = normalized.find(o => String(o.value) === String(value))
+
+  return (
+    <div className={`relative ${className}`}>
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className={`w-full ${heightClass} px-3.5 rounded-xl border bg-white text-xs font-semibold text-slate-700 flex items-center justify-between gap-2 transition-all hover:border-[#8B1A4A]/30 focus:outline-none ${open ? 'border-[#8B1A4A] ring-4 ring-[#8B1A4A]/10' : 'border-slate-200'}`}
+      >
+        <span className="truncate">{selected ? selected.label : placeholder}</span>
+        <ChevronDown className={`w-3.5 h-3.5 text-[#8B1A4A]/60 flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute left-0 right-0 mt-2 rounded-2xl border border-slate-100 bg-white p-2 shadow-xl z-50 max-h-64 overflow-y-auto space-y-1">
+            {normalized.map(opt => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => { onChange({ target: { value: opt.value } }); setOpen(false) }}
+                className={`w-full text-left flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                  String(value) === String(opt.value) ? 'bg-[#8B1A4A] text-white shadow-sm' : 'text-slate-600 hover:bg-[#8B1A4A]/5 hover:text-[#8B1A4A]'
+                }`}
+              >
+                <span>{opt.label}</span>
+                {String(value) === String(opt.value) && <Check className="w-3.5 h-3.5" />}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+// Themed replacement for window.confirm() — matches the rest of the admin panel's
+// glass-card modal styling (see the Media Picker modal further down) instead of the
+// browser's native "localhost:5173 says" dialog.
+function ConfirmDialog({ open, title, message, confirmLabel = 'Delete', onConfirm, onCancel }) {
+  return (
+    <AnimatePresence>
+      {open && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/40 backdrop-blur-md px-6">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            className="w-full max-w-md p-8 rounded-[32px] bg-white border border-slate-100 shadow-2xl text-center"
+          >
+            <div className="w-16 h-16 mx-auto rounded-full bg-rose-50 flex items-center justify-center mb-5">
+              <AlertCircle className="w-8 h-8 text-rose-600" />
+            </div>
+            <h3 className="font-garamond text-2xl font-bold text-[#2D3A4A] mb-2">{title}</h3>
+            <p className="text-sm text-slate-500 mb-8 leading-relaxed">{message}</p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={onCancel}
+                className="flex-1 h-12 rounded-full border border-slate-200 text-slate-600 text-xs font-bold uppercase tracking-wide hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={onConfirm}
+                className="flex-1 h-12 rounded-full bg-rose-600 text-white text-xs font-bold uppercase tracking-wide hover:bg-rose-700 transition-colors shadow-sm"
+              >
+                {confirmLabel}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  )
+}
+
 export function AdminDashboard() {
   const [user, setUser] = useState(null)
-  const [userRole, setUserRole] = useState('Super Admin')
+  const [userRole, setUserRole] = useState(null)
+  const [userPermissions, setUserPermissions] = useState([])
+  const [profileChecked, setProfileChecked] = useState(false)
+  const [adminUsers, setAdminUsers] = useState([])
+  const [currentAdminUser, setCurrentAdminUser] = useState({ email: '', displayName: '', role: 'Reception', extraPermissions: [], revokedPermissions: [] })
+  const [creatingAdminUser, setCreatingAdminUser] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [authError, setAuthError] = useState('')
@@ -246,12 +345,14 @@ export function AdminDashboard() {
   const [activeGroup, setActiveGroup] = useState('overview') // overview, category, page, seo
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
+  const [confirmDialog, setConfirmDialog] = useState({ open: false, title: '', message: '', confirmLabel: 'Delete', onConfirm: null })
   
   const [expandedGroups, setExpandedGroups] = useState({
     overview: true,
     category: true,
     page: true,
-    seo: true
+    seo: true,
+    admin: true
   })
 
   const toggleGroup = (groupKey) => {
@@ -316,6 +417,8 @@ export function AdminDashboard() {
       console.log('Firebase auth bypassed. Loading simulated dashboard.')
       setUser({ email: 'superadmin@srikara.com' })
       setUserRole('Super Admin')
+      setUserPermissions(getEffectivePermissions({ role: 'Super Admin', active: true }))
+      setProfileChecked(true)
     } else {
       const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
         setUser(currentUser)
@@ -323,13 +426,25 @@ export function AdminDashboard() {
           try {
             const userDoc = await getDoc(doc(db, 'users', currentUser.uid))
             if (userDoc.exists()) {
-              const role = userDoc.data().role || 'Super Admin'
-              setUserRole(role)
-              adjustGroupForRole(role)
+              const profile = userDoc.data()
+              setUserRole(profile.role || null)
+              setUserPermissions(getEffectivePermissions(profile))
+              adjustGroupForRole(profile.role)
+            } else {
+              // No provisioned admin profile — do NOT default to Super Admin.
+              // Closes a privilege-escalation gap where any authenticated Firebase
+              // user with no users/{uid} doc used to silently get full access.
+              setUserRole(null)
+              setUserPermissions([])
             }
           } catch (e) {
-            setUserRole('Super Admin')
+            setUserRole(null)
+            setUserPermissions([])
+          } finally {
+            setProfileChecked(true)
           }
+        } else {
+          setProfileChecked(false)
         }
       })
       return () => unsubscribe()
@@ -617,19 +732,23 @@ export function AdminDashboard() {
     if (role === 'HR') {
       setActiveGroup('category')
       setActiveTab('jobs')
-      setExpandedGroups({ overview: false, category: true, page: false, seo: false })
+      setExpandedGroups({ overview: false, category: true, page: false, seo: false, admin: false })
     } else if (role === 'Doctor Admin') {
       setActiveGroup('category')
       setActiveTab('doctors')
-      setExpandedGroups({ overview: false, category: true, page: false, seo: false })
+      setExpandedGroups({ overview: false, category: true, page: false, seo: false, admin: false })
     } else if (role === 'Reception') {
       setActiveGroup('overview')
       setActiveTab('appointments')
-      setExpandedGroups({ overview: true, category: false, page: false, seo: false })
+      setExpandedGroups({ overview: true, category: false, page: false, seo: false, admin: role === 'Super Admin' })
+    } else if (role === 'Marketing Admin') {
+      setActiveGroup('overview')
+      setActiveTab('analytics')
+      setExpandedGroups({ overview: true, category: false, page: false, seo: false, admin: role === 'Super Admin' })
     } else {
       setActiveGroup('overview')
       setActiveTab('analytics')
-      setExpandedGroups({ overview: true, category: false, page: false, seo: false })
+      setExpandedGroups({ overview: true, category: false, page: false, seo: false, admin: role === 'Super Admin' })
     }
   }
 
@@ -639,24 +758,25 @@ export function AdminDashboard() {
     setAuthError('')
     
     if (!auth) {
+      const mockLogin = (role) => {
+        setUser({ email })
+        setUserRole(role)
+        setUserPermissions(getEffectivePermissions({ role, active: true }))
+        setProfileChecked(true)
+        adjustGroupForRole(role)
+      }
       if (email === 'admin@srikara.com' && password === 'admin123') {
-        setUser({ email })
-        setUserRole('Super Admin')
-        adjustGroupForRole('Super Admin')
+        mockLogin('Super Admin')
       } else if (email === 'hr@srikara.com' && password === 'admin123') {
-        setUser({ email })
-        setUserRole('HR')
-        adjustGroupForRole('HR')
+        mockLogin('HR')
       } else if (email === 'marketing@srikara.com' && password === 'admin123') {
-        setUser({ email })
-        setUserRole('Marketing Admin')
-        adjustGroupForRole('Marketing')
+        mockLogin('Marketing Admin')
       } else if (email === 'reception@srikara.com' && password === 'admin123') {
-        setUser({ email })
-        setUserRole('Reception')
-        adjustGroupForRole('Reception')
+        mockLogin('Reception')
+      } else if (email === 'doctoradmin@srikara.com' && password === 'admin123') {
+        mockLogin('Doctor Admin')
       } else {
-        setAuthError('Mock Credentials: admin@srikara.com / admin123 (or hr@srikara.com, marketing@srikara.com)')
+        setAuthError('Mock Credentials: admin@srikara.com / admin123 (or hr@, marketing@, reception@, doctoradmin@srikara.com)')
       }
       return
     }
@@ -676,14 +796,102 @@ export function AdminDashboard() {
     await signOut(auth)
   }
 
-  const isAuthorized = (allowedRoles) => {
-    return allowedRoles.includes(userRole)
+  // hasAccess is the single gate used across the sidebar and content panels.
+  // admin_users is intentionally never read from userPermissions — it is always
+  // derived directly from role so it can't be granted via extraPermissions.
+  const hasAccess = (moduleKey) => {
+    if (moduleKey === 'admin_users') return userRole === 'Super Admin'
+    return userRole === 'Super Admin' || userPermissions.includes(moduleKey)
   }
 
   const notifyUser = (type, text) => {
     setMessage({ type, text })
     setTimeout(() => setMessage({ type: '', text: '' }), 5000)
   }
+
+  const requestConfirm = (title, message, onConfirm, confirmLabel = 'Delete') => {
+    setConfirmDialog({ open: true, title, message, confirmLabel, onConfirm })
+  }
+  const closeConfirm = () => setConfirmDialog({ open: false, title: '', message: '', confirmLabel: 'Delete', onConfirm: null })
+  const handleConfirmAccept = async () => {
+    const action = confirmDialog.onConfirm
+    closeConfirm()
+    if (action) await action()
+  }
+
+  // 2b. Admin User Management (Super Admin only)
+  const loadAdminUsers = async () => {
+    if (!db) return
+    try {
+      const snap = await getDocs(collection(db, 'users'))
+      setAdminUsers(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+    } catch (e) {
+      console.warn('Failed to load admin users', e.message)
+    }
+  }
+
+  useEffect(() => {
+    if (hasAccess('admin_users')) loadAdminUsers()
+  }, [userRole])
+
+  const createAdminUser = async (e) => {
+    e.preventDefault()
+    if (!currentAdminUser.email || !currentAdminUser.role) return
+    setCreatingAdminUser(true)
+    try {
+      if (!auth) {
+        // Mock mode: no live Firebase, simulate locally.
+        const newAdmin = { id: Date.now().toString(), ...currentAdminUser, active: true, createdAt: Date.now() }
+        setAdminUsers(prev => [...prev, newAdmin])
+        notifyUser('success', `Simulated admin "${currentAdminUser.email}" created (mock mode — no live Firebase).`)
+      } else {
+        // Create the Auth account on an isolated secondary App instance so the
+        // currently logged-in Super Admin's session on the primary `auth` is untouched.
+        const secondaryApp = initializeApp(firebaseConfig, `secondary-${Date.now()}`)
+        const secondaryAuth = getAuth(secondaryApp)
+        try {
+          const tempPassword = (crypto.randomUUID ? crypto.randomUUID() : `Tmp-${Date.now()}-${Math.random()}`)
+          const cred = await createUserWithEmailAndPassword(secondaryAuth, currentAdminUser.email, tempPassword)
+          await sendPasswordResetEmail(secondaryAuth, currentAdminUser.email)
+          const profile = {
+            email: currentAdminUser.email,
+            displayName: currentAdminUser.displayName || currentAdminUser.email,
+            role: currentAdminUser.role,
+            active: true,
+            extraPermissions: currentAdminUser.extraPermissions || [],
+            revokedPermissions: currentAdminUser.revokedPermissions || [],
+            createdAt: Date.now(),
+          }
+          await setDoc(doc(db, 'users', cred.user.uid), profile)
+          setAdminUsers(prev => [...prev, { id: cred.user.uid, ...profile }])
+          notifyUser('success', `Admin account created. A password-setup email was sent to ${currentAdminUser.email}.`)
+        } finally {
+          await signOut(secondaryAuth).catch(() => {})
+          await deleteApp(secondaryApp).catch(() => {})
+        }
+      }
+      setCurrentAdminUser({ email: '', displayName: '', role: 'Reception', extraPermissions: [], revokedPermissions: [] })
+    } catch (err) {
+      notifyUser('error', err.code === 'auth/email-already-in-use' ? 'That email is already registered.' : `Failed to create admin: ${err.message}`)
+    } finally {
+      setCreatingAdminUser(false)
+    }
+  }
+
+  const updateAdminUser = async (uid, patch) => {
+    const updatedList = adminUsers.map(a => a.id === uid ? { ...a, ...patch } : a)
+    setAdminUsers(updatedList)
+    if (db) {
+      try {
+        await setDoc(doc(db, 'users', uid), patch, { merge: true })
+        notifyUser('success', 'Admin permissions updated.')
+      } catch (err) {
+        notifyUser('error', `Failed to update admin: ${err.message}`)
+      }
+    }
+  }
+
+  const toggleAdminActive = (adminUser) => updateAdminUser(adminUser.id, { active: !(adminUser.active !== false) })
 
   // 3. Category CRUD Actions
   // Doctor CRUD
@@ -712,7 +920,6 @@ export function AdminDashboard() {
   }
 
   const deleteDoctor = async (id) => {
-    if (!window.confirm('Delete doctor profile?')) return
     const updated = doctors.filter(d => d.id !== id)
     setDoctors(updated)
     await persistToStore('doctors', updated)
@@ -749,7 +956,6 @@ export function AdminDashboard() {
   }
 
   const deleteBlog = async (id) => {
-    if (!window.confirm('Remove this blog post?')) return
     const updated = blogs.filter(b => b.id !== id)
     setBlogs(updated)
     await persistToStore('blogs', updated)
@@ -779,7 +985,6 @@ export function AdminDashboard() {
   }
 
   const deleteJob = async (id) => {
-    if (!window.confirm('Delete job opening?')) return
     const updated = jobs.filter(j => j.id !== id)
     setJobs(updated)
     await persistToStore('jobs', updated)
@@ -809,7 +1014,6 @@ export function AdminDashboard() {
   }
 
   const deleteFaq = async (id) => {
-    if (!window.confirm('Delete this FAQ?')) return
     const updated = faqs.filter(f => f.id !== id)
     setFaqs(updated)
     await persistToStore('faqs', updated)
@@ -939,7 +1143,7 @@ export function AdminDashboard() {
   const handleUploadMediaSimulate = (e) => {
     e.preventDefault()
     if (!newMediaFile.name || !newMediaFile.url) {
-      alert('Please fill out simulated filename and URL.')
+      notifyUser('error', 'Please fill out simulated filename and URL.')
       return
     }
     setUploadingMedia(true)
@@ -955,7 +1159,6 @@ export function AdminDashboard() {
   }
 
   const deleteMediaFile = (id) => {
-    if (!window.confirm('Delete media asset?')) return
     const updated = mediaFiles.filter(m => m.id !== id)
     setMediaFiles(updated)
     persistToStore('mediaFiles', updated)
@@ -1238,8 +1441,8 @@ export function AdminDashboard() {
                       
                       {expandedGroups.overview && (
                         <div className="pl-4 ml-4 border-l border-slate-100 space-y-1">
-                          {isAuthorized(['Super Admin', 'Marketing Admin', 'Reception']) && (
-                            <button 
+                          {hasAccess('analytics') && (
+                            <button
                               type="button"
                               onClick={() => { setActiveGroup('overview'); setActiveTab('analytics'); }}
                               className={`w-full text-left flex items-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
@@ -1250,8 +1453,8 @@ export function AdminDashboard() {
                               <span>Traffic Analytics</span>
                             </button>
                           )}
-                          {isAuthorized(['Super Admin', 'Marketing Admin']) && (
-                            <button 
+                          {hasAccess('heatmaps') && (
+                            <button
                               type="button"
                               onClick={() => { setActiveGroup('overview'); setActiveTab('heatmaps'); }}
                               className={`w-full text-left flex items-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
@@ -1262,8 +1465,8 @@ export function AdminDashboard() {
                               <span>Heatmaps & Clicks</span>
                             </button>
                           )}
-                          {isAuthorized(['Super Admin', 'Reception']) && (
-                            <button 
+                          {hasAccess('appointments') && (
+                            <button
                               type="button"
                               onClick={() => { setActiveGroup('overview'); setActiveTab('appointments'); }}
                               className={`w-full text-left flex items-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
@@ -1294,8 +1497,8 @@ export function AdminDashboard() {
 
                       {expandedGroups.category && (
                         <div className="pl-4 ml-4 border-l border-slate-100 space-y-1 max-h-[300px] overflow-y-auto pr-1">
-                          {isAuthorized(['Super Admin', 'Doctor Admin']) && (
-                            <button 
+                          {hasAccess('doctors') && (
+                            <button
                               type="button"
                               onClick={() => { setActiveGroup('category'); setActiveTab('doctors'); }}
                               className={`w-full text-left flex items-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
@@ -1306,8 +1509,8 @@ export function AdminDashboard() {
                               <span>Doctors Directory</span>
                             </button>
                           )}
-                          {isAuthorized(['Super Admin', 'Marketing Admin']) && (
-                            <button 
+                          {hasAccess('departments') && (
+                            <button
                               type="button"
                               onClick={() => { setActiveGroup('category'); setActiveTab('departments'); }}
                               className={`w-full text-left flex items-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
@@ -1318,8 +1521,8 @@ export function AdminDashboard() {
                               <span>Specialties & Depts</span>
                             </button>
                           )}
-                          {isAuthorized(['Super Admin', 'Marketing Admin']) && (
-                            <button 
+                          {hasAccess('blogs') && (
+                            <button
                               type="button"
                               onClick={() => { setActiveGroup('category'); setActiveTab('blogs'); }}
                               className={`w-full text-left flex items-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
@@ -1330,8 +1533,8 @@ export function AdminDashboard() {
                               <span>Blogs & Articles</span>
                             </button>
                           )}
-                          {isAuthorized(['Super Admin', 'Marketing Admin']) && (
-                            <button 
+                          {hasAccess('news') && (
+                            <button
                               type="button"
                               onClick={() => { setActiveGroup('category'); setActiveTab('news'); }}
                               className={`w-full text-left flex items-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
@@ -1342,8 +1545,8 @@ export function AdminDashboard() {
                               <span>News & Alerts</span>
                             </button>
                           )}
-                          {isAuthorized(['Super Admin', 'Marketing Admin']) && (
-                            <button 
+                          {hasAccess('gallery') && (
+                            <button
                               type="button"
                               onClick={() => { setActiveGroup('category'); setActiveTab('gallery'); }}
                               className={`w-full text-left flex items-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
@@ -1354,8 +1557,8 @@ export function AdminDashboard() {
                               <span>Media Gallery</span>
                             </button>
                           )}
-                          {isAuthorized(['Super Admin', 'HR']) && (
-                            <button 
+                          {hasAccess('jobs') && (
+                            <button
                               type="button"
                               onClick={() => { setActiveGroup('category'); setActiveTab('jobs'); }}
                               className={`w-full text-left flex items-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
@@ -1366,8 +1569,8 @@ export function AdminDashboard() {
                               <span>Careers Board</span>
                             </button>
                           )}
-                          {isAuthorized(['Super Admin', 'Marketing Admin']) && (
-                            <button 
+                          {hasAccess('testimonials') && (
+                            <button
                               type="button"
                               onClick={() => { setActiveGroup('category'); setActiveTab('testimonials'); }}
                               className={`w-full text-left flex items-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
@@ -1378,8 +1581,8 @@ export function AdminDashboard() {
                               <span>Testimonials CMS</span>
                             </button>
                           )}
-                          {isAuthorized(['Super Admin', 'Marketing Admin']) && (
-                            <button 
+                          {hasAccess('faqs') && (
+                            <button
                               type="button"
                               onClick={() => { setActiveGroup('category'); setActiveTab('faqs'); }}
                               className={`w-full text-left flex items-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
@@ -1390,8 +1593,8 @@ export function AdminDashboard() {
                               <span>FAQs CMS</span>
                             </button>
                           )}
-                          {isAuthorized(['Super Admin', 'Marketing Admin']) && (
-                            <button 
+                          {hasAccess('downloads') && (
+                            <button
                               type="button"
                               onClick={() => { setActiveGroup('category'); setActiveTab('downloads'); }}
                               className={`w-full text-left flex items-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
@@ -1402,8 +1605,8 @@ export function AdminDashboard() {
                               <span>Downloads CMS</span>
                             </button>
                           )}
-                          {isAuthorized(['Super Admin', 'Marketing Admin']) && (
-                            <button 
+                          {hasAccess('media') && (
+                            <button
                               type="button"
                               onClick={() => { setActiveGroup('category'); setActiveTab('media'); }}
                               className={`w-full text-left flex items-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
@@ -1434,8 +1637,8 @@ export function AdminDashboard() {
 
                       {expandedGroups.page && (
                         <div className="pl-4 ml-4 border-l border-slate-100 space-y-1">
-                          {isAuthorized(['Super Admin', 'Marketing Admin']) && (
-                            <button 
+                          {hasAccess('homepage') && (
+                            <button
                               type="button"
                               onClick={() => { setActiveGroup('page'); setActiveTab('homepage'); }}
                               className={`w-full text-left flex items-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
@@ -1446,8 +1649,8 @@ export function AdminDashboard() {
                               <span>Homepage Layout</span>
                             </button>
                           )}
-                          {isAuthorized(['Super Admin', 'Marketing Admin']) && (
-                            <button 
+                          {hasAccess('aboutpage') && (
+                            <button
                               type="button"
                               onClick={() => { setActiveGroup('page'); setActiveTab('aboutpage'); }}
                               className={`w-full text-left flex items-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
@@ -1458,8 +1661,8 @@ export function AdminDashboard() {
                               <span>About Us Page</span>
                             </button>
                           )}
-                          {isAuthorized(['Super Admin', 'HR']) && (
-                            <button 
+                          {hasAccess('careers_customizer') && (
+                            <button
                               type="button"
                               onClick={() => { setActiveGroup('page'); setActiveTab('careers_customizer'); }}
                               className={`w-full text-left flex items-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
@@ -1470,8 +1673,8 @@ export function AdminDashboard() {
                               <span>Careers Landing</span>
                             </button>
                           )}
-                          {isAuthorized(['Super Admin', 'Marketing Admin']) && (
-                            <button 
+                          {hasAccess('branches') && (
+                            <button
                               type="button"
                               onClick={() => { setActiveGroup('page'); setActiveTab('branches'); }}
                               className={`w-full text-left flex items-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
@@ -1502,19 +1705,53 @@ export function AdminDashboard() {
 
                       {expandedGroups.seo && (
                         <div className="pl-4 ml-4 border-l border-slate-100 space-y-1">
-                          <button 
-                            type="button"
-                            onClick={() => { setActiveGroup('seo'); setActiveTab('seo'); }}
-                            className={`w-full text-left flex items-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
-                              activeTab === 'seo' ? 'bg-[#8B1A4A] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'
-                            }`}
-                          >
-                            <File className="w-3.5 h-3.5" />
-                            <span>SEO Meta Tags</span>
-                          </button>
+                          {hasAccess('seo') && (
+                            <button
+                              type="button"
+                              onClick={() => { setActiveGroup('seo'); setActiveTab('seo'); }}
+                              className={`w-full text-left flex items-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
+                                activeTab === 'seo' ? 'bg-[#8B1A4A] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'
+                              }`}
+                            >
+                              <File className="w-3.5 h-3.5" />
+                              <span>SEO Meta Tags</span>
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
+
+                    {/* Folder 5: Admin & Security (Super Admin only) */}
+                    {hasAccess('admin_users') && (
+                      <div className="space-y-1">
+                        <button
+                          type="button"
+                          onClick={() => toggleGroup('admin')}
+                          className="w-full flex items-center justify-between py-2 px-3 rounded-xl hover:bg-slate-50 transition-all text-xs font-black uppercase tracking-wider text-slate-500"
+                        >
+                          <div className="flex items-center gap-2">
+                            {expandedGroups.admin ? <FolderOpen className="w-4 h-4 text-[#cca830]" /> : <Folder className="w-4 h-4 text-[#cca830]" />}
+                            <span>Admin & Security</span>
+                          </div>
+                          {expandedGroups.admin ? <ChevronDown className="w-3.5 h-3.5 opacity-55" /> : <ChevronRight className="w-3.5 h-3.5 opacity-55" />}
+                        </button>
+
+                        {expandedGroups.admin && (
+                          <div className="pl-4 ml-4 border-l border-slate-100 space-y-1">
+                            <button
+                              type="button"
+                              onClick={() => { setActiveGroup('admin'); setActiveTab('admin_users'); }}
+                              className={`w-full text-left flex items-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
+                                activeTab === 'admin_users' ? 'bg-[#8B1A4A] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'
+                              }`}
+                            >
+                              <ShieldCheck className="w-3.5 h-3.5" />
+                              <span>Admin Users & Roles</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                   </div>
 
@@ -1524,11 +1761,23 @@ export function AdminDashboard() {
               {/* Main Panel Content Area */}
               <div className="lg:col-span-9 w-full">
                 <AnimatePresence mode="wait">
-                  
+                  {!userRole ? (
+                    <motion.div key="no-profile" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="glass-card-admin rounded-[32px] p-12 shadow-sm text-center space-y-4">
+                      <Lock className="w-10 h-10 text-[#8B1A4A] mx-auto" />
+                      <h3 className="font-garamond text-3xl font-bold text-[#2D3A4A]">No Admin Profile Provisioned</h3>
+                      <p className="text-sm text-slate-500 max-w-md mx-auto">Your account is signed in but has no admin role assigned yet. Contact a Super Admin to have your account set up before you can access the control panel.</p>
+                    </motion.div>
+                  ) : !hasAccess(activeTab) ? (
+                    <motion.div key="restricted" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="glass-card-admin rounded-[32px] p-12 shadow-sm text-center space-y-4">
+                      <Lock className="w-10 h-10 text-[#8B1A4A] mx-auto" />
+                      <h3 className="font-garamond text-3xl font-bold text-[#2D3A4A]">Access Restricted</h3>
+                      <p className="text-sm text-slate-500 max-w-md mx-auto">Your role ({userRole}) does not have permission to view or edit this module. Contact a Super Admin if you need access.</p>
+                    </motion.div>
+                  ) : (<>
                   {/* ============================================== */}
                   {/* OVERVIEW MODULES                               */}
                   {/* ============================================== */}
-                  
+
                   {/* TAB: Traffic Analytics */}
                   {activeTab === 'analytics' && activeGroup === 'overview' && (
                     <motion.div key="analytics" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
@@ -1905,7 +2154,7 @@ export function AdminDashboard() {
                                       </button>
                                       <button 
                                         type="button"
-                                        onClick={() => deleteDoctor(doc.id)}
+                                        onClick={() => requestConfirm('Delete Doctor Profile?', `This will permanently remove "${doc.name}" from the live site. This action cannot be undone.`, () => deleteDoctor(doc.id))}
                                         className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                                       >
                                         <Trash2 className="w-4 h-4" />
@@ -1940,18 +2189,11 @@ export function AdminDashboard() {
                           <div className="grid grid-cols-2 gap-4">
                             <div>
                               <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Branch</label>
-                              <select value={currentDoctor.branch} onChange={e => setCurrentDoctor(prev => ({ ...prev, branch: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs">
-                                <option>LB Nagar</option>
-                                <option>Kompally</option>
-                                <option>ECIL</option>
-                                <option>Miyapur</option>
-                                <option>Peerzadiguda</option>
-                                <option>Lakdikapul</option>
-                                <option>Vijayawada</option>
-                                <option>Rajahmundry</option>
-                                <option>RTC X Roads</option>
-                                <option>Secunderabad</option>
-                              </select>
+                              <ThemedDropdown
+                                value={currentDoctor.branch}
+                                onChange={e => setCurrentDoctor(prev => ({ ...prev, branch: e.target.value }))}
+                                options={['LB Nagar', 'Kompally', 'ECIL', 'Miyapur', 'Peerzadiguda', 'Lakdikapul', 'Vijayawada', 'Rajahmundry', 'RTC X Roads', 'Secunderabad']}
+                              />
                             </div>
                             <div>
                               <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Experience</label>
@@ -2112,7 +2354,7 @@ export function AdminDashboard() {
                                     <Edit2 className="w-4 h-4" />
                                   </button>
                                   <button 
-                                    onClick={() => deleteBlog(blog.id)}
+                                    onClick={() => requestConfirm('Remove Blog Post?', `"${blog.title}" will be unpublished and permanently deleted.`, () => deleteBlog(blog.id))}
                                     className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                                   >
                                     <Trash2 className="w-4 h-4" />
@@ -2139,13 +2381,11 @@ export function AdminDashboard() {
                           <div className="grid grid-cols-2 gap-4">
                             <div>
                               <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Category</label>
-                              <select value={currentBlog.category} onChange={e => setCurrentBlog(prev => ({ ...prev, category: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs">
-                                <option>Orthopaedics</option>
-                                <option>Cardiology</option>
-                                <option>Neurosurgery</option>
-                                <option>General Surgery</option>
-                                <option>Diabetology</option>
-                              </select>
+                              <ThemedDropdown
+                                value={currentBlog.category}
+                                onChange={e => setCurrentBlog(prev => ({ ...prev, category: e.target.value }))}
+                                options={['Orthopaedics', 'Cardiology', 'Neurosurgery', 'General Surgery', 'Diabetology']}
+                              />
                             </div>
                             <div>
                               <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Reading Time</label>
@@ -2209,7 +2449,7 @@ export function AdminDashboard() {
                                 <h4 className="font-bold text-slate-800 text-base mt-2">{item.title}</h4>
                                 <p className="text-xs text-gray-500 mt-1 font-semibold">{item.date} · {item.content}</p>
                               </div>
-                              <button onClick={() => deleteNews(item.id)} className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors">
+                              <button onClick={() => requestConfirm('Remove News Item?', `"${item.title}" will be removed from the news & alerts feed.`, () => deleteNews(item.id))} className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors">
                                 <Trash2 className="w-4 h-4" />
                               </button>
                             </div>
@@ -2228,12 +2468,11 @@ export function AdminDashboard() {
                           <div className="grid grid-cols-2 gap-4">
                             <div>
                               <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Alert Type</label>
-                              <select value={currentNews.type} onChange={e => setCurrentNews(prev => ({ ...prev, type: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs">
-                                <option>News</option>
-                                <option>Event</option>
-                                <option>Award</option>
-                                <option>Announcement</option>
-                              </select>
+                              <ThemedDropdown
+                                value={currentNews.type}
+                                onChange={e => setCurrentNews(prev => ({ ...prev, type: e.target.value }))}
+                                options={['News', 'Event', 'Award', 'Announcement']}
+                              />
                             </div>
                             <div>
                               <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Publish Date</label>
@@ -2271,7 +2510,7 @@ export function AdminDashboard() {
                                 <h4 className="font-bold text-slate-800 text-xs truncate max-w-[150px]">{file.name}</h4>
                                 <span className="text-[10px] text-[#8B1A4A] font-bold uppercase">{file.folder}</span>
                               </div>
-                              <button onClick={() => deleteMediaFile(file.id)} className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg">
+                              <button onClick={() => requestConfirm('Delete Media Asset?', `"${file.name}" will be removed from the gallery.`, () => deleteMediaFile(file.id))} className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg">
                                 <Trash2 className="w-4 h-4" />
                               </button>
                             </div>
@@ -2318,7 +2557,7 @@ export function AdminDashboard() {
                                 >
                                   <Edit2 className="w-4 h-4" />
                                 </button>
-                                <button onClick={() => deleteJob(job.id)} className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg">
+                                <button onClick={() => requestConfirm('Delete Job Opening?', `"${job.title}" will be removed from the careers board.`, () => deleteJob(job.id))} className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg">
                                   <Trash2 className="w-4 h-4" />
                                 </button>
                               </div>
@@ -2354,10 +2593,11 @@ export function AdminDashboard() {
                             </div>
                             <div>
                               <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Status</label>
-                              <select value={currentJob.status} onChange={e => setCurrentJob(prev => ({ ...prev, status: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs">
-                                <option>Active</option>
-                                <option>Closed</option>
-                              </select>
+                              <ThemedDropdown
+                                value={currentJob.status}
+                                onChange={e => setCurrentJob(prev => ({ ...prev, status: e.target.value }))}
+                                options={['Active', 'Closed']}
+                              />
                             </div>
                           </div>
                           <div>
@@ -2407,7 +2647,7 @@ export function AdminDashboard() {
                                 <p className="text-xs text-gray-500 mt-1 font-semibold">"{item.review}"</p>
                                 {item.videoUrl && <p className="text-xs text-[#8B1A4A] font-mono mt-2 font-bold">{item.videoUrl}</p>}
                               </div>
-                              <button onClick={() => deleteTestimonial(item.id)} className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg">
+                              <button onClick={() => requestConfirm('Remove Testimonial?', `The testimonial from "${item.patientName}" will be permanently deleted.`, () => deleteTestimonial(item.id))} className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg">
                                 <Trash2 className="w-4 h-4" />
                               </button>
                             </div>
@@ -2426,11 +2666,11 @@ export function AdminDashboard() {
                           <div className="grid grid-cols-2 gap-4">
                             <div>
                               <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Star Rating</label>
-                              <select value={currentTestimonial.rating} onChange={e => setCurrentTestimonial(prev => ({ ...prev, rating: parseInt(e.target.value) }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs">
-                                <option value="5">5 Stars</option>
-                                <option value="4">4 Stars</option>
-                                <option value="3">3 Stars</option>
-                              </select>
+                              <ThemedDropdown
+                                value={currentTestimonial.rating}
+                                onChange={e => setCurrentTestimonial(prev => ({ ...prev, rating: parseInt(e.target.value) }))}
+                                options={[{ value: 5, label: '5 Stars' }, { value: 4, label: '4 Stars' }, { value: 3, label: '3 Stars' }]}
+                              />
                             </div>
                             <div>
                               <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Video Testimonial Link</label>
@@ -2474,7 +2714,7 @@ export function AdminDashboard() {
                                 >
                                   <Edit2 className="w-4 h-4" />
                                 </button>
-                                <button onClick={() => deleteFaq(faq.id)} className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg">
+                                <button onClick={() => requestConfirm('Delete FAQ?', `"${faq.question}" will be permanently removed.`, () => deleteFaq(faq.id))} className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg">
                                   <Trash2 className="w-4 h-4" />
                                 </button>
                               </div>
@@ -2491,12 +2731,11 @@ export function AdminDashboard() {
                         <form onSubmit={saveFaq} className="space-y-4">
                           <div>
                             <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Category</label>
-                            <select value={currentFaq.category} onChange={e => setCurrentFaq(prev => ({ ...prev, category: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs">
-                              <option>General</option>
-                              <option>Billing</option>
-                              <option>Treatments</option>
-                              <option>Robotics</option>
-                            </select>
+                            <ThemedDropdown
+                              value={currentFaq.category}
+                              onChange={e => setCurrentFaq(prev => ({ ...prev, category: e.target.value }))}
+                              options={['General', 'Billing', 'Treatments', 'Robotics']}
+                            />
                           </div>
                           <div>
                             <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Question</label>
@@ -2528,7 +2767,7 @@ export function AdminDashboard() {
                                 <h4 className="font-bold text-slate-800 text-base">{item.name}</h4>
                                 <p className="text-xs text-gray-500 mt-1 font-semibold">Category: {item.category} · Size: {item.size}</p>
                               </div>
-                              <button onClick={() => deleteDownload(item.id)} className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg">
+                              <button onClick={() => requestConfirm('Remove Download?', `"${item.name}" will be removed from the downloads library.`, () => deleteDownload(item.id))} className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg">
                                 <Trash2 className="w-4 h-4" />
                               </button>
                             </div>
@@ -2547,12 +2786,11 @@ export function AdminDashboard() {
                           <div className="grid grid-cols-2 gap-4">
                             <div>
                               <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Category Group</label>
-                              <select value={currentDownload.category} onChange={e => setCurrentDownload(prev => ({ ...prev, category: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs">
-                                <option>PDFs</option>
-                                <option>Health Packages</option>
-                                <option>Insurance Documents</option>
-                                <option>Clinical Guidelines</option>
-                              </select>
+                              <ThemedDropdown
+                                value={currentDownload.category}
+                                onChange={e => setCurrentDownload(prev => ({ ...prev, category: e.target.value }))}
+                                options={['PDFs', 'Health Packages', 'Insurance Documents', 'Clinical Guidelines']}
+                              />
                             </div>
                             <div>
                               <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Simulated Size</label>
@@ -2601,8 +2839,8 @@ export function AdminDashboard() {
                                   <h4 className="text-xs font-bold text-slate-800 truncate">{media.name}</h4>
                                   <div className="flex justify-between items-center mt-1">
                                     <span className="text-[10px] text-gray-400 font-semibold">{media.size}</span>
-                                    <button 
-                                      onClick={() => deleteMediaFile(media.id)}
+                                    <button
+                                      onClick={() => requestConfirm('Delete Media Asset?', `"${media.name}" will be removed from the media library.`, () => deleteMediaFile(media.id))}
                                       className="text-rose-600 hover:bg-rose-50 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
                                     >
                                       <Trash2 className="w-4 h-4" />
@@ -2625,19 +2863,19 @@ export function AdminDashboard() {
                             <div className="grid grid-cols-2 gap-4">
                               <div>
                                 <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Asset Type</label>
-                                <select value={newMediaFile.type} onChange={e => setNewMediaFile(prev => ({ ...prev, type: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs">
-                                  <option value="image">Image</option>
-                                  <option value="document">Document</option>
-                                  <option value="video">Video</option>
-                                </select>
+                                <ThemedDropdown
+                                  value={newMediaFile.type}
+                                  onChange={e => setNewMediaFile(prev => ({ ...prev, type: e.target.value }))}
+                                  options={[{ value: 'image', label: 'Image' }, { value: 'document', label: 'Document' }, { value: 'video', label: 'Video' }]}
+                                />
                               </div>
                               <div>
                                 <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Folder Category</label>
-                                <select value={newMediaFile.folder} onChange={e => setNewMediaFile(prev => ({ ...prev, folder: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs">
-                                  <option>Images</option>
-                                  <option>Documents</option>
-                                  <option>Videos</option>
-                                </select>
+                                <ThemedDropdown
+                                  value={newMediaFile.folder}
+                                  onChange={e => setNewMediaFile(prev => ({ ...prev, folder: e.target.value }))}
+                                  options={['Images', 'Documents', 'Videos']}
+                                />
                               </div>
                             </div>
                             <div>
@@ -3048,15 +3286,13 @@ export function AdminDashboard() {
                           <h3 className="font-garamond text-3xl font-bold text-[#2D3A4A]">SEO CMS Manager</h3>
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-bold text-gray-500">Edit Page:</span>
-                            <select 
-                              value={selectedSeoPage} 
+                            <ThemedDropdown
+                              value={selectedSeoPage}
                               onChange={e => setSelectedSeoPage(e.target.value)}
-                              className="h-10 px-3 rounded-xl border bg-white text-xs font-bold"
-                            >
-                              <option value="homepage">Homepage</option>
-                              <option value="about">About Us Page</option>
-                              <option value="careers">Careers & Fellowships</option>
-                            </select>
+                              heightClass="h-10"
+                              className="w-56"
+                              options={[{ value: 'homepage', label: 'Homepage' }, { value: 'about', label: 'About Us Page' }, { value: 'careers', label: 'Careers & Fellowships' }]}
+                            />
                           </div>
                         </div>
                         
@@ -3134,6 +3370,114 @@ export function AdminDashboard() {
                     </motion.div>
                   )}
 
+                  {/* TAB: Admin Users & Roles (Super Admin only) */}
+                  {activeTab === 'admin_users' && activeGroup === 'admin' && (
+                    <motion.div key="admin_users" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 xl:grid-cols-12 gap-10">
+
+                      {/* Left: Admin list */}
+                      <div className="xl:col-span-7 space-y-6">
+                        <div className="glass-card-admin rounded-[32px] p-8 shadow-sm space-y-6">
+                          <h3 className="font-garamond text-3xl font-bold text-[#2D3A4A]">Admin Accounts ({adminUsers.length})</h3>
+                          <div className="space-y-3 max-h-[560px] overflow-y-auto pr-1">
+                            {adminUsers.map(a => (
+                              <div key={a.id} className="p-4 rounded-2xl border border-slate-100 bg-white flex items-center justify-between gap-4">
+                                <div>
+                                  <p className="text-sm font-bold text-slate-800">{a.displayName || a.email}</p>
+                                  <p className="text-xs text-slate-500">{a.email} &middot; {a.role}</p>
+                                  {(a.extraPermissions?.length > 0 || a.revokedPermissions?.length > 0) && (
+                                    <p className="text-[10px] text-slate-400 mt-1">
+                                      {a.extraPermissions?.length > 0 && `+${a.extraPermissions.length} extra `}
+                                      {a.revokedPermissions?.length > 0 && `-${a.revokedPermissions.length} revoked`}
+                                    </p>
+                                  )}
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => toggleAdminActive(a)}
+                                  className={`px-3 h-9 rounded-full text-[10px] font-black uppercase tracking-wide ${
+                                    a.active !== false ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
+                                  }`}
+                                >
+                                  {a.active !== false ? 'Active' : 'Disabled'}
+                                </button>
+                              </div>
+                            ))}
+                            {adminUsers.length === 0 && (
+                              <p className="text-xs text-slate-400 text-center py-8">No admin accounts yet — create one on the right.</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right: Create admin form */}
+                      <div className="xl:col-span-5 space-y-6">
+                        <form onSubmit={createAdminUser} className="glass-card-admin rounded-[32px] p-8 shadow-sm space-y-5">
+                          <h3 className="font-garamond text-2xl font-bold text-[#2D3A4A]">New Admin</h3>
+                          <div>
+                            <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Email</label>
+                            <input type="email" required value={currentAdminUser.email}
+                              onChange={e => setCurrentAdminUser(prev => ({ ...prev, email: e.target.value }))}
+                              className="w-full h-11 px-3 rounded-xl border bg-white text-xs" />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Display Name</label>
+                            <input type="text" value={currentAdminUser.displayName}
+                              onChange={e => setCurrentAdminUser(prev => ({ ...prev, displayName: e.target.value }))}
+                              className="w-full h-11 px-3 rounded-xl border bg-white text-xs" />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Role</label>
+                            <ThemedDropdown
+                              value={currentAdminUser.role}
+                              onChange={e => setCurrentAdminUser(prev => ({ ...prev, role: e.target.value, extraPermissions: [], revokedPermissions: [] }))}
+                              options={ROLES.filter(r => r !== 'Super Admin')}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Extra Permissions (beyond role default)</label>
+                            <div className="grid grid-cols-2 gap-1 max-h-40 overflow-y-auto pr-1">
+                              {OVERRIDABLE_MODULES.filter(m => !(ROLE_DEFAULT_PERMISSIONS[currentAdminUser.role] || []).includes(m)).map(m => (
+                                <label key={m} className="flex items-center gap-2 text-[11px] text-slate-600">
+                                  <input type="checkbox"
+                                    checked={currentAdminUser.extraPermissions.includes(m)}
+                                    onChange={e => setCurrentAdminUser(prev => ({
+                                      ...prev,
+                                      extraPermissions: e.target.checked ? [...prev.extraPermissions, m] : prev.extraPermissions.filter(x => x !== m)
+                                    }))}
+                                  />
+                                  {MODULE_LABELS[m]}
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Revoke From Role Default</label>
+                            <div className="grid grid-cols-2 gap-1 max-h-40 overflow-y-auto pr-1">
+                              {(ROLE_DEFAULT_PERMISSIONS[currentAdminUser.role] || []).map(m => (
+                                <label key={m} className="flex items-center gap-2 text-[11px] text-slate-600">
+                                  <input type="checkbox"
+                                    checked={currentAdminUser.revokedPermissions.includes(m)}
+                                    onChange={e => setCurrentAdminUser(prev => ({
+                                      ...prev,
+                                      revokedPermissions: e.target.checked ? [...prev.revokedPermissions, m] : prev.revokedPermissions.filter(x => x !== m)
+                                    }))}
+                                  />
+                                  {MODULE_LABELS[m]}
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                          <button type="submit" disabled={creatingAdminUser}
+                            className="w-full h-12 bg-[#8B1A4A] text-white rounded-full text-xs font-bold uppercase disabled:opacity-50">
+                            {creatingAdminUser ? 'Creating…' : 'Create Admin Account'}
+                          </button>
+                          {auth && <p className="text-[10px] text-slate-400 text-center">A password-setup email will be sent to the new admin — no password is ever shown here.</p>}
+                        </form>
+                      </div>
+                    </motion.div>
+                  )}
+                  </>)}
+
                 </AnimatePresence>
               </div>
 
@@ -3142,7 +3486,17 @@ export function AdminDashboard() {
           </div>
         )}
 
-        {/* ══════════════ 3. INLINE MEDIA PICKER MODAL ══════════════ */}
+        {/* ══════════════ 3. THEMED CONFIRM DIALOG (replaces window.confirm) ══════════════ */}
+        <ConfirmDialog
+          open={confirmDialog.open}
+          title={confirmDialog.title}
+          message={confirmDialog.message}
+          confirmLabel={confirmDialog.confirmLabel}
+          onConfirm={handleConfirmAccept}
+          onCancel={closeConfirm}
+        />
+
+        {/* ══════════════ 4. INLINE MEDIA PICKER MODAL ══════════════ */}
         <AnimatePresence>
           {showMediaPickerModal && (
             <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-md px-6">

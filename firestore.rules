@@ -1,0 +1,115 @@
+rules_version = '2';
+
+// Mirrors src/lib/permissions.js (ROLE_DEFAULT_PERMISSIONS). Firestore rules cannot
+// import JS, so the role -> module map is manually duplicated in roleDefault() below.
+// If you change MODULES/ROLE_DEFAULT_PERMISSIONS in permissions.js, update this file too.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // Fetched once per rule evaluation and reused via `let` to avoid hitting the
+    // per-request get() ceiling when a rule needs the caller's profile multiple times.
+    function myDoc() {
+      return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data
+        : null;
+    }
+
+    function isSuperAdmin(d) {
+      return d != null && d.active != false && d.role == 'Super Admin';
+    }
+
+    function roleDefault(role, mod) {
+      return (role == 'Marketing Admin' && mod in ['analytics','heatmaps','departments','blogs','news','gallery','testimonials','faqs','downloads','media','homepage','aboutpage','branches','seo']) ||
+             (role == 'HR' && mod in ['jobs','careers_customizer']) ||
+             (role == 'Doctor Admin' && mod in ['doctors']) ||
+             (role == 'Reception' && mod in ['analytics','appointments']);
+    }
+
+    function docHasPerm(d, mod) {
+      return d != null && d.active != false && (
+        d.role == 'Super Admin' ||
+        (mod in (d.extraPermissions == null ? [] : d.extraPermissions)) ||
+        (roleDefault(d.role, mod) && !(mod in (d.revokedPermissions == null ? [] : d.revokedPermissions)))
+      );
+    }
+
+    // users/{uid} holds role + permission overrides — the single most security
+    // critical rule here. A non-Super-Admin must NEVER be able to write role,
+    // active, extraPermissions or revokedPermissions on any doc, including their own,
+    // or RBAC is trivially bypassed by editing your own permissions.
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isSuperAdmin(myDoc()));
+      allow create, update, delete: if isSuperAdmin(myDoc());
+    }
+
+    match /doctors/{id} {
+      allow read: if true;
+      allow write: if docHasPerm(myDoc(), 'doctors');
+    }
+    match /departments/{id} {
+      allow read: if true;
+      allow write: if docHasPerm(myDoc(), 'departments');
+    }
+    match /blogs/{id} {
+      allow read: if true;
+      allow write: if docHasPerm(myDoc(), 'blogs');
+    }
+    match /news/{id} {
+      allow read: if true;
+      allow write: if docHasPerm(myDoc(), 'news');
+    }
+    match /job_openings/{id} {
+      allow read: if true;
+      allow write: if docHasPerm(myDoc(), 'jobs');
+    }
+    match /testimonials/{id} {
+      allow read: if true;
+      allow write: if docHasPerm(myDoc(), 'testimonials');
+    }
+    match /faqs/{id} {
+      allow read: if true;
+      allow write: if docHasPerm(myDoc(), 'faqs');
+    }
+    match /downloads/{id} {
+      allow read: if true;
+      allow write: if docHasPerm(myDoc(), 'downloads');
+    }
+    match /media/{id} {
+      allow read: if true;
+      allow write: if docHasPerm(myDoc(), 'media');
+    }
+
+    match /appointments/{id} {
+      allow create: if true; // public booking form, when added — no read/update/delete for public
+      allow read, update, delete: if docHasPerm(myDoc(), 'appointments');
+    }
+
+    match /analytics_events/{id} {
+      allow create: if true; // VisitorTracker.jsx writes unauthenticated
+      allow read, update, delete: if docHasPerm(myDoc(), 'analytics') || docHasPerm(myDoc(), 'heatmaps');
+    }
+
+    // homepage/about/careers_page/branches all live as top-level keys of ONE doc.
+    // Field-level isolation via affectedKeys().hasOnly([...]) so e.g. HR (careers_customizer)
+    // can only ever touch careers_page, never homepage/about/branches in the same doc.
+    match /site_contents/pages {
+      allow read: if true;
+      allow create: if isSuperAdmin(myDoc());
+      allow update: if isSuperAdmin(myDoc()) ||
+        (docHasPerm(myDoc(), 'homepage') && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['homepage'])) ||
+        (docHasPerm(myDoc(), 'aboutpage') && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['about'])) ||
+        (docHasPerm(myDoc(), 'careers_customizer') && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['careers_page'])) ||
+        (docHasPerm(myDoc(), 'branches') && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['branches']));
+    }
+
+    match /site_contents/seo {
+      allow read: if true;
+      allow write: if docHasPerm(myDoc(), 'seo');
+    }
+  }
+}
