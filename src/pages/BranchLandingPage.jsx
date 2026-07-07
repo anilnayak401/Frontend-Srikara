@@ -16,6 +16,7 @@ import { DoctorsGroupBanner } from '@/components/sections/DoctorsGroupBanner'
 import { PremiumDoctorFinder } from '@/components/sections/PremiumDoctorFinder'
 import { PremiumCaseStudies } from '@/components/sections/PremiumCaseStudies'
 import { PremiumLocation } from '@/components/sections/PremiumLocation'
+import { TestimonialsSection } from '@/components/sections/TestimonialsSection'
 import { UnevenDepartmentCollage } from '@/components/sections/UnevenDepartmentCollage'
 import { assetUrl } from '@/lib/assetUrl'
 
@@ -234,6 +235,8 @@ export function BranchLandingPage({ branch: initialBranch }) {
 
           {/* ── 6.5 CASE STUDIES ── */}
           <PremiumCaseStudies />
+
+          <TestimonialsSection category={branch.title} />
 
           {/* ── 7. PREMIUM LOCATION & REVIEWS ── */}
           <PremiumLocation branch={branch} />

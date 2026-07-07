@@ -14,6 +14,7 @@ import { PremiumLocation } from '@/components/sections/PremiumLocation'
 import { AchievementsSection } from '@/components/sections/AchievementsSection'
 import { DoctorsGroupBanner } from '@/components/sections/DoctorsGroupBanner'
 import { UnevenDepartmentCollage } from '@/components/sections/UnevenDepartmentCollage'
+import { TestimonialsSection } from '@/components/sections/TestimonialsSection'
 
 const SPECIALTY_IMAGES = [
   'https://images.unsplash.com/photo-1576091160550-217359f42f8c?auto=format&fit=crop&q=80',
@@ -157,6 +158,8 @@ export function PeerzadigudaPage() {
         {/* ── LOCATION ── */}
         <AchievementsSection />
         <PremiumLocation branch={branch} />
+
+        <TestimonialsSection category={branch.title} />
 
         <Footer />
         <MobileBottomNav />

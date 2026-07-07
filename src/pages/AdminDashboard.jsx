@@ -391,7 +391,7 @@ export function AdminDashboard() {
   const [currentFaq, setCurrentFaq] = useState({ question: '', answer: '', category: 'General' })
   const [isEditingFaq, setIsEditingFaq] = useState(false)
   const [currentDept, setCurrentDept] = useState({ id: 'ortho', name: '', description: '', treatments: '', faqCategory: 'Treatments' })
-  const [currentTestimonial, setCurrentTestimonial] = useState({ patientName: '', rating: 5, review: '', videoUrl: '' })
+  const [currentTestimonial, setCurrentTestimonial] = useState({ patientName: '', rating: 5, review: '', videoUrl: '', page: 'General / Home' })
   const [currentDownload, setCurrentDownload] = useState({ name: '', url: '', category: 'PDFs', size: '1.2 MB' })
   const [currentNews, setCurrentNews] = useState({ title: '', type: 'News', date: '', content: '' })
 
@@ -1040,7 +1040,7 @@ export function AdminDashboard() {
     setTestimonials(updated)
     await persistToStore('testimonials', updated)
     if (db) await setDoc(doc(db, 'testimonials', newId), payload)
-    setCurrentTestimonial({ patientName: '', rating: 5, review: '', videoUrl: '' })
+    setCurrentTestimonial({ patientName: '', rating: 5, review: '', videoUrl: '', page: 'General / Home' })
     notifyUser('success', 'Testimonial added.')
   }
 
@@ -1168,6 +1168,68 @@ export function AdminDashboard() {
   const triggerMediaPicker = (callback) => {
     setMediaTargetField(() => callback)
     setShowMediaPickerModal(true)
+  }
+
+  const handleImageUpload = async (file, onUploaded) => {
+    if (!file) return
+
+    notifyUser('info', 'Uploading image...')
+
+    const readAsBase64 = (f) => new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result)
+      reader.onerror = reject
+      reader.readAsDataURL(f)
+    })
+
+    try {
+      if (storage) {
+        const fileRef = ref(storage, `doctors/${Date.now()}_${file.name}`)
+        await uploadBytes(fileRef, file)
+        const downloadUrl = await getDownloadURL(fileRef)
+        
+        const newAsset = { 
+          id: Date.now().toString(),
+          name: file.name,
+          type: 'image',
+          size: `${Math.round(file.size / 1024)} KB`,
+          folder: 'Images',
+          url: downloadUrl
+        }
+        const updated = [...mediaFiles, newAsset]
+        setMediaFiles(updated)
+        persistToStore('mediaFiles', updated)
+
+        onUploaded(downloadUrl)
+        notifyUser('success', 'Image uploaded successfully!')
+      } else {
+        const base64Url = await readAsBase64(file)
+        
+        const newAsset = { 
+          id: Date.now().toString(),
+          name: file.name,
+          type: 'image',
+          size: `${Math.round(file.size / 1024)} KB`,
+          folder: 'Images',
+          url: base64Url
+        }
+        const updated = [...mediaFiles, newAsset]
+        setMediaFiles(updated)
+        persistToStore('mediaFiles', updated)
+
+        onUploaded(base64Url)
+        notifyUser('success', 'Saved image locally as data URL.')
+      }
+    } catch (err) {
+      console.error('Image upload failed:', err)
+      try {
+        const base64Url = await readAsBase64(file)
+        onUploaded(base64Url)
+        notifyUser('success', 'Saved image locally as data URL.')
+      } catch (e) {
+        notifyUser('error', 'Failed to process selected image.')
+      }
+    }
   }
 
   // Search filter lists
@@ -2182,7 +2244,30 @@ export function AdminDashboard() {
                             </div>
                             <div>
                               <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Specialty</label>
-                              <input type="text" value={currentDoctor.specialty} onChange={e => setCurrentDoctor(prev => ({ ...prev, specialty: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" placeholder="Cardiology" required />
+                              <input 
+                                type="text" 
+                                value={currentDoctor.specialty} 
+                                onChange={e => {
+                                  const val = e.target.value;
+                                  let specId = 'ortho';
+                                  const clean = val.toLowerCase();
+                                  if (clean.includes('ortho')) specId = 'ortho';
+                                  else if (clean.includes('cardio')) specId = 'cardio';
+                                  else if (clean.includes('neuro')) specId = 'neuro';
+                                  else if (clean.includes('nephro')) specId = 'nephro';
+                                  else if (clean.includes('pulmo')) specId = 'pulmo';
+                                  else if (clean.includes('gastro')) specId = 'gastro';
+                                  else if (clean.includes('physician') || clean.includes('general')) specId = 'physician';
+                                  else if (clean.includes('urology')) specId = 'urology';
+                                  else if (clean.includes('gyn') || clean.includes('obstetric')) specId = 'gyn';
+                                  else specId = clean.slice(0, 5) || 'ortho';
+
+                                  setCurrentDoctor(prev => ({ ...prev, specialty: val, specialtyId: specId }));
+                                }} 
+                                className="w-full h-11 px-3 rounded-xl border bg-white text-xs" 
+                                placeholder="Cardiology" 
+                                required 
+                              />
                             </div>
                           </div>
 
@@ -2207,22 +2292,40 @@ export function AdminDashboard() {
                           </div>
 
                           <div>
-                            <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Doctor Bio / Statement</label>
-                            <textarea value={currentDoctor.bio} onChange={e => setCurrentDoctor(prev => ({ ...prev, bio: e.target.value }))} className="w-full h-20 p-3 rounded-xl border bg-white text-xs" placeholder="Describe the doctor's achievements..." />
-                          </div>
-
-                          <div>
                             <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Photo URL</label>
                             <div className="flex gap-2">
                               <input type="text" value={currentDoctor.photoUrl} onChange={e => setCurrentDoctor(prev => ({ ...prev, photoUrl: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" placeholder="https://..." />
                               <button 
+                                type="button"
+                                onClick={() => {
+                                  const input = document.createElement('input')
+                                  input.type = 'file'
+                                  input.accept = 'image/*'
+                                  input.onchange = (e) => {
+                                    const file = e.target.files[0]
+                                    handleImageUpload(file, (url) => {
+                                      setCurrentDoctor(prev => ({ ...prev, photoUrl: url }))
+                                    })
+                                  }
+                                  input.click()
+                                }}
+                                className="px-3 h-11 rounded-xl bg-[#8B1A4A] hover:bg-[#2D3A4A] text-white text-xs font-bold flex items-center justify-center gap-1 shrink-0 transition-colors"
+                              >
+                                <Upload className="w-4 h-4" /> Upload
+                              </button>
+                              <button 
                                 type="button" 
                                 onClick={() => triggerMediaPicker((url) => setCurrentDoctor(prev => ({ ...prev, photoUrl: url })))}
-                                className="px-3 h-11 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold flex items-center justify-center gap-1"
+                                className="px-3 h-11 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold flex items-center justify-center gap-1 shrink-0 text-slate-700"
                               >
                                 <FolderOpen className="w-4 h-4" /> Pick
                               </button>
                             </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Doctor Bio / Statement</label>
+                            <textarea value={currentDoctor.bio} onChange={e => setCurrentDoctor(prev => ({ ...prev, bio: e.target.value }))} className="w-full h-20 p-3 rounded-xl border bg-white text-xs" placeholder="Describe the doctor's achievements..." />
                           </div>
 
                           <div className="flex gap-3 pt-2">
@@ -2398,9 +2501,27 @@ export function AdminDashboard() {
                             <div className="flex gap-2">
                               <input type="text" value={currentBlog.image} onChange={e => setCurrentBlog(prev => ({ ...prev, image: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" placeholder="https://..." />
                               <button 
+                                type="button"
+                                onClick={() => {
+                                  const input = document.createElement('input')
+                                  input.type = 'file'
+                                  input.accept = 'image/*'
+                                  input.onchange = (e) => {
+                                    const file = e.target.files[0]
+                                    handleImageUpload(file, (url) => {
+                                      setCurrentBlog(prev => ({ ...prev, image: url }))
+                                    })
+                                  }
+                                  input.click()
+                                }}
+                                className="px-3 h-11 rounded-xl bg-[#8B1A4A] hover:bg-[#2D3A4A] text-white text-xs font-bold flex items-center justify-center gap-1 shrink-0 transition-colors"
+                              >
+                                <Upload className="w-4 h-4" /> Upload
+                              </button>
+                              <button 
                                 type="button" 
                                 onClick={() => triggerMediaPicker((url) => setCurrentBlog(prev => ({ ...prev, image: url })))}
-                                className="px-3 h-11 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold"
+                                className="px-3 h-11 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold shrink-0 text-slate-700"
                               >
                                 Browse
                               </button>
@@ -2643,7 +2764,10 @@ export function AdminDashboard() {
                                     <Star key={i} className="w-4 h-4 fill-amber-500" />
                                   ))}
                                 </div>
-                                <h4 className="font-bold text-slate-800 text-base">{item.patientName}</h4>
+                                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                                  <h4 className="font-bold text-slate-800 text-base">{item.patientName}</h4>
+                                  <span className="px-2 py-0.5 rounded-full bg-[#8B1A4A]/5 text-[#8B1A4A] text-[9px] font-black uppercase tracking-wider">{item.page || 'General / Home'}</span>
+                                </div>
                                 <p className="text-xs text-gray-500 mt-1 font-semibold">"{item.review}"</p>
                                 {item.videoUrl && <p className="text-xs text-[#8B1A4A] font-mono mt-2 font-bold">{item.videoUrl}</p>}
                               </div>
@@ -2673,9 +2797,30 @@ export function AdminDashboard() {
                               />
                             </div>
                             <div>
-                              <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Video Testimonial Link</label>
-                              <input type="text" value={currentTestimonial.videoUrl} onChange={e => setCurrentTestimonial(prev => ({ ...prev, videoUrl: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" placeholder="YouTube Embed URL" />
+                              <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Page / Branch Category</label>
+                              <ThemedDropdown
+                                value={currentTestimonial.page}
+                                onChange={e => setCurrentTestimonial(prev => ({ ...prev, page: e.target.value }))}
+                                options={[
+                                  { value: 'General / Home', label: 'General / Home' },
+                                  { value: 'About Page', label: 'About Page' },
+                                  { value: 'ECIL', label: 'ECIL Branch' },
+                                  { value: 'LB Nagar', label: 'LB Nagar Branch' },
+                                  { value: 'Kompally', label: 'Kompally Branch' },
+                                  { value: 'Miyapur', label: 'Miyapur Branch' },
+                                  { value: 'Peerzadiguda', label: 'Peerzadiguda Branch' },
+                                  { value: 'Lakdikapul', label: 'Lakdikapul Branch' },
+                                  { value: 'Vijayawada', label: 'Vijayawada Branch' },
+                                  { value: 'Rajahmundry', label: 'Rajahmundry Branch' },
+                                  { value: 'RTC X Roads', label: 'RTC X Roads Branch' },
+                                  { value: 'Secunderabad', label: 'Secunderabad Branch' }
+                                ]}
+                              />
                             </div>
+                          </div>
+                          <div>
+                            <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Video Testimonial Link</label>
+                            <input type="text" value={currentTestimonial.videoUrl} onChange={e => setCurrentTestimonial(prev => ({ ...prev, videoUrl: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" placeholder="YouTube Embed URL" />
                           </div>
                           <div>
                             <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Patient Review Comment</label>

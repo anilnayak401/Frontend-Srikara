@@ -14,6 +14,7 @@ import { PremiumDoctorFinder } from '@/components/sections/PremiumDoctorFinder'
 import { PremiumCaseStudies } from '@/components/sections/PremiumCaseStudies'
 import { PremiumLocation } from '@/components/sections/PremiumLocation'
 import { UnevenDepartmentCollage } from '@/components/sections/UnevenDepartmentCollage'
+import { TestimonialsSection } from '@/components/sections/TestimonialsSection'
 import { miyapur as initialBranch } from '@/data/branches/miyapur'
 import { db } from '@/lib/firebase'
 import { doc, getDoc } from 'firebase/firestore'
@@ -166,6 +167,8 @@ export function MiyapurPage() {
 
           {/* 8. LOCATION */}
           <PremiumLocation branch={branch} />
+
+          <TestimonialsSection category={branch.title} />
 
         </div>
 

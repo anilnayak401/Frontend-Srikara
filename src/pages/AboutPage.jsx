@@ -8,6 +8,7 @@ import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
 import { TimelineSection } from '@/components/sections/TimelineSection'
 import { PremiumDoctorFinder } from '@/components/sections/PremiumDoctorFinder'
 import { ScrollSequence } from '@/components/sections/ScrollSequence'
+import { TestimonialsSection } from '@/components/sections/TestimonialsSection'
 
 // --- PREMIUM ABOUT PAGE DESIGN TOKENS ---
 const ABO_STYLES = `
@@ -206,6 +207,9 @@ export function AboutPage() {
 
         <TimelineSection />
         <PremiumDoctorFinder isGlobal={true} />
+        
+        <TestimonialsSection category="About Page" />
+        
         <Footer />
         <MobileBottomNav />
       </div>

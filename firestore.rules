@@ -111,5 +111,9 @@ service cloud.firestore {
       allow read: if true;
       allow write: if docHasPerm(myDoc(), 'seo');
     }
+
+    match /api_keys/{id} {
+      allow read, write: if false; // Denies all client SDK read/write access
+    }
   }
 }

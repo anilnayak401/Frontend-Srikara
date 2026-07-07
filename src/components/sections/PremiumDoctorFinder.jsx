@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Shield, Heart, Phone, MessageSquare, Mail, Share2, MapPin, User, Calendar } from 'lucide-react';
 import { ALL_DOCTORS } from '@/data/doctors';
+import { useDoctors } from '@/hooks/useDoctors';
 
 const CAROUSEL_TRANSITION = {
   type: 'spring',
@@ -235,6 +236,7 @@ function DoctorCard({ doctor, isActive, transitionEnabled, onClick, getHasDragge
 
 export const PremiumDoctorFinder = ({ branchTitle = 'ECIL', branchId = 'ECIL', isGlobal = false, allowBranchSwitch = false }) => {
   const navigate = useNavigate();
+  const { doctors } = useDoctors();
   const [isMobile, setIsMobile] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState(isGlobal ? 'ECIL' : (branchId || branchTitle || 'ECIL'));
 
@@ -250,14 +252,22 @@ export const PremiumDoctorFinder = ({ branchTitle = 'ECIL', branchId = 'ECIL', i
   const normalize = (s) => s ? s.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
 
   // Filter doctors for this specific branch
-  const branchDoctors = ALL_DOCTORS.filter(doc => 
-    normalize(doc.branch) === normalize(selectedBranch)
-  );
+  const branchDoctors = useMemo(() => {
+    const normSel = normalize(selectedBranch);
+    if (!normSel || normSel === 'hospitals') {
+      return doctors;
+    }
+    return doctors.filter(doc => 
+      normalize(doc.branch) === normSel
+    );
+  }, [doctors, selectedBranch]);
 
   const N = branchDoctors.length;
 
   // Tripled list for infinite looping visual elements
-  const tripledDoctors = [...branchDoctors, ...branchDoctors, ...branchDoctors];
+  const tripledDoctors = useMemo(() => {
+    return [...branchDoctors, ...branchDoctors, ...branchDoctors];
+  }, [branchDoctors]);
 
   const [slideIndex, setSlideIndex] = useState(N);
   const [transition, setTransition] = useState(true);
@@ -423,7 +433,7 @@ export const PremiumDoctorFinder = ({ branchTitle = 'ECIL', branchId = 'ECIL', i
                   if (isSelected) return;
                   setSelectedBranch(branchName);
                   setTransition(false);
-                  const matchingDocs = ALL_DOCTORS.filter(doc => 
+                  const matchingDocs = doctors.filter(doc => 
                     normalize(doc.branch) === normalize(branchName)
                   );
                   const newN = matchingDocs.length;

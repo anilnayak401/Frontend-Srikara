@@ -13,6 +13,7 @@ import { FounderChairmanCard } from '@/components/sections/FounderChairmanCard'
 import { PremiumDoctorFinder } from '@/components/sections/PremiumDoctorFinder'
 import { PremiumCaseStudies } from '@/components/sections/PremiumCaseStudies'
 import { PremiumLocation } from '@/components/sections/PremiumLocation'
+import { TestimonialsSection } from '@/components/sections/TestimonialsSection'
 import { DepartmentSearch } from '@/components/sections/DepartmentSearch'
 import { UnevenDepartmentCollage } from '@/components/sections/UnevenDepartmentCollage'
 import { ecil as initialBranch } from '@/data/branches/ecil'
@@ -122,7 +123,7 @@ export function HomePage() {
           </section>
 
           {/* 5. PREMIUM DOCTOR FINDER */}
-          <PremiumDoctorFinder branchTitle={branch.title} branchId={branch.title} />
+          <PremiumDoctorFinder branchTitle="Hospitals" branchId="Hospitals" />
 
           {/* 6. INFRASTRUCTURE */}
           {branch.infrastructure && (
@@ -170,6 +171,8 @@ export function HomePage() {
 
           {/* 6.5 CASE STUDIES */}
           <PremiumCaseStudies />
+
+          <TestimonialsSection category="General / Home" />
 
           {/* 7. PREMIUM LOCATION & REVIEWS */}
           <PremiumLocation branch={branch} />

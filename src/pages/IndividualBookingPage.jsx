@@ -7,15 +7,24 @@ import { StickyNavbar } from '@/components/layout/StickyNavbar'
 import { Footer } from '@/components/layout/Footer'
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
 import { ALL_DOCTORS } from '@/data/doctors'
+import { useDoctors } from '@/hooks/useDoctors'
 
 export function IndividualBookingPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
-  const doctor = ALL_DOCTORS.find(d => d.slug === slug)
+  const { doctors, loading } = useDoctors()
+  const doctor = doctors.find(d => d.slug === slug)
 
   useEffect(() => { window.scrollTo(0, 0) }, [slug])
 
   if (!doctor) {
+    if (loading) {
+      return (
+        <div className="min-h-screen bg-[#0a1628] flex items-center justify-center">
+          <div className="w-10 h-10 border-2 border-[#cca830] border-t-transparent rounded-full animate-spin" />
+        </div>
+      )
+    }
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
         <div className="text-center">

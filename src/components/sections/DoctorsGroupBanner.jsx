@@ -1,39 +1,52 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ArrowUp, X, Sparkles, Star, Calendar, User, Phone } from 'lucide-react';
 import { ALL_DOCTORS } from '@/data/doctors';
+import { useDoctors } from '@/hooks/useDoctors';
 import { assetUrl } from '@/lib/assetUrl';
 
 export function DoctorsGroupBanner({ branchName }) {
   const navigate = useNavigate();
+  const { doctors } = useDoctors();
   const [isExpanded, setIsExpanded] = useState(false);
   const containerRef = useRef(null);
 
   const normalize = (s) => s ? s.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
 
   // Filter doctors for this specific branch if branchName is provided
-  const filteredDoctors = branchName
-    ? ALL_DOCTORS.filter(d => normalize(d.branch) === normalize(branchName))
-    : ALL_DOCTORS;
+  const filteredDoctors = useMemo(() => {
+    return branchName
+      ? doctors.filter(d => normalize(d.branch) === normalize(branchName))
+      : doctors;
+  }, [doctors, branchName]);
 
   // Show all branch-specific doctors (including those with placeholder portraits)
   const doctorsWithImages = filteredDoctors;
+
+  // Find Dr. Akhil Dadi or fallback to the first doctor in the branch list
+  const akhilDadi = useMemo(() => {
+    return doctorsWithImages.find(d => d.slug === 'akhil-dadi' || d.slug === 'dr-akhil-dadi') || doctorsWithImages[0];
+  }, [doctorsWithImages]);
+  
+  // Always find Dr. Akhil Dadi globally from doctors for the main highlight
+  const globalAkhilDadi = useMemo(() => {
+    return doctors.find(d => d.slug === 'akhil-dadi' || d.slug === 'dr-akhil-dadi') || akhilDadi;
+  }, [doctors, akhilDadi]);
+  
+  // Others list (excluding Dr. Akhil Dadi to show him as main highlight, but he will be first in the full team list)
+  const otherDoctors = useMemo(() => {
+    return akhilDadi ? doctorsWithImages.filter(d => d.id !== akhilDadi.id) : [];
+  }, [doctorsWithImages, akhilDadi]);
+
+  const fullTeam = useMemo(() => {
+    return akhilDadi ? [akhilDadi, ...otherDoctors] : [];
+  }, [akhilDadi, otherDoctors]);
 
   // If no doctors exist in this branch list, do not render the banner
   if (doctorsWithImages.length === 0) {
     return null;
   }
-
-  // Find Dr. Akhil Dadi or fallback to the first doctor in the branch list
-  const akhilDadi = doctorsWithImages.find(d => d.slug === 'akhil-dadi' || d.slug === 'dr-akhil-dadi') || doctorsWithImages[0];
-  
-  // Always find Dr. Akhil Dadi globally from ALL_DOCTORS for the main highlight
-  const globalAkhilDadi = ALL_DOCTORS.find(d => d.slug === 'akhil-dadi' || d.slug === 'dr-akhil-dadi') || akhilDadi;
-  
-  // Others list (excluding Dr. Akhil Dadi to show him as main highlight, but he will be first in the full team list)
-  const otherDoctors = akhilDadi ? doctorsWithImages.filter(d => d.id !== akhilDadi.id) : [];
-  const fullTeam = akhilDadi ? [akhilDadi, ...otherDoctors] : [];
 
   // Drag handler to detect swipe up
   const handleDragEnd = (event, info) => {

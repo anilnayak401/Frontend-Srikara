@@ -1,8 +1,9 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { Quote, ArrowRight, Award, Star, Stethoscope, Sparkles, BadgeCheck } from 'lucide-react'
 import { ALL_DOCTORS } from '@/data/doctors'
+import { useDoctors } from '@/hooks/useDoctors'
 import { assetUrl } from '@/lib/assetUrl'
 
 /**
@@ -13,10 +14,12 @@ import { assetUrl } from '@/lib/assetUrl'
  */
 export function FounderChairmanCard() {
   const navigate = useNavigate()
+  const { doctors } = useDoctors()
 
-  const founder =
-    ALL_DOCTORS.find((d) => d.slug === 'dr-akhil-dadi') ||
-    ALL_DOCTORS.find((d) => d.name?.includes('Akhil Dadi'))
+  const founder = useMemo(() => {
+    return doctors.find((d) => d.slug === 'dr-akhil-dadi') ||
+           doctors.find((d) => d.name?.includes('Akhil Dadi'))
+  }, [doctors])
 
   const name = founder?.name || 'Dr. Akhil Dadi'
   const slug = founder?.slug || 'dr-akhil-dadi'

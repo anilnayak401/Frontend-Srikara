@@ -12,6 +12,7 @@ import { StickyNavbar } from '@/components/layout/StickyNavbar'
 import { Footer } from '@/components/layout/Footer'
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
 import { ALL_DOCTORS, ACCENT_MAP } from '@/data/doctors'
+import { useDoctors } from '@/hooks/useDoctors'
 import { assetUrl } from '@/lib/assetUrl'
 
 // ─────────────────────────────────────────────────────────────
@@ -1066,14 +1067,23 @@ function InteractiveBlogsAndVideos({ slug, name, brandAccent }) {
 function DoctorProfilePageContent() {
   const { slug } = useParams()
   const navigate = useNavigate()
-  const doctor = ALL_DOCTORS.find(d => d.slug === slug)
+  const { doctors, loading } = useDoctors()
+  const doctor = doctors.find(d => d.slug === slug)
   const pledgeContainerRef = useRef(null)
+  const [pledgeGlow, setPledgeGlow] = useState({ x: 0, y: 0, opacity: 0 })
 
   useEffect(() => { 
     window.scrollTo(0, 0) 
   }, [slug])
 
   if (!doctor) {
+    if (loading) {
+      return (
+        <div className="min-h-screen bg-[#0a1628] flex items-center justify-center">
+          <div className="w-10 h-10 border-2 border-[#cca830] border-t-transparent rounded-full animate-spin" />
+        </div>
+      )
+    }
     return (
       <div className="min-h-screen flex items-center justify-center bg-white text-slate-800">
         <div className="text-center">
@@ -1087,7 +1097,6 @@ function DoctorProfilePageContent() {
   const isChairman = doctor.slug === 'akhil-dadi' || doctor.slug === 'dr-akhil-dadi'
   const brandAccent = isChairman ? '#cca830' : (ACCENT_MAP[doctor.specialtyId]?.accent || '#8B1A4A')
   
-  const [pledgeGlow, setPledgeGlow] = useState({ x: 0, y: 0, opacity: 0 })
   const handlePledgeMouseMove = (e) => {
     if (!pledgeContainerRef.current) return
     const rect = pledgeContainerRef.current.getBoundingClientRect()

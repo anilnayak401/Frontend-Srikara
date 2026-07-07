@@ -13,6 +13,9 @@ import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
 import { branches } from '@/data/branches'
 import { assetUrl } from '@/lib/assetUrl'
 import { ALL_DOCTORS } from '@/data/doctors'
+import { useDoctors } from '@/hooks/useDoctors'
+import { db } from '@/lib/firebase'
+import { collection, addDoc } from 'firebase/firestore'
 
 // Professional Luxury Tokens
 const COLORS = {
@@ -48,11 +51,58 @@ const ICON_MAP = {
 
 export function BookAppointmentPage() {
   const navigate = useNavigate()
+  const { doctors } = useDoctors()
   const [step, setStep] = useState(1)
   const [selectedBranch, setSelectedBranch] = useState(null)
   const [selectedSpec, setSelectedSpec] = useState(null)
   const [isBookingOpen, setIsBookingOpen] = useState(false)
   const [selectedDoc, setSelectedDoc] = useState(null)
+  
+  const [bookingName, setBookingName] = useState('')
+  const [bookingPhone, setBookingPhone] = useState('')
+  const [bookingDate, setBookingDate] = useState('')
+  const [bookingTime, setBookingTime] = useState('10:00 AM')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleFormSubmit = async (e) => {
+    e.preventDefault()
+    if (isSubmitting) return
+
+    setIsSubmitting(true)
+
+    const appointmentDetails = {
+      name: bookingName.trim(),
+      phone: bookingPhone.trim(),
+      branch: selectedBranch?.title || 'Unknown Branch',
+      doctor: selectedDoc?.name || 'Any Consultant',
+      specialty: selectedSpec?.name || 'General Consultation',
+      slot: `${bookingDate} at ${bookingTime}`,
+      timestamp: Date.now(),
+      created_at: new Date().toISOString()
+    }
+
+    try {
+      if (db) {
+        await addDoc(collection(db, 'appointments'), appointmentDetails)
+      } else {
+        console.warn('Firebase DB is not initialized. Simulating success.', appointmentDetails)
+      }
+      
+      alert(`Appointment Confirmed! Our team will contact you shortly.`)
+      setIsBookingOpen(false)
+      
+      // Reset form
+      setBookingName('')
+      setBookingPhone('')
+      setBookingDate('')
+      setBookingTime('10:00 AM')
+    } catch (err) {
+      console.error('Failed to create appointment in Firestore:', err)
+      alert('Failed to request appointment. Please try again or call us directly.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   // Dynamic specialties based on selected branch
   const specialties = useMemo(() => {
@@ -61,7 +111,7 @@ export function BookAppointmentPage() {
     const normBranch = normalize(selectedBranch.title)
     
     const specMap = {}
-    ALL_DOCTORS.forEach(doc => {
+    doctors.forEach(doc => {
       if (normalize(doc.branch) === normBranch) {
         const specId = doc.specialtyId
         if (!specMap[specId]) {
@@ -82,7 +132,7 @@ export function BookAppointmentPage() {
       if (b.id === 'ortho') return 1
       return a.name.localeCompare(b.name)
     })
-  }, [selectedBranch])
+  }, [selectedBranch, doctors])
 
   // Filtered doctors based on branch + specialty
   const filteredDoctors = useMemo(() => {
@@ -91,7 +141,7 @@ export function BookAppointmentPage() {
     const normBranch = normalize(selectedBranch.title)
     const specId = selectedSpec.id
     
-    return ALL_DOCTORS.filter(doc => 
+    return doctors.filter(doc => 
       normalize(doc.branch) === normBranch && 
       doc.specialtyId === specId
     ).map(doc => ({
@@ -105,7 +155,7 @@ export function BookAppointmentPage() {
       rating: parseFloat(doc.rating) || 4.8,
       slug: doc.slug
     }))
-  }, [selectedBranch, selectedSpec])
+  }, [selectedBranch, selectedSpec, doctors])
 
   const steps = [
     { id: 1, label: 'Choose Location' },
@@ -320,15 +370,29 @@ export function BookAppointmentPage() {
                     </div>
 
                     <div className="md:col-span-3 p-6 sm:p-10">
-                       <form className="space-y-4 sm:space-y-6" onSubmit={(e) => { e.preventDefault(); alert('Appointment Confirmed! Our team will contact you shortly.'); setIsBookingOpen(false); }}>
+                       <form className="space-y-4 sm:space-y-6" onSubmit={handleFormSubmit}>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                              <div className="space-y-1.5 sm:space-y-2">
                                 <label className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#8B1A4A]">Full Name</label>
-                                <input type="text" placeholder="Your name" required className="w-full h-11 sm:h-12 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-4 outline-none focus:border-[#8B1A4A] text-[#1A202C] text-sm transition-all" />
+                                <input 
+                                  type="text" 
+                                  placeholder="Your name" 
+                                  required 
+                                  value={bookingName}
+                                  onChange={(e) => setBookingName(e.target.value)}
+                                  className="w-full h-11 sm:h-12 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-4 outline-none focus:border-[#8B1A4A] text-[#1A202C] text-sm transition-all" 
+                                />
                              </div>
                              <div className="space-y-1.5 sm:space-y-2">
                                 <label className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#8B1A4A]">Mobile Number</label>
-                                <input type="tel" placeholder="+91 00000 00000" required className="w-full h-11 sm:h-12 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-4 outline-none focus:border-[#8B1A4A] text-[#1A202C] text-sm transition-all" />
+                                <input 
+                                  type="tel" 
+                                  placeholder="+91 00000 00000" 
+                                  required 
+                                  value={bookingPhone}
+                                  onChange={(e) => setBookingPhone(e.target.value)}
+                                  className="w-full h-11 sm:h-12 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-4 outline-none focus:border-[#8B1A4A] text-[#1A202C] text-sm transition-all" 
+                                />
                              </div>
                           </div>
                           <div className="space-y-1.5 sm:space-y-2">
@@ -336,22 +400,35 @@ export function BookAppointmentPage() {
                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                 <div className="relative">
                                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]" size={14} />
-                                   <input type="date" required className="w-full h-11 sm:h-12 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl pl-10 pr-4 outline-none focus:border-[#8B1A4A] text-[#1A202C] text-sm transition-all" />
+                                   <input 
+                                     type="date" 
+                                     required 
+                                     value={bookingDate}
+                                     onChange={(e) => setBookingDate(e.target.value)}
+                                     className="w-full h-11 sm:h-12 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl pl-10 pr-4 outline-none focus:border-[#8B1A4A] text-[#1A202C] text-sm transition-all" 
+                                   />
                                 </div>
                                 <div className="relative">
                                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]" size={14} />
-                                   <select className="w-full h-11 sm:h-12 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl pl-10 pr-4 outline-none focus:border-[#8B1A4A] text-[#1A202C] text-sm appearance-none transition-all">
-                                      <option>Choose Time...</option>
-                                      <option>10:00 AM</option>
-                                      <option>02:30 PM</option>
-                                      <option>06:00 PM</option>
+                                   <select 
+                                     value={bookingTime}
+                                     onChange={(e) => setBookingTime(e.target.value)}
+                                     className="w-full h-11 sm:h-12 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl pl-10 pr-4 outline-none focus:border-[#8B1A4A] text-[#1A202C] text-sm appearance-none transition-all"
+                                   >
+                                      <option value="10:00 AM">10:00 AM</option>
+                                      <option value="02:30 PM">02:30 PM</option>
+                                      <option value="06:00 PM">06:00 PM</option>
                                    </select>
                                 </div>
                              </div>
                           </div>
                           <div className="pt-2 sm:pt-4">
-                             <button className="w-full h-11 sm:h-12 bg-[#8B1A4A] text-white rounded-2xl font-bold text-xs sm:text-sm uppercase tracking-widest hover:bg-[#7a1640] transition-all">
-                                Confirm Appointment →
+                             <button 
+                               type="submit"
+                               disabled={isSubmitting}
+                               className="w-full h-11 sm:h-12 bg-[#8B1A4A] text-white rounded-2xl font-bold text-xs sm:text-sm uppercase tracking-widest hover:bg-[#7a1640] transition-all disabled:opacity-50"
+                             >
+                                {isSubmitting ? 'Confirming...' : 'Confirm Appointment →'}
                              </button>
                              <p className="text-center text-[#94A3B8] text-[10px] sm:text-xs mt-3 sm:mt-4">Our team will call you within 15 minutes</p>
                           </div>

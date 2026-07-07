@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
 import { useLocation, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { MessageSquare, Sparkles, Calendar, Send, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Sparkles, MessageSquare, Send, X, Calendar, MapPin, Phone } from 'lucide-react'
 import { branches } from '@/data/branches'
+import { db } from '@/lib/firebase'
+import { collection, addDoc } from 'firebase/firestore'
 
 const getGreetingMessage = (pathname, currentBranch) => {
   const cleanPath = pathname.replace(/\/$/, '')
@@ -169,6 +171,7 @@ export function AppointmentWidget({ currentBranch }) {
     branch: currentBranch?.slug || '',
     specialty: '',
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const messagesEndRef = useRef(null)
 
@@ -244,11 +247,42 @@ export function AppointmentWidget({ currentBranch }) {
     }, 1000)
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    alert(`Appointment request submitted successfully for ${formData.name}! Our coordinator will contact you at ${formData.phone} shortly.`)
-    setOpen(false)
-    setFormData({ name: '', phone: '', branch: currentBranch?.slug || '', specialty: '' })
+    if (isSubmitting) return
+
+    setIsSubmitting(true)
+
+    const branchInfo = branches.find(b => b.slug === formData.branch)
+    const branchName = branchInfo?.title || formData.branch || 'General Srikara'
+
+    const appointmentDetails = {
+      name: formData.name.trim(),
+      phone: formData.phone.trim(),
+      branch: branchName,
+      doctor: 'Any Consultant',
+      specialty: formData.specialty || 'General Consultation',
+      slot: 'Requested via Chat Widget',
+      timestamp: Date.now(),
+      created_at: new Date().toISOString()
+    }
+
+    try {
+      if (db) {
+        await addDoc(collection(db, 'appointments'), appointmentDetails)
+      } else {
+        console.warn('Firebase DB is not initialized. Simulating success.', appointmentDetails)
+      }
+
+      alert(`Appointment request submitted successfully for ${formData.name}! Our coordinator will contact you at ${formData.phone} shortly.`)
+      setOpen(false)
+      setFormData({ name: '', phone: '', branch: currentBranch?.slug || '', specialty: '' })
+    } catch (err) {
+      console.error('Failed to save appointment in Firestore:', err)
+      alert('Failed to request appointment. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -522,8 +556,12 @@ export function AppointmentWidget({ currentBranch }) {
                 <option value="pulmonology">Pulmonology (Respiratory)</option>
               </Select>
             </div>
-            <Button type="submit" className="w-full bg-[#8B1A4A] hover:bg-[#5E0F30] text-white font-bold uppercase tracking-wider text-xs py-5 rounded-full mt-6 shadow-md transition-all duration-300">
-              Submit Request Form
+            <Button 
+              type="submit" 
+              disabled={isSubmitting}
+              className="w-full bg-[#8B1A4A] hover:bg-[#5E0F30] text-white font-bold uppercase tracking-wider text-xs py-5 rounded-full mt-6 shadow-md transition-all duration-300 disabled:opacity-50"
+            >
+              {isSubmitting ? 'Submitting Request...' : 'Submit Request Form'}
             </Button>
           </form>
         </DialogContent>

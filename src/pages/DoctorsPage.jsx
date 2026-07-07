@@ -11,8 +11,7 @@ import { BranchSideNav } from '@/components/layout/BranchSideNav'
 import { Footer } from '@/components/layout/Footer'
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
 import { ALL_DOCTORS, getSpecialties, ACCENT_MAP } from '@/data/doctors'
-import { db } from '@/lib/firebase'
-import { collection, getDocs } from 'firebase/firestore'
+import { useDoctors } from '@/hooks/useDoctors'
 
 // Custom Tilt Hover Effect Hook for a premium feel
 function useTiltEffect(ref, active = true) {
@@ -632,59 +631,7 @@ export function DoctorsPage() {
   const tabsRef = useRef(null)
   const branchTabsRef = useRef(null)
 
-  const [allDoctors, setAllDoctors] = useState(ALL_DOCTORS)
-
-  useEffect(() => {
-    const loadDynamicDoctors = async () => {
-      try {
-        if (db) {
-          const docSnap = await getDocs(collection(db, 'doctors'))
-          if (!docSnap.empty) {
-            const fbDocs = docSnap.docs.map(d => ({ id: d.id, ...d.data() }))
-            const formatted = fbDocs.map(d => ({
-              ...d,
-              specialtyId: d.specialtyId || d.specialty.toLowerCase().slice(0, 5),
-              image: d.photoUrl || d.image,
-              fallback: d.photoUrl || d.image || 'doctors/doctor-placeholder.png',
-              label: d.tagline || d.label || d.specialty,
-              expertise: d.expertise || [d.specialty]
-            }))
-            const filteredStatic = ALL_DOCTORS.filter(sd => 
-              !formatted.some(fd => fd.name.toLowerCase() === sd.name.toLowerCase())
-            )
-            setAllDoctors([...filteredStatic, ...formatted])
-            return // success
-          }
-        }
-      } catch (err) {
-        console.warn('Firestore fetch failed in DoctorsPage, falling back to local storage:', err)
-      }
-
-      try {
-        const cached = localStorage.getItem('srikara_cms_data')
-        if (cached) {
-          const parsed = JSON.parse(cached)
-          if (parsed.doctors && parsed.doctors.length > 0) {
-            const formatted = parsed.doctors.map(d => ({
-              ...d,
-              specialtyId: d.specialtyId || d.specialty.toLowerCase().slice(0, 5),
-              image: d.photoUrl || d.image,
-              fallback: d.photoUrl || d.image || 'doctors/doctor-placeholder.png',
-              label: d.tagline || d.label || d.specialty,
-              expertise: d.expertise || [d.specialty]
-            }))
-            const filteredStatic = ALL_DOCTORS.filter(sd => 
-              !formatted.some(fd => fd.name.toLowerCase() === sd.name.toLowerCase())
-            )
-            setAllDoctors([...filteredStatic, ...formatted])
-          }
-        }
-      } catch (e) {
-        console.warn('Error loading dynamic doctors in DoctorsPage:', e)
-      }
-    }
-    loadDynamicDoctors()
-  }, [])
+  const { doctors: allDoctors } = useDoctors()
 
   // Sync if query param changes
   useEffect(() => {

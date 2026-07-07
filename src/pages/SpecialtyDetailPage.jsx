@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { motion } from 'framer-motion'
@@ -10,6 +10,7 @@ import { Footer } from '@/components/layout/Footer'
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
 import { assetUrl } from '@/lib/assetUrl'
 import { ALL_DOCTORS } from '@/data/doctors'
+import { useDoctors } from '@/hooks/useDoctors'
 
 // Premium Glassmorphic Doctor Card Component (Screenshot 2 Style - DETTO MATCH)
 function PremiumDoctorCard({ doc, accentColor }) {
@@ -160,6 +161,7 @@ export function SpecialtyDetailPage() {
   const navigate = useNavigate()
   const scrollRef = useRef(null)
 
+  const { doctors } = useDoctors()
   const currentBranchName = searchParams.get('branch') || ''
 
   // Departments definitions matching the collage mapping
@@ -352,9 +354,9 @@ export function SpecialtyDetailPage() {
   }
 
   // Filter and sort doctors matching specialty, showing current branch's doctors first
-  const sortedDoctors = (() => {
+  const sortedDoctors = useMemo(() => {
     const normalize = (s) => s ? s.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
-    const matchingDocs = ALL_DOCTORS.filter(doc => doc.specialtyId === specialtyId)
+    const matchingDocs = doctors.filter(doc => doc.specialtyId === specialtyId)
     return [...matchingDocs].sort((a, b) => {
       const normA = normalize(a.branch);
       const normB = normalize(b.branch);
@@ -363,7 +365,7 @@ export function SpecialtyDetailPage() {
       if (normA !== normCurr && normB === normCurr) return 1;
       return 0;
     })
-  })()
+  }, [doctors, specialtyId, currentBranchName])
 
   // Scroll to top on mount
   useEffect(() => {
