@@ -236,6 +236,10 @@ export function CareersPage() {
 
   // Dynamic CMS States
   const [jobOpenings, setJobOpenings] = useState([])
+  const [careersData, setCareersData] = useState({
+    bannerTitle: "Advancing Surgical Excellence in Arthroplasty",
+    bannerSubtitle: "Srikara Hospitals is a leader in robotic joint replacement surgery and is actively engaged in academics and teaching. Our Arthroplasty Fellowship is one of the most sought-after programs in India, attracting orthopedic surgeons globally."
+  })
   const [fellowshipDetails, setFellowshipDetails] = useState({
     duration: '1 Month',
     eligibility: 'MS (Orthopedics) / D.Ortho',
@@ -264,6 +268,16 @@ export function CareersPage() {
           setFellowshipDetails(prev => ({ ...prev, ...fellSnap.data() }))
         }
 
+        // Fetch site pages data for Careers page customizer
+        const pageRef = doc(db, 'site_contents', 'pages')
+        const pageSnap = await getDoc(pageRef)
+        if (pageSnap.exists()) {
+          const data = pageSnap.data()
+          if (data.careers_page) {
+            setCareersData(prev => ({ ...prev, ...data.careers_page }))
+          }
+        }
+
         // Fetch Job Openings
         const jobSnap = await getDocs(collection(db, 'job_openings'))
         const jobList = jobSnap.docs.map(d => ({ id: d.id, ...d.data() }))
@@ -278,6 +292,9 @@ export function CareersPage() {
             const parsed = JSON.parse(cached)
             if (parsed.jobs && parsed.jobs.length > 0) {
               setJobOpenings(parsed.jobs.filter(j => j.status === 'Active'))
+            }
+            if (parsed.pageData && parsed.pageData.careers_page) {
+              setCareersData(prev => ({ ...prev, ...parsed.pageData.careers_page }))
             }
           }
         } catch (e) {
@@ -356,7 +373,7 @@ export function CareersPage() {
               transition={{ duration: 0.8, delay: 0.1 }}
               className="font-garamond text-4xl md:text-6xl font-bold leading-tight mb-6 text-[#1A202C]"
             >
-              Advancing Surgical Excellence in <span className="hero-gradient-text italic font-serif">Arthroplasty</span>
+              {careersData.bannerTitle}
             </motion.h1>
 
             <motion.p
@@ -365,7 +382,7 @@ export function CareersPage() {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="text-[#4A4A4A] text-base md:text-lg leading-relaxed font-light mb-10 max-w-3xl mx-auto"
             >
-              Srikara Hospitals is a leader in robotic joint replacement surgery and is actively engaged in academics and teaching. Our Arthroplasty Fellowship is one of the most sought-after programs in India, attracting orthopedic surgeons globally.
+              {careersData.bannerSubtitle}
             </motion.p>
 
             <motion.div
@@ -386,7 +403,7 @@ export function CareersPage() {
           {/* ══════════════ WHY CHOOSE US SECTION ══════════════ */}
           <section className="mb-24">
             <div className="text-center mb-16">
-              <h2 className="font-garamond text-3xl md:text-4xl font-bold mb-4">Why Choose Srikara’s Arthroplasty Fellowship?</h2>
+              <h2 className="font-garamond text-3xl md:text-4xl font-bold mb-4">Why Choose Srikara's Arthroplasty Fellowship?</h2>
               <div className="w-16 h-[2.5px] bg-[#8B1A4A]/30 mx-auto" />
             </div>
 
@@ -541,145 +558,7 @@ export function CareersPage() {
 
           </section>
 
-          {/* ══════════════ FEE STRUCTURE SECTION ══════════════ */}
-          <section className="mb-24">
-            <div className="text-center mb-16">
-              <h2 className="font-garamond text-3xl md:text-4xl font-bold mb-4">Fellowship Fee Structure</h2>
-              <p className="text-[#4A4A4A] text-sm font-light max-w-xl mx-auto">
-                Overview of fees across schedules. The booking amount secures your slot.
-              </p>
-              <div className="w-16 h-[2.5px] bg-[#8B1A4A]/30 mx-auto mt-4" />
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto items-stretch">
-              {fellowshipDetails.fees.map((item, idx) => {
-                const defaultStyles = FEES[idx] || FEES[FEES.length - 1]
-                return (
-                  <motion.div
-                    key={idx}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.6, delay: idx * 0.1 }}
-                    style={defaultStyles.style}
-                    className={`glass-card-colorful rounded-3xl p-8 flex flex-col justify-between relative overflow-hidden ${
-                      item.active 
-                      ? 'scale-105 z-10 border-[#8B1A4A]/40' 
-                      : 'opacity-85 hover:opacity-100'
-                    }`}
-                  >
-                    {item.active && (
-                      <>
-                        <div className="absolute -top-12 -left-12 w-32 h-32 bg-[#8B1A4A]/10 blur-2xl rounded-full animate-pulse-slow" />
-                        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#8B1A4A] text-white text-[9px] uppercase tracking-widest font-black px-4 py-1.5 rounded-full shadow-md">
-                          Current Cohort
-                        </div>
-                      </>
-                    )}
-                    
-                    <div>
-                      <span className={`text-[9px] font-black uppercase tracking-wider px-3 py-1 rounded-full ${defaultStyles.badgeColor}`}>
-                        {item.active ? 'Active Cohort' : 'Past Cohorts'}
-                      </span>
-                      <h4 className="font-headline font-bold text-base text-[#2D3A4A] mt-6 mb-2">{item.period}</h4>
-                      <p className="text-[10px] text-gray-500 font-medium">Fellowship Training Cost</p>
-                    </div>
-
-                    <div className="my-8">
-                      <p className="text-3xl font-black text-[#8B1A4A] tracking-tight">{item.rate}</p>
-                      <p className="text-[10px] text-gray-400 mt-1">Paid monthly in advance</p>
-                    </div>
-
-                    <div className="border-t border-gray-200/50 pt-4">
-                      <p className="text-xs text-[#4A4A4A] leading-relaxed">
-                        Includes hospital rotation rights, theatre access, and documentation.
-                      </p>
-                    </div>
-                  </motion.div>
-                )
-              })}
-            </div>
-
-            {/* Booking callout */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              style={{
-                '--glass-border': 'rgba(139, 26, 74, 0.25)',
-                '--glass-border-hover': 'rgba(139, 26, 74, 0.5)',
-                '--glass-shadow': 'rgba(139, 26, 74, 0.05)'
-              }}
-              className="glass-card-colorful rounded-2xl p-6 max-w-xl mx-auto mt-10 border-dashed text-center"
-            >
-              <p className="text-[#8B1A4A] text-sm font-bold">
-                Booking Amount: ₹10,000 <span className="text-[#2D3A4A] font-light">(Adjustable in the final tuition fee structure)</span>
-              </p>
-            </motion.div>
-          </section>
-
-          {/* ══════════════ REFUND & POSTPONEMENT POLICY ══════════════ */}
-          <section className="mb-24">
-            <div className="text-center mb-16">
-              <h2 className="font-garamond text-3xl md:text-4xl font-bold mb-4">Refund & Postponement Policy</h2>
-              <div className="w-16 h-[2.5px] bg-[#8B1A4A]/30 mx-auto" />
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch max-w-6xl mx-auto">
-              
-              {/* Refund percentages */}
-              <div className="lg:col-span-7 grid grid-cols-2 gap-5">
-                {fellowshipDetails.refunds.map((r, idx) => {
-                  const defaultRef = REFUNDS[idx] || REFUNDS[REFUNDS.length - 1]
-                  return (
-                    <div 
-                      key={idx} 
-                      style={defaultRef.style}
-                      className="glass-card-colorful rounded-2xl p-6 flex flex-col justify-between"
-                    >
-                      <div>
-                        <p className="text-xs text-gray-500 font-semibold">{r.timeline}</p>
-                        <p className={`font-garamond ${defaultRef.textColor} text-xl font-bold mt-2`}>{r.pct}</p>
-                      </div>
-                      <div className="mt-6 pt-3 border-t border-black/5 flex items-center justify-between">
-                        <span className="text-[10px] uppercase font-black tracking-widest text-[#8B1A4A]">Returns</span>
-                        <span className={`text-sm font-black ${defaultRef.textColor}`}>{r.amt}</span>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-
-              {/* Postponement rules */}
-              <div 
-                style={{
-                  '--glass-border': 'rgba(139, 26, 74, 0.25)',
-                  '--glass-border-hover': 'rgba(139, 26, 74, 0.5)',
-                  '--glass-shadow': 'rgba(139, 26, 74, 0.08)',
-                  '--glass-shadow-hover': 'rgba(139, 26, 74, 0.18)'
-                }}
-                className="lg:col-span-5 glass-card-colorful rounded-[28px] p-8 flex flex-col justify-between relative overflow-hidden"
-              >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-[#8B1A4A]/5 blur-xl rounded-full translate-x-8 -translate-y-8" />
-                <div>
-                  <div className="w-10 h-10 rounded-lg bg-rose-50 border border-rose-100 flex items-center justify-center text-[#8B1A4A] mb-5 shadow-sm">
-                    <Percent className="w-5 h-5" />
-                  </div>
-                  <h3 className="font-headline font-bold text-lg text-[#2D3A4A] mb-3">Postponement Policy</h3>
-                  <p className="text-sm text-[#4A4A4A] leading-relaxed font-light mb-6">
-                    We understand that emergencies arise. Candidates must inform our academic cell at least <strong>1 month in advance</strong> to change slots to a future date without additional fees.
-                  </p>
-                </div>
-                
-                <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-[#8B1A4A] text-xs">
-                  <p className="font-semibold leading-relaxed">
-                    🚨 Late Requests: Requests submitted less than 1 month before the fellowship start date will incur a {fellowshipDetails.postponementCharge || '₹10,000'} deferral charge.
-                  </p>
-                </div>
-              </div>
-
-            </div>
-          </section>
 
           {/* ══════════════ FREQUENTLY ASKED QUESTIONS (DYNAMIC FAQ ACCORDIONS) ══════════════ */}
           {fellowshipDetails.faqs && fellowshipDetails.faqs.length > 0 && (

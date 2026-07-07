@@ -13,7 +13,8 @@ import {
   Building2,
   Paperclip
 } from 'lucide-react';
-import { branches } from '@/data/branches';
+import { useBranches } from '@/hooks/useBranches';
+import { useEffect } from 'react';
 
 // Guaranteed active, high-resolution hospital & clinic building exterior facade photos (No clinical rooms, no dead links)
 const BRANCH_BUILDINGS = {
@@ -35,12 +36,20 @@ const getBranchBuildingImage = (b) => {
 };
 
 export const PremiumLocation = ({ branch: currentBranch }) => {
+  const { branches } = useBranches();
   const [selected, setSelected] = useState(
     branches.find(b => b.slug === currentBranch?.slug) || branches[0]
   );
+
+  useEffect(() => {
+    if (branches && branches.length > 0) {
+      setSelected(branches.find(b => b.slug === currentBranch?.slug) || branches[0]);
+    }
+  }, [branches, currentBranch]);
+
   const [copied, setCopied] = useState(false);
 
-  const mapSrc = selected.googleMapEmbed;
+  const mapSrc = selected?.googleMapEmbed;
 
   const handleCopyAddress = () => {
     navigator.clipboard.writeText(selected.address);

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { branches } from '@/data/branches'
+import { useBranches } from '@/hooks/useBranches'
 import { db } from '@/lib/firebase'
 import { collection, addDoc } from 'firebase/firestore'
 
@@ -145,6 +145,7 @@ const getAIResponse = (userQuery) => {
 }
 
 export function AppointmentWidget({ currentBranch }) {
+  const { branches } = useBranches()
   const location = useLocation()
   const [open, setOpen] = useState(false)
   const [showGreeting, setShowGreeting] = useState(false)

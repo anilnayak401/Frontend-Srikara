@@ -8,12 +8,13 @@ import { DoctorProfile } from '@/components/sections/DoctorProfile'
 import { TechnologySection } from '@/components/sections/TechnologySection'
 import { SpecialtyGrid } from '@/components/sections/SpecialtyGrid'
 import { AppointmentWidget } from '@/components/sections/AppointmentWidget'
-import { getBranchBySlug } from '@/data/branches'
+import { useBranches } from '@/hooks/useBranches'
 import { Helmet } from 'react-helmet-async'
 
 export function BranchPage() {
   const { slug } = useParams()
-  const branch = getBranchBySlug(slug)
+  const { branches } = useBranches()
+  const branch = branches.find(b => b.slug === slug)
 
   if (!branch) {
     return (

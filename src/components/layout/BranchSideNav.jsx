@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { MapPin, X, ChevronRight, PhoneCall, HeartPulse, Navigation } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { branches } from '@/data/branches'
+import { useBranches } from '@/hooks/useBranches'
 
 export function BranchSideNav({ currentSlug }) {
+  const { branches } = useBranches()
   const [isOpen, setIsOpen] = useState(false)
   const navigate = useNavigate()
 

@@ -128,7 +128,7 @@ export function DoctorsGroupBanner({ branchName }) {
                   </h3>
 
                   <p className="text-slate-600 text-base md:text-lg font-light leading-relaxed mb-8">
-                    {globalAkhilDadi.about || 'A visionary in robotic arthroplasty, Dr. Akhil Dadi brings world-class German fellowship expertise to Srikara Hospitals, leading the team with over 15+ years of clinical mastery.'}
+                    {globalAkhilDadi.about || globalAkhilDadi.bio || 'A visionary in robotic arthroplasty, Dr. Akhil Dadi brings world-class German fellowship expertise to Srikara Hospitals, leading the team with over 15+ years of clinical mastery.'}
                   </p>
 
                   <div className="flex flex-wrap gap-4 mb-8">

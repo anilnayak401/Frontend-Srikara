@@ -34,6 +34,7 @@ const loadDynamicDoctors = async (force = false) => {
     const generatedSlug = d.name
       ? d.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
       : 'unknown-doctor'
+    const resolvedBio = d.about || d.bio || ''
 
     return {
       ...d,
@@ -50,6 +51,8 @@ const loadDynamicDoctors = async (force = false) => {
       availability: d.availability || 'Mon - Sat: 10:00 AM - 5:00 PM',
       phone: d.phone || '04068324803',
       whatsapp: d.whatsapp || '914068324803',
+      about: resolvedBio,
+      bio: resolvedBio,
       languages: Array.isArray(d.languages)
         ? d.languages
         : (d.languages ? d.languages.split(',').map(s => s.trim()) : ['English']),

@@ -1201,7 +1201,7 @@ function DoctorProfilePageContent() {
                 </p>
 
                 <p className="text-slate-500 text-xs md:text-sm font-light leading-relaxed mb-8 max-w-sm">
-                  {doctor.about || `${doctor.name} is a renowned ${doctor.specialty} specialist at Srikara Hospitals, leading innovative patient care and advanced therapeutic solutions.`}
+                  {(doctor.about && doctor.about.trim()) || (doctor.bio && doctor.bio.trim()) || `${doctor.name} is a renowned ${doctor.specialty} specialist at Srikara Hospitals, leading innovative patient care and advanced therapeutic solutions.`}
                 </p>
 
                 {/* Staggered Capsule Buttons */}

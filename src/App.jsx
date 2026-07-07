@@ -99,6 +99,9 @@ function App() {
             <Route path="/branches/rajahmundry"   element={<BranchLandingPage branch={rajahmundry} />} />
             <Route path="/branches/rtc-x-roads"   element={<BranchLandingPage branch={rtcXRoads} />} />
             <Route path="/branches/secunderabad"  element={<BranchLandingPage branch={secunderabad} />} />
+            
+            {/* Dynamic catch-all for CMS branch locations */}
+            <Route path="/branches/:slug"         element={<BranchLandingPage />} />
 
             {/* Index & nav pages */}
             <Route path="/branches"     element={<BranchesIndex />} />

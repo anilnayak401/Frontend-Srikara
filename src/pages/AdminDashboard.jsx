@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 
 import { ALL_DOCTORS } from '@/data/doctors'
+import { useBranches } from '@/hooks/useBranches'
 
 // Import Firebase SDK safely
 import { auth, db, storage, firebaseConfig } from '@/lib/firebase'
@@ -184,9 +185,37 @@ const DEFAULT_FAQS = [
 ]
 
 const DEFAULT_DEPARTMENTS = [
-  { id: 'ortho', name: 'Orthopedics & Joint Replacement', description: 'World-renowned joint care with advanced NAVIO robotic surgical systems.', treatments: 'Robotic Knee Surgery, Hip Arthroplasty, Arthroscopic Repairs', faqCategory: 'Treatments' },
-  { id: 'cardio', name: 'Cardiology & Cardiothoracic', description: 'Advanced interventional diagnostics and emergency angioplasty support.', treatments: 'Primary Angioplasty, Valve Replacement, Heart Bypass (CABG)', faqCategory: 'Treatments' }
+  { id: 'cardio', name: 'Cardiology & Cardiothoracic', description: 'Advanced interventional diagnostics and emergency angioplasty support.', treatments: 'Primary Angioplasty, Valve Replacement, Heart Bypass (CABG)', faqCategory: 'Treatments' },
+  { id: 'neuro', name: 'Neurology', description: 'Comprehensive brain, spine, and neurological disorder management.', treatments: 'Stroke Care, Epilepsy Management, Movement Disorders', faqCategory: 'Treatments' },
+  { id: 'pulmo', name: 'Pulmonology', description: 'Advanced respiratory care and interstitial lung disease clinic.', treatments: 'Bronchoscopy, Sleep Studies, COPD Management', faqCategory: 'Treatments' },
+  { id: 'nephro', name: 'Nephrology', description: 'Renal replacement therapy and dialysis excellence center.', treatments: 'Dialysis, Kidney Transplant Evaluation, CKD Management', faqCategory: 'Treatments' },
+  { id: 'gastro', name: 'Gastroenterology', description: 'Digestive health, therapeutic endoscopy, and hepatology.', treatments: 'Endoscopy, Colonoscopy, Liver Disease Management', faqCategory: 'Treatments' },
+  { id: 'onco', name: 'Oncology', description: 'Comprehensive medical oncology and targeted therapy.', treatments: 'Chemotherapy, Immunotherapy, Cancer Screening', faqCategory: 'Treatments' },
+  { id: 'cardiac-surg', name: 'Cardiac Surgery', description: 'Minimally invasive bypass and valve replacement surgery.', treatments: 'CABG, Valve Repair, Aortic Surgery', faqCategory: 'Treatments' },
+  { id: 'neurosurg', name: 'Neurosurgery', description: 'Micro-neurosurgery and precision spinal reconstruction.', treatments: 'Brain Tumor Surgery, Spinal Fusion, Disc Replacement', faqCategory: 'Treatments' },
+  { id: 'ortho', name: 'Orthopaedics & Joint Replacement', description: 'World-renowned joint care with advanced NAVIO robotic surgical systems.', treatments: 'Robotic Knee Surgery, Hip Arthroplasty, Arthroscopic Repairs', faqCategory: 'Treatments' },
+  { id: 'urology', name: 'Urology', description: 'Advanced laparo-urology and renal transplant surgery.', treatments: 'Kidney Stones (RIRS/PCNL), Prostate Surgery, Renal Transplant', faqCategory: 'Treatments' },
+  { id: 'vascular', name: 'Vascular Surgery', description: 'Endovascular repairs and diabetic foot management.', treatments: 'Varicose Veins, AV Fistula, Angioplasty', faqCategory: 'Treatments' },
+  { id: 'gyn', name: 'Obstetrics & Gynaecology', description: 'High-risk pregnancy care and advanced laparoscopic gynaecology.', treatments: 'Normal & C-Section Delivery, Hysterectomy, PCOS Management', faqCategory: 'Treatments' },
+  { id: 'ivf', name: 'Fertility & IVF', description: 'Precision reproductive medicine and genetic screening.', treatments: 'IVF, IUI, Fertility Workup', faqCategory: 'Treatments' },
+  { id: 'neonatology', name: 'Neonatology', description: 'Level III NICU for advanced neonatal intensive care.', treatments: 'Premature Baby Care, Ventilator Support, Phototherapy', faqCategory: 'Treatments' },
+  { id: 'peds', name: 'Paediatrics', description: 'Comprehensive child healthcare and immunisations.', treatments: 'Vaccinations, Growth Monitoring, Childhood Infections', faqCategory: 'Treatments' },
+  { id: 'radio', name: 'Radiology', description: 'Interventional radiology and high-resolution imaging.', treatments: 'MRI, CT Scan, Ultrasound, Digital X-Ray', faqCategory: 'Treatments' },
+  { id: 'path', name: 'Pathology', description: 'Automated molecular pathology and histopathology.', treatments: 'Blood Tests, Biopsy, Molecular Diagnostics', faqCategory: 'Treatments' },
+  { id: 'physio', name: 'Physiotherapy', description: 'Neuro-rehabilitation and sports injury recovery.', treatments: 'Post-Surgical Rehab, Sports Physio, Electrotherapy', faqCategory: 'Treatments' },
+  { id: 'emergency', name: 'Emergency Medicine', description: 'Golden-hour trauma care and immediate life support.', treatments: 'Trauma Care, Cardiac Arrest, Polytrauma Management', faqCategory: 'Treatments' },
+  { id: 'critical', name: 'Intensive Care Unit', description: 'Advanced multi-specialty life monitoring and 1:1 care.', treatments: 'Ventilator Support, Hemodynamic Monitoring, Sepsis Care', faqCategory: 'Treatments' },
 ]
+
+// Bump this whenever DEFAULT_DEPARTMENTS gains new entries, so stores seeded
+// from an older, shorter list pick up the additions exactly once (without
+// resurrecting departments the admin deliberately deleted afterwards).
+const DEPARTMENTS_SEED_VERSION = 2
+
+const missingDefaultDepartments = (stored) => {
+  const existingIds = new Set(stored.map(d => d.id))
+  return DEFAULT_DEPARTMENTS.filter(d => !existingIds.has(d.id))
+}
 
 const DEFAULT_TESTIMONIALS = [
   { id: '1', patientName: 'Lakshmi Devi', rating: 5, review: 'Fantastic robotic surgery care at Srikara Hospital. I walked within 3 days without pain!', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
@@ -208,30 +237,58 @@ const DEFAULT_PAGE_DATA = {
     emergencyNumber: '040-4646-4646',
     ctaText: 'Book an Appointment',
     statsServed: '100K+',
-    statsSpecialties: '15+'
+    statsSpecialties: '15+',
+    infraTitle: 'Precision',
+    infraHighlight: 'Ecosystem',
+    infraDesc: 'We invest in the future of healthcare so you can invest in your health.'
   },
   about: {
     chairmanName: 'Dr. Akhil Dadi',
     chairmanSubtitle: 'Chairman & Chief Joint Replacement Surgeon',
     chairmanBio: 'Pioneered robotic joint surgeries in South India and envisioned premium hospital modules to deliver patient care with transparency.',
-    milestones: 'Over 30,000+ joint replacements and 9 centers across Telangana and Andhra Pradesh.'
+    milestones: 'Over 30,000+ joint replacements and 9 centers across Telangana and Andhra Pradesh.',
+    reachSubtitle: 'Our Reach',
+    reachTitle: 'Strategically Located for Absolute Access',
+    reachDesc: 'Operating across 9 strategic units including RTC X Roads, Miyapur, LB Nagar, and Vijayawada, our locations are situated at key entry points to major cities. This ensures that world-class orthopedic and multispeciality care is always within reach.',
+    visionQuote: 'SRIKARA Multispeciality Hospitals is synonymous with quality, expertise, innovation, and international standards, offering a comprehensive spectrum of medical excellence under one roof.',
+    visionName: 'Dr. Akhil Dadi',
+    visionRole: 'Founder & Managing Director',
+    visionSubrole: 'World Orthopaedic Concern Member',
+    isuiteTitle: 'i-SUITE: The Future of Surgery',
+    isuiteDesc: 'We take pride in the first i-SUITE Operation Theatre in the state. Featuring four integrated modular operating rooms designed specifically for high-precision joint replacements and complex neurosurgeries, our infrastructure allows for zero-contamination environments and digital surgical navigation.',
+    isuiteStat1Val: '30,000+',
+    isuiteStat1Label: 'Joint Replacements',
+    isuiteStat2Val: '1,000+',
+    isuiteStat2Label: 'Neuro Procedures',
+    conciergeTitle: 'Global Concierge',
+    conciergeDesc: 'Our dedicated International Patient Cell manages overseas healthcare journeys, from visa assistance to personalized recovery suites, ensuring global proximity to clinical mastery.',
+    conciergeBtnText: 'International Desk'
   },
   careers_page: {
-    bannerTitle: 'Join the Medical Pioneers',
-    bannerSubtitle: 'Build your career in robotic healthcare alongside South India\'s top specialists.',
-    benefits: 'Flexible Timings, Professional Training, High-end Surgical Labs, Comprehensive Medical Insurance'
+    bannerBadge: 'Academics & Surgical Training',
+    bannerTitle: 'Advancing Surgical Excellence in Arthroplasty',
+    bannerSubtitle: 'Srikara Hospitals is a leader in robotic joint replacement surgery and is actively engaged in academics and teaching. Our Arthroplasty Fellowship is one of the most sought-after programs in India, attracting orthopedic surgeons globally.',
+    bannerCta: 'Apply for Fellowship',
+    benefits: 'Flexible Timings, Professional Training, High-end Surgical Labs, Comprehensive Medical Insurance',
+    whyTitle: "Why Choose Srikara's Arthroplasty Fellowship?",
+    feeTitle: 'Fellowship Fee Structure',
+    policyTitle: 'Refund & Postponement Policy',
+    jobsTitle: 'Active Career Opportunities',
+    portalTitle: 'Interactive Application Portal',
+    ctaTitle: 'Take the Next Step in Your Career!',
+    ctaDesc: 'Join us at Srikara Hospitals and gain unparalleled surgical expertise in arthroplasty and joint replacement surgery. Be part of a program that shapes the future of orthopedic excellence!'
   },
   branches: {
-    'ecil': { heroHeadline: "Your Family's Comprehensive", heroHighlight: "Health Partner.", description: "A complete multi-specialty care center designed for the families of ECIL.", phone: "040-68324804", address: "ECIL Cross Roads, Hyderabad", rating: 4.7 },
-    'lb-nagar': { heroHeadline: "Robotic Joint Replacement Hub", heroHighlight: "Care & Precision.", description: "Our primary center equipped with advanced critical care modules and surgeons.", phone: "040-68324801", address: "LB Nagar Ring Road, Hyderabad", rating: 4.8 },
-    'kompally': { heroHeadline: "Comprehensive Healthcare Gateway", heroHighlight: "Aiding recovery.", description: "Premier diagnostic facility and modular orthopedics departments.", phone: "040-68324802", address: "Kompally highway, Hyderabad", rating: 4.6 },
-    'peerzadiguda': { heroHeadline: "Affordable Advanced Care.", heroHighlight: "Robotic Precision.", description: "Bringing world-class Orthopedic and General care to Peerzadiguda.", phone: "040-68108108", address: "Survey No. 12, Peerzadiguda Road, Uppal, Hyd", rating: 4.8 },
-    'lakdikapul': { heroHeadline: "Robotic Surgery & Joint Excellence", heroHighlight: "Leading orthopedics.", description: "Our flagship hospital equipped with premium joint, spine, and urology surgical suites.", phone: "040-68324800", address: "Lakdikapul, Hyderabad", rating: 4.9 },
-    'miyapur': { heroHeadline: "Multispecialty Care Hub", heroHighlight: "Advanced recovery.", description: "Trusted critical care, pediatrics, and neurology departments serving Miyapur.", phone: "040-68324805", address: "Miyapur Main Road, Hyderabad", rating: 4.7 },
-    'vijayawada': { heroHeadline: "Orthopedic & Spine Pioneer", heroHighlight: "Srikara Andhra.", description: "Bringing robotic total knee arthroplasty and diagnostic suites to Vijayawada.", phone: "0866-6832480", address: "Benz Circle, Vijayawada", rating: 4.8 },
-    'rajahmundry': { heroHeadline: "Comprehensive Health Landmark", heroHighlight: "Compassionate care.", description: "Pioneering specialized cardiac, trauma, and joint replacement treatments in East Godavari.", phone: "0883-6832480", address: "Rajahmundry highway, AP", rating: 4.6 },
-    'rtc-x-roads': { heroHeadline: "Trauma & Emergency Center", heroHighlight: "Available 24/7.", description: "Super-specialty orthopedic and emergency response setups in central Hyderabad.", phone: "040-68324803", address: "RTC Cross Roads, Hyderabad", rating: 4.7 },
-    'secunderabad': { heroHeadline: "Specialized Orthopedic Institute", heroHighlight: "Decades of trust.", description: "Advanced arthroscopic procedures and specialized rehabilitation center.", phone: "040-68324806", address: "Secunderabad Station Road, Hyd", rating: 4.8 }
+    'ecil': { heroHeadline: "Your Family's Comprehensive", heroHighlight: "Health Partner.", description: "A complete multi-specialty care center designed for the families of ECIL.", phone: "040-68324804", address: "ECIL Cross Roads, Hyderabad", rating: 4.7, advantageTitle: "The ECIL", advantageHighlight: "Advantage", infraTitle: "Precision", infraHighlight: "Ecosystem", infraDesc: "We invest in the future of healthcare so you can invest in your health." },
+    'lb-nagar': { heroHeadline: "Robotic Joint Replacement Hub", heroHighlight: "Care & Precision.", description: "Our primary center equipped with advanced critical care modules and surgeons.", phone: "040-68324801", address: "LB Nagar Ring Road, Hyderabad", rating: 4.8, advantageTitle: "The LB Nagar", advantageHighlight: "Advantage", infraTitle: "Precision", infraHighlight: "Ecosystem", infraDesc: "We invest in the future of healthcare so you can invest in your health." },
+    'kompally': { heroHeadline: "Comprehensive Healthcare Gateway", heroHighlight: "Aiding recovery.", description: "Premier diagnostic facility and modular orthopedics departments.", phone: "040-68324802", address: "Kompally highway, Hyderabad", rating: 4.6, advantageTitle: "The Kompally", advantageHighlight: "Advantage", infraTitle: "Precision", infraHighlight: "Ecosystem", infraDesc: "We invest in the future of healthcare so you can invest in your health." },
+    'peerzadiguda': { heroHeadline: "Affordable Advanced Care.", heroHighlight: "Robotic Precision.", description: "Bringing world-class Orthopedic and General care to Peerzadiguda.", phone: "040-68108108", address: "Survey No. 12, Peerzadiguda Road, Uppal, Hyd", rating: 4.8, advantageTitle: "The Peerzadiguda", advantageHighlight: "Advantage", infraTitle: "Precision", infraHighlight: "Ecosystem", infraDesc: "We invest in the future of healthcare so you can invest in your health." },
+    'lakdikapul': { heroHeadline: "Robotic Surgery & Joint Excellence", heroHighlight: "Leading orthopedics.", description: "Our flagship hospital equipped with premium joint, spine, and urology surgical suites.", phone: "040-68324800", address: "Lakdikapul, Hyderabad", rating: 4.9, advantageTitle: "The Lakdikapul", advantageHighlight: "Advantage", infraTitle: "Precision", infraHighlight: "Ecosystem", infraDesc: "We invest in the future of healthcare so you can invest in your health." },
+    'miyapur': { heroHeadline: "Multispecialty Care Hub", heroHighlight: "Advanced recovery.", description: "Trusted critical care, pediatrics, and neurology departments serving Miyapur.", phone: "040-68324805", address: "Miyapur Main Road, Hyderabad", rating: 4.7, advantageTitle: "The Miyapur", advantageHighlight: "Advantage", infraTitle: "Precision", infraHighlight: "Ecosystem", infraDesc: "We invest in the future of healthcare so you can invest in your health." },
+    'vijayawada': { heroHeadline: "Orthopedic & Spine Pioneer", heroHighlight: "Srikara Andhra.", description: "Bringing robotic total knee arthroplasty and diagnostic suites to Vijayawada.", phone: "0866-6832480", address: "Benz Circle, Vijayawada", rating: 4.8, advantageTitle: "The Vijayawada", advantageHighlight: "Advantage", infraTitle: "Precision", infraHighlight: "Ecosystem", infraDesc: "We invest in the future of healthcare so you can invest in your health." },
+    'rajahmundry': { heroHeadline: "Comprehensive Health Landmark", heroHighlight: "Compassionate care.", description: "Pioneering specialized cardiac, trauma, and joint replacement treatments in East Godavari.", phone: "0883-6832480", address: "Rajahmundry highway, AP", rating: 4.6, advantageTitle: "The Rajahmundry", advantageHighlight: "Advantage", infraTitle: "Precision", infraHighlight: "Ecosystem", infraDesc: "We invest in the future of healthcare so you can invest in your health." },
+    'rtc-x-roads': { heroHeadline: "Trauma & Emergency Center", heroHighlight: "Available 24/7.", description: "Super-specialty orthopedic and emergency response setups in central Hyderabad.", phone: "040-68324803", address: "RTC Cross Roads, Hyderabad", rating: 4.7, advantageTitle: "The RTC X Roads", advantageHighlight: "Advantage", infraTitle: "Precision", infraHighlight: "Ecosystem", infraDesc: "We invest in the future of healthcare so you can invest in your health." },
+    'secunderabad': { heroHeadline: "Specialized Orthopedic Institute", heroHighlight: "Decades of trust.", description: "Advanced arthroscopic procedures and specialized rehabilitation center.", phone: "040-68324806", address: "Secunderabad Station Road, Hyd", rating: 4.8, advantageTitle: "The Secunderabad", advantageHighlight: "Advantage", infraTitle: "Precision", infraHighlight: "Ecosystem", infraDesc: "We invest in the future of healthcare so you can invest in your health." }
   }
 }
 
@@ -239,6 +296,24 @@ const DEFAULT_SEO_DATA = {
   homepage: { title: 'Srikara Hospitals | Multi-Specialty Healthcare Excellence', desc: 'Srikara multi-specialty hospitals offer premium robotic knee replacements, cardiology, neurosurgery, and patient care.', keywords: 'robotic knee surgery, hospital hyderabad, cardiologists' },
   about: { title: 'About Srikara | Leadership, Vision & Values', desc: 'Read about Dr. Akhil Dadi and the core values guiding Srikara Hospital.', keywords: 'hospital founders, medical history, joint replacement pioneers' },
   careers: { title: 'Careers & Fellowship at Srikara', desc: 'Join the leading team of orthopedic, cardiology, and pediatric care providers.', keywords: 'medical jobs hyderabad, hospital fellowships' }
+}
+
+const mergeWithDefaults = (data) => {
+  if (!data) return DEFAULT_PAGE_DATA
+  return {
+    ...DEFAULT_PAGE_DATA,
+    ...data,
+    homepage: { ...DEFAULT_PAGE_DATA.homepage, ...data.homepage },
+    about: { ...DEFAULT_PAGE_DATA.about, ...data.about },
+    careers_page: { ...DEFAULT_PAGE_DATA.careers_page, ...data.careers_page },
+    branches: Object.keys(DEFAULT_PAGE_DATA.branches).reduce((acc, k) => {
+      acc[k] = {
+        ...DEFAULT_PAGE_DATA.branches[k],
+        ...(data.branches?.[k] || {})
+      }
+      return acc
+    }, { ...(data.branches || {}) })
+  }
 }
 
 // Fully custom themed dropdown — replaces native <select> entirely (including the
@@ -366,6 +441,7 @@ export function AdminDashboard() {
   const [doctors, setDoctors] = useState([])
   const [jobs, setJobs] = useState([])
   const [appointments, setAppointments] = useState([])
+  const [apptSearch, setApptSearch] = useState('')
   const [mediaFiles, setMediaFiles] = useState([])
   const [blogs, setBlogs] = useState([])
   const [faqs, setFaqs] = useState([])
@@ -376,6 +452,27 @@ export function AdminDashboard() {
   const [pageData, setPageData] = useState(DEFAULT_PAGE_DATA)
   const [seoData, setSeoData] = useState(DEFAULT_SEO_DATA)
   const [analyticsEvents, setAnalyticsEvents] = useState([])
+
+  // Dynamic Location Management States
+  const { branches: hookBranches, refetch: refetchBranches } = useBranches()
+  const [branchesList, setBranchesList] = useState([])
+  const [currentBranchDetails, setCurrentBranchDetails] = useState({
+    slug: '',
+    title: '',
+    phone: '',
+    address: '',
+    googleRating: 4.8,
+    googleMapEmbed: '',
+    heroImage: '',
+    highlights: '24/7 Trauma, Robotic Surgery, Rehabilitation'
+  })
+  const [isEditingBranch, setIsEditingBranch] = useState(false)
+
+  useEffect(() => {
+    if (hookBranches && hookBranches.length > 0) {
+      setBranchesList(hookBranches)
+    }
+  }, [hookBranches])
 
   // Interactive Live Search & Filters
   const [searchTerm, setSearchTerm] = useState('')
@@ -498,7 +595,9 @@ export function AdminDashboard() {
             }
             setAppointments(DEFAULT_APPOINTMENTS)
           } else {
-            setAppointments(appSnap.docs.map(a => ({ id: a.id, ...a.data() })))
+            const loadedAppts = appSnap.docs.map(a => ({ id: a.id, ...a.data() }))
+            loadedAppts.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+            setAppointments(loadedAppts)
           }
 
           // 4. Load Blogs
@@ -533,13 +632,19 @@ export function AdminDashboard() {
 
           // 6. Load Departments
           const deptSnap = await getDocs(collection(db, 'departments'))
-          if (deptSnap.empty) {
-            for (const deptItem of DEFAULT_DEPARTMENTS) {
+          const storedDepts = deptSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+          const deptMetaRef = doc(db, 'site_contents', 'meta')
+          const deptMetaSnap = await getDoc(deptMetaRef)
+          const deptSeedVersion = deptMetaSnap.exists() ? (deptMetaSnap.data().departmentsSeedVersion || 1) : 1
+          if (deptSnap.empty || deptSeedVersion < DEPARTMENTS_SEED_VERSION) {
+            const missingDepts = missingDefaultDepartments(storedDepts)
+            for (const deptItem of missingDepts) {
               await setDoc(doc(db, 'departments', String(deptItem.id)), deptItem)
             }
-            setDepartments(DEFAULT_DEPARTMENTS)
+            await setDoc(deptMetaRef, { departmentsSeedVersion: DEPARTMENTS_SEED_VERSION }, { merge: true })
+            setDepartments([...storedDepts, ...missingDepts])
           } else {
-            setDepartments(deptSnap.docs.map(d => ({ id: d.id, ...d.data() })))
+            setDepartments(storedDepts)
           }
 
           // 7. Load Testimonials
@@ -579,7 +684,7 @@ export function AdminDashboard() {
           const pageRef = doc(db, 'site_contents', 'pages')
           const pageSnap = await getDoc(pageRef)
           if (pageSnap.exists()) {
-            setPageData(pageSnap.data())
+            setPageData(mergeWithDefaults(pageSnap.data()))
           } else {
             await setDoc(pageRef, DEFAULT_PAGE_DATA)
             setPageData(DEFAULT_PAGE_DATA)
@@ -639,11 +744,20 @@ export function AdminDashboard() {
         setAppointments(parsed.appointments || DEFAULT_APPOINTMENTS)
         setFaqs(parsed.faqs || DEFAULT_FAQS)
         setMediaFiles(parsed.mediaFiles || DEFAULT_MEDIA)
-        setDepartments(parsed.departments || DEFAULT_DEPARTMENTS)
+        const storedDepts = parsed.departments || []
+        if (!parsed.departments || (parsed.departmentsSeedVersion || 1) < DEPARTMENTS_SEED_VERSION) {
+          const mergedDepts = [...storedDepts, ...missingDefaultDepartments(storedDepts)]
+          setDepartments(mergedDepts)
+          parsed.departments = mergedDepts
+          parsed.departmentsSeedVersion = DEPARTMENTS_SEED_VERSION
+          localStorage.setItem('srikara_cms_data', JSON.stringify(parsed))
+        } else {
+          setDepartments(storedDepts)
+        }
         setTestimonials(parsed.testimonials || DEFAULT_TESTIMONIALS)
         setDownloads(parsed.downloads || DEFAULT_DOWNLOADS)
         setNews(parsed.news || DEFAULT_NEWS)
-        setPageData(parsed.pageData || DEFAULT_PAGE_DATA)
+        setPageData(mergeWithDefaults(parsed.pageData))
         setSeoData(parsed.seoData || DEFAULT_SEO_DATA)
       } else {
         loadedDocs = []
@@ -897,7 +1011,7 @@ export function AdminDashboard() {
     e.preventDefault()
     let updated
     const newDocId = isEditingDoc ? currentDoctor.id : Date.now().toString()
-    const payload = { ...currentDoctor, id: newDocId, slug: currentDoctor.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') }
+    const payload = { ...currentDoctor, id: newDocId, slug: currentDoctor.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'), about: currentDoctor.bio }
 
     if (isEditingDoc) {
       updated = doctors.map(d => d.id === currentDoctor.id ? payload : d)
@@ -1019,14 +1133,32 @@ export function AdminDashboard() {
     notifyUser('success', 'FAQ deleted.')
   }
 
-  // Departments CMS Save
+  // Departments CMS Save (Add or Update)
   const saveDepartment = async (e) => {
     e.preventDefault()
-    const updated = departments.map(d => d.id === currentDept.id ? currentDept : d)
+    const exists = departments.find(d => d.id === currentDept.id)
+    let updated
+    if (exists) {
+      updated = departments.map(d => d.id === currentDept.id ? currentDept : d)
+    } else {
+      updated = [...departments, currentDept]
+    }
     setDepartments(updated)
     await persistToStore('departments', updated)
     if (db) await setDoc(doc(db, 'departments', currentDept.id), currentDept)
-    notifyUser('success', 'Department details updated.')
+    notifyUser('success', exists ? 'Department updated.' : 'New department added!')
+    if (!exists) setCurrentDept({ id: '', name: '', description: '', treatments: '', faqCategory: 'Treatments' })
+  }
+
+  // Departments CMS Delete
+  const deleteDepartment = async (deptId) => {
+    if (!window.confirm('Are you sure you want to delete this department?')) return
+    const updated = departments.filter(d => d.id !== deptId)
+    setDepartments(updated)
+    await persistToStore('departments', updated)
+    if (db) await deleteDoc(doc(db, 'departments', deptId))
+    notifyUser('success', 'Department deleted.')
+    if (currentDept.id === deptId) setCurrentDept({ id: '', name: '', description: '', treatments: '', faqCategory: 'Treatments' })
   }
 
   // Testimonials CRUD
@@ -1099,6 +1231,16 @@ export function AdminDashboard() {
       const updated = appointments.map(a => a.id === appointment.id ? { ...a, crmSync: 'Synced' } : a)
       setAppointments(updated)
       await persistToStore('appointments', updated)
+      if (db) {
+        try {
+          const item = updated.find(a => a.id === appointment.id)
+          if (item) {
+            await setDoc(doc(db, 'appointments', String(appointment.id)), item)
+          }
+        } catch (err) {
+          console.error('Failed to update CRM sync in Firestore:', err)
+        }
+      }
       notifyUser('success', 'CRM synchronized successfully! Confirmation message pushed.')
     }, 1500)
   }
@@ -1107,7 +1249,33 @@ export function AdminDashboard() {
     const updated = appointments.map(a => a.id === id ? { ...a, status } : a)
     setAppointments(updated)
     await persistToStore('appointments', updated)
+    if (db) {
+      try {
+        const item = updated.find(a => a.id === id)
+        if (item) {
+          await setDoc(doc(db, 'appointments', String(id)), item)
+        }
+      } catch (err) {
+        console.error('Failed to update appointment status in Firestore:', err)
+      }
+    }
     notifyUser('success', `Appointment status updated to ${status}.`)
+  }
+
+  const deleteAppointment = async (id) => {
+    requestConfirm('Cancel Appointment', 'Are you sure you want to cancel and remove this appointment request?', async () => {
+      const updated = appointments.filter(a => a.id !== id)
+      setAppointments(updated)
+      await persistToStore('appointments', updated)
+      if (db) {
+        try {
+          await deleteDoc(doc(db, 'appointments', String(id)))
+        } catch (err) {
+          console.error('Failed to delete appointment in Firestore:', err)
+        }
+      }
+      notifyUser('success', 'Appointment request removed successfully.')
+    })
   }
 
   // 4. Page-wise editing
@@ -1126,6 +1294,86 @@ export function AdminDashboard() {
     setPageData(updated)
     await persistToStore('pageData', updated)
     notifyUser('success', `Branch details for ${slug.toUpperCase()} updated.`)
+  }
+
+  const handleSaveBranch = async (e) => {
+    e.preventDefault()
+    if (!currentBranchDetails.slug || !currentBranchDetails.title) {
+      notifyUser('error', 'Please provide a slug and title for the location.')
+      return
+    }
+
+    const slug = currentBranchDetails.slug.trim().toLowerCase().replace(/\s+/g, '-')
+    const highlightsArray = typeof currentBranchDetails.highlights === 'string' 
+      ? currentBranchDetails.highlights.split(',').map(s => s.trim()).filter(Boolean)
+      : Array.isArray(currentBranchDetails.highlights) ? currentBranchDetails.highlights : ['Comprehensive clinical care']
+
+    const payload = {
+      ...currentBranchDetails,
+      slug,
+      googleRating: Number(currentBranchDetails.googleRating) || 4.8,
+      highlights: highlightsArray
+    }
+
+    // 1. Local Cache Sync
+    const updated = isEditingBranch 
+      ? branchesList.map(b => b.slug === slug ? payload : b)
+      : [...branchesList.filter(b => b.slug !== slug), payload]
+
+    setBranchesList(updated)
+    localStorage.setItem('srikara_branches', JSON.stringify(updated))
+
+    // Sync to pageData.branches so that the page customizer works automatically!
+    const pageDataBranchesCopy = { ...pageData.branches }
+    pageDataBranchesCopy[slug] = {
+      heroHeadline: pageDataBranchesCopy[slug]?.heroHeadline || "Advanced Surgical Center",
+      heroHighlight: pageDataBranchesCopy[slug]?.heroHighlight || "Orthopedic Excellence",
+      description: pageDataBranchesCopy[slug]?.description || payload.address,
+      phone: payload.phone,
+      address: payload.address,
+      rating: payload.googleRating,
+      heroImage: payload.heroImage,
+      advantageTitle: pageDataBranchesCopy[slug]?.advantageTitle || `The ${payload.title}`,
+      advantageHighlight: pageDataBranchesCopy[slug]?.advantageHighlight || "Advantage",
+      infraTitle: pageDataBranchesCopy[slug]?.infraTitle || "Precision",
+      infraHighlight: pageDataBranchesCopy[slug]?.infraHighlight || "Ecosystem",
+      infraDesc: pageDataBranchesCopy[slug]?.infraDesc || "We invest in the future of healthcare..."
+    }
+    const updatedPageData = { ...pageData, branches: pageDataBranchesCopy, branchesList: updated }
+    setPageData(updatedPageData)
+    await persistToStore('pageData', updatedPageData)
+
+    setIsEditingBranch(false)
+    setCurrentBranchDetails({
+      slug: '',
+      title: '',
+      phone: '',
+      address: '',
+      googleRating: 4.8,
+      googleMapEmbed: '',
+      heroImage: '',
+      highlights: '24/7 Trauma, Robotic Surgery, Rehabilitation'
+    })
+    notifyUser('success', `Location "${payload.title}" saved successfully!`)
+    refetchBranches()
+  }
+
+  const handleDeleteBranch = (slug) => {
+    requestConfirm('Delete Location', `Are you sure you want to delete the "${slug}" location? This cannot be undone.`, async () => {
+      const updated = branchesList.filter(b => b.slug !== slug)
+      setBranchesList(updated)
+      localStorage.setItem('srikara_branches', JSON.stringify(updated))
+
+      // Also clean up pageData.branches
+      const pageDataBranchesCopy = { ...pageData.branches }
+      delete pageDataBranchesCopy[slug]
+      const updatedPageData = { ...pageData, branches: pageDataBranchesCopy, branchesList: updated }
+      setPageData(updatedPageData)
+      await persistToStore('pageData', updatedPageData)
+
+      notifyUser('success', 'Location removed successfully.')
+      refetchBranches()
+    })
   }
 
   // 5. SEO metadata management
@@ -1247,6 +1495,15 @@ export function AdminDashboard() {
     j.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
     j.department.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  const filteredAppointments = appointments.filter(app => {
+    const term = apptSearch.toLowerCase();
+    return (app.name || '').toLowerCase().includes(term) || 
+           (app.phone || '').includes(term) || 
+           (app.doctor || '').toLowerCase().includes(term) || 
+           (app.specialty || app.department || '').toLowerCase().includes(term) ||
+           (app.branch || '').toLowerCase().includes(term);
+  })
 
   // ─────────────────────────────────────────────────────────────
   // REAL-TIME ANALYTICS INTEGRATION
@@ -1629,6 +1886,18 @@ export function AdminDashboard() {
                               <span>Careers Board</span>
                             </button>
                           )}
+                          {hasAccess('locations') && (
+                            <button
+                              type="button"
+                              onClick={() => { setActiveGroup('category'); setActiveTab('locations'); }}
+                              className={`w-full text-left flex items-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
+                                activeTab === 'locations' ? 'bg-[#8B1A4A] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'
+                              }`}
+                            >
+                              <File className="w-3.5 h-3.5" />
+                              <span>Manage Locations</span>
+                            </button>
+                          )}
                           {hasAccess('testimonials') && (
                             <button
                               type="button"
@@ -1983,7 +2252,7 @@ export function AdminDashboard() {
                       {/* Click logs table */}
                       <div className="glass-card-admin rounded-[32px] p-8 shadow-sm">
                         <h3 className="font-garamond text-2xl font-bold text-[#2D3A4A] mb-6">Interaction Logs</h3>
-                        <div className="overflow-x-auto">
+                        <div className="overflow-x-auto max-h-[600px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
                           <table className="w-full text-left border-collapse text-sm">
                             <thead>
                               <tr className="border-b border-slate-100 text-gray-400 font-extrabold uppercase tracking-wider text-xs">
@@ -2024,14 +2293,16 @@ export function AdminDashboard() {
                             <Search className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-400" />
                             <input 
                               type="text" 
-                              placeholder="Search patient..." 
+                              placeholder="Search patient, phone, doctor..." 
+                              value={apptSearch}
+                              onChange={e => setApptSearch(e.target.value)}
                               className="h-11 pl-10 pr-4 rounded-xl border bg-white text-xs w-full sm:w-60 focus:border-[#8B1A4A] outline-none" 
                             />
                           </div>
                         </div>
                       </div>
 
-                      <div className="overflow-x-auto">
+                      <div className="overflow-x-auto max-h-[600px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
                         <table className="w-full text-left border-collapse text-sm">
                           <thead>
                             <tr className="border-b border-slate-100 text-gray-400 font-extrabold uppercase tracking-wider text-xs">
@@ -2044,32 +2315,33 @@ export function AdminDashboard() {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100/60">
-                            {appointments.map(app => (
+                            {filteredAppointments.map(app => (
                               <tr key={app.id} className="hover:bg-slate-50/50 transition-colors">
                                 <td className="py-4">
                                   <p className="font-bold text-slate-800 text-base">{app.name}</p>
-                                  <p className="text-xs text-gray-500 font-semibold">{app.phone} · {app.email}</p>
+                                  <p className="text-xs text-gray-500 font-semibold">{app.phone}{app.email ? ` · ${app.email}` : ''}</p>
                                   {app.message && <p className="text-xs text-[#8B1A4A] mt-1 bg-[#8B1A4A]/5 px-3 py-1 rounded-lg w-fit">Note: "{app.message}"</p>}
                                 </td>
                                 <td className="py-4">
-                                  <span className="font-bold text-[#2D3A4A]">{app.department}</span>
+                                  <span className="font-bold text-[#2D3A4A]">{app.department || app.specialty}</span>
                                   <p className="text-xs text-gray-500">{app.doctor}</p>
+                                  {app.branch && <span className="block text-[10px] text-gray-400 font-bold uppercase mt-0.5">📍 {app.branch}</span>}
                                 </td>
                                 <td className="py-4 text-xs font-semibold text-gray-500">
-                                  {app.date}<br/>{app.time}
+                                  {app.slot ? app.slot : `${app.date || ''} at ${app.time || ''}`}
                                 </td>
                                 <td className="py-4">
                                   <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase ${
                                     app.status === 'Confirmed' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
                                   }`}>
-                                    {app.status}
+                                    {app.status || 'Pending'}
                                   </span>
                                 </td>
                                 <td className="py-4">
                                   <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase ${
                                     app.crmSync === 'Synced' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
                                   }`}>
-                                    {app.crmSync}
+                                    {app.crmSync || 'Pending'}
                                   </span>
                                 </td>
                                 <td className="py-4 text-right space-x-2">
@@ -2081,7 +2353,7 @@ export function AdminDashboard() {
                                       Retry Sync
                                     </button>
                                   )}
-                                  {app.status === 'Pending' && (
+                                  {(app.status === 'Pending' || !app.status) && (
                                     <button 
                                       onClick={() => handleUpdateApptStatus(app.id, 'Confirmed')}
                                       className="px-3 py-2 rounded-xl bg-[#8B1A4A] hover:bg-[#2D3A4A] text-white text-xs font-bold transition-all"
@@ -2089,6 +2361,12 @@ export function AdminDashboard() {
                                       Confirm
                                     </button>
                                   )}
+                                  <button 
+                                    onClick={() => deleteAppointment(app.id)}
+                                    className="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold transition-all"
+                                  >
+                                    Cancel
+                                  </button>
                                 </td>
                               </tr>
                             ))}
@@ -2367,21 +2645,39 @@ export function AdminDashboard() {
                       
                       {/* Left: Department List */}
                       <div className="xl:col-span-7 glass-card-admin rounded-[32px] p-8 shadow-sm space-y-6">
-                        <h3 className="font-garamond text-3xl font-bold text-[#2D3A4A]">Specialties & Departments ({departments.length})</h3>
-                        <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-garamond text-3xl font-bold text-[#2D3A4A]">Specialties & Departments ({departments.length})</h3>
+                          <button 
+                            onClick={() => setCurrentDept({ id: '', name: '', description: '', treatments: '', faqCategory: 'Treatments' })}
+                            className="px-4 py-2.5 rounded-xl bg-[#8B1A4A] text-white text-xs font-bold uppercase hover:bg-[#2D3A4A] transition-all shadow-sm flex items-center gap-1.5"
+                          >
+                            <Plus className="w-3.5 h-3.5" /> Add New
+                          </button>
+                        </div>
+                        <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin' }}>
                           {departments.map(dept => (
-                            <div key={dept.id} className="p-6 rounded-2xl bg-white border border-slate-100 flex justify-between items-start">
-                              <div className="space-y-1">
-                                <h4 className="text-lg font-bold text-slate-800">{dept.name}</h4>
-                                <p className="text-xs text-gray-500">{dept.description}</p>
-                                <p className="text-xs text-[#8B1A4A] font-semibold mt-2">Treatments: <span className="text-slate-600 font-normal">{dept.treatments}</span></p>
+                            <div key={dept.id} className={`p-5 rounded-2xl bg-white border flex justify-between items-start transition-all ${currentDept.id === dept.id ? 'border-[#8B1A4A]/40 shadow-md' : 'border-slate-100 hover:border-slate-200'}`}>
+                              <div className="space-y-1 flex-1 min-w-0 mr-3">
+                                <h4 className="text-base font-bold text-slate-800 truncate">{dept.name}</h4>
+                                <p className="text-[11px] text-gray-500 line-clamp-1">{dept.description}</p>
+                                <p className="text-[10px] text-[#8B1A4A] font-semibold mt-1">Treatments: <span className="text-slate-500 font-normal">{dept.treatments}</span></p>
                               </div>
-                              <button 
-                                onClick={() => setCurrentDept(dept)}
-                                className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors flex-shrink-0"
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </button>
+                              <div className="flex items-center gap-1.5 flex-shrink-0">
+                                <button 
+                                  onClick={() => setCurrentDept(dept)}
+                                  className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-colors"
+                                  title="Edit"
+                                >
+                                  <Edit2 className="w-4 h-4" />
+                                </button>
+                                <button 
+                                  onClick={() => deleteDepartment(dept.id)}
+                                  className="p-2 text-rose-400 hover:bg-rose-50 rounded-lg transition-colors"
+                                  title="Delete"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -2389,26 +2685,36 @@ export function AdminDashboard() {
 
                       {/* Right: Department Editor Form */}
                       <div className="xl:col-span-5 glass-card-admin rounded-[32px] p-8 shadow-sm space-y-4">
-                        <h3 className="font-garamond text-2xl font-bold text-[#2D3A4A]">Edit Department Details</h3>
+                        <h3 className="font-garamond text-2xl font-bold text-[#2D3A4A]">
+                          {departments.find(d => d.id === currentDept.id) ? 'Edit Department' : '+ Add New Department'}
+                        </h3>
                         <form onSubmit={saveDepartment} className="space-y-4">
                           <div>
-                            <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Department Identifier</label>
-                            <input type="text" value={currentDept.id} disabled className="w-full h-11 px-3 rounded-xl border bg-slate-50 text-xs font-mono text-gray-500" />
+                            <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Department Identifier (slug)</label>
+                            <input 
+                              type="text" 
+                              value={currentDept.id} 
+                              onChange={e => setCurrentDept(prev => ({ ...prev, id: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') }))} 
+                              disabled={!!departments.find(d => d.id === currentDept.id)} 
+                              placeholder="e.g. dermatology"
+                              className={`w-full h-11 px-3 rounded-xl border text-xs font-mono ${departments.find(d => d.id === currentDept.id) ? 'bg-slate-50 text-gray-500' : 'bg-white text-slate-800'}`} 
+                              required 
+                            />
                           </div>
                           <div>
                             <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Display Name</label>
-                            <input type="text" value={currentDept.name} onChange={e => setCurrentDept(prev => ({ ...prev, name: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" required />
+                            <input type="text" value={currentDept.name} onChange={e => setCurrentDept(prev => ({ ...prev, name: e.target.value }))} placeholder="e.g. Dermatology & Cosmetology" className="w-full h-11 px-3 rounded-xl border bg-white text-xs" required />
                           </div>
                           <div>
                             <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Description Paragraph</label>
-                            <textarea value={currentDept.description} onChange={e => setCurrentDept(prev => ({ ...prev, description: e.target.value }))} className="w-full h-24 p-3 rounded-xl border bg-white text-xs" required />
+                            <textarea value={currentDept.description} onChange={e => setCurrentDept(prev => ({ ...prev, description: e.target.value }))} placeholder="Brief description of the department..." className="w-full h-24 p-3 rounded-xl border bg-white text-xs" required />
                           </div>
                           <div>
                             <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Associated Treatments (Comma Separated)</label>
-                            <input type="text" value={currentDept.treatments} onChange={e => setCurrentDept(prev => ({ ...prev, treatments: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" />
+                            <input type="text" value={currentDept.treatments} onChange={e => setCurrentDept(prev => ({ ...prev, treatments: e.target.value }))} placeholder="e.g. Acne Treatment, Laser Therapy, Chemical Peels" className="w-full h-11 px-3 rounded-xl border bg-white text-xs" />
                           </div>
                           <button type="submit" className="w-full h-12 bg-[#8B1A4A] text-white hover:bg-[#2D3A4A] rounded-full text-xs font-bold uppercase transition-all shadow-md mt-4">
-                            Save Department Details
+                            {departments.find(d => d.id === currentDept.id) ? 'Save Department Details' : 'Add Department'}
                           </button>
                         </form>
                       </div>
@@ -2434,7 +2740,7 @@ export function AdminDashboard() {
                             />
                           </div>
 
-                          <div className="space-y-4">
+                          <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin' }}>
                             {filteredBlogs.map(blog => (
                               <div key={blog.id} className="p-5 rounded-2xl bg-white border border-slate-100 flex justify-between items-center shadow-sm">
                                 <div className="flex gap-4 items-center min-w-0">
@@ -2560,7 +2866,7 @@ export function AdminDashboard() {
                       {/* Left list */}
                       <div className="xl:col-span-7 glass-card-admin rounded-[32px] p-8 shadow-sm space-y-6">
                         <h3 className="font-garamond text-3xl font-bold text-[#2D3A4A]">Announcements & News ({news.length})</h3>
-                        <div className="space-y-4">
+                        <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin' }}>
                           {news.map(item => (
                             <div key={item.id} className="p-5 rounded-2xl bg-white border border-slate-100 flex justify-between items-center shadow-sm">
                               <div>
@@ -2614,7 +2920,7 @@ export function AdminDashboard() {
                   {activeTab === 'gallery' && activeGroup === 'category' && (
                     <motion.div key="gallery" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="glass-card-admin rounded-[32px] p-8 shadow-sm space-y-6">
                       <h3 className="font-garamond text-3xl font-bold text-[#2D3A4A]">Gallery CMS</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-h-[600px] overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin' }}>
                         {mediaFiles.filter(f => f.folder === 'Images' || f.folder === 'Videos').map(file => (
                           <div key={file.id} className="p-4 bg-white border border-slate-100 rounded-2xl flex flex-col justify-between shadow-sm">
                             <div className="h-32 rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center">
@@ -2658,7 +2964,7 @@ export function AdminDashboard() {
                           />
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin' }}>
                           {filteredJobs.map(job => (
                             <div key={job.id} className="p-6 rounded-2xl bg-white border border-slate-100 flex justify-between items-center shadow-sm">
                               <div>
@@ -2903,7 +3209,7 @@ export function AdminDashboard() {
                       {/* Left list */}
                       <div className="xl:col-span-7 glass-card-admin rounded-[32px] p-8 shadow-sm space-y-6">
                         <h3 className="font-garamond text-3xl font-bold text-[#2D3A4A]">Downloadable PDFs & Brochures ({downloads.length})</h3>
-                        <div className="space-y-4">
+                        <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin' }}>
                           {downloads.map(item => (
                             <div key={item.id} className="p-5 rounded-2xl bg-white border border-slate-100 flex justify-between items-center shadow-sm">
                               <div>
@@ -2952,6 +3258,161 @@ export function AdminDashboard() {
                     </motion.div>
                   )}
 
+                  {/* TAB: Locations Management CMS */}
+                  {activeTab === 'locations' && activeGroup === 'category' && (
+                    <motion.div key="locations" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 xl:grid-cols-12 gap-10">
+                      
+                      {/* Left list */}
+                      <div className="xl:col-span-7 glass-card-admin rounded-[32px] p-8 shadow-sm space-y-6">
+                        <div className="flex justify-between items-center border-b pb-4">
+                          <h3 className="font-garamond text-3xl font-bold text-[#2D3A4A]">Locations Database ({branchesList.length})</h3>
+                          <button
+                            onClick={() => {
+                              setIsEditingBranch(false)
+                              setCurrentBranchDetails({
+                                slug: '',
+                                title: '',
+                                phone: '',
+                                address: '',
+                                googleRating: 4.8,
+                                googleMapEmbed: '',
+                                heroImage: '',
+                                highlights: '24/7 Trauma, Robotic Surgery, Rehabilitation'
+                              })
+                            }}
+                            className="bg-[#8B1A4A]/5 text-[#8B1A4A] hover:bg-[#8B1A4A]/10 px-4 py-2 rounded-xl text-xs font-bold transition-all"
+                          >
+                            + Add New
+                          </button>
+                        </div>
+                        <div className="space-y-4 max-h-[600px] overflow-y-auto pr-1">
+                          {branchesList.map(item => (
+                            <div key={item.slug} className="p-5 rounded-2xl bg-white border border-slate-100 flex justify-between items-start gap-4 shadow-sm hover:border-[#8B1A4A]/25 transition-all">
+                              <div className="flex gap-4">
+                                {item.heroImage && (
+                                  <img src={item.heroImage} alt={item.title} className="w-16 h-16 object-cover rounded-xl border border-slate-100 flex-shrink-0" />
+                                )}
+                                <div>
+                                  <h4 className="font-bold text-slate-800 text-base">{item.title}</h4>
+                                  <p className="text-xs text-gray-500 mt-1 font-semibold">📍 {item.address}</p>
+                                  <p className="text-xs text-gray-400 mt-0.5">📞 {item.phone} · ⭐ {item.googleRating}</p>
+                                  <span className="text-[9px] bg-[#8B1A4A]/5 text-[#8B1A4A] font-extrabold px-2.5 py-1 rounded-full uppercase mt-2.5 inline-block">Slug: {item.slug}</span>
+                                </div>
+                              </div>
+                              <div className="flex gap-1 flex-shrink-0">
+                                <button 
+                                  onClick={() => {
+                                    setCurrentBranchDetails({
+                                      ...item,
+                                      highlights: Array.isArray(item.highlights) ? item.highlights.join(', ') : item.highlights || ''
+                                    })
+                                    setIsEditingBranch(true)
+                                  }}
+                                  className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+                                >
+                                  <Edit2 className="w-4 h-4" />
+                                </button>
+                                <button onClick={() => handleDeleteBranch(item.slug)} className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg">
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Right Form */}
+                      <div className="xl:col-span-5 glass-card-admin rounded-[32px] p-8 shadow-sm space-y-4">
+                        <h3 className="font-garamond text-2xl font-bold text-[#2D3A4A]">
+                          {isEditingBranch ? 'Edit Location Details' : 'Add New Location'}
+                        </h3>
+                        <form onSubmit={handleSaveBranch} className="space-y-4">
+                          <div>
+                            <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Branch Slug (URL Path ID)</label>
+                            <input 
+                              type="text" 
+                              value={currentBranchDetails.slug} 
+                              onChange={e => setCurrentBranchDetails(prev => ({ ...prev, slug: e.target.value }))} 
+                              placeholder="e.g. gachibowli (lowercase, no spaces)" 
+                              disabled={isEditingBranch}
+                              className="w-full h-11 px-3 rounded-xl border bg-white text-xs disabled:bg-slate-50 disabled:text-slate-400" 
+                              required 
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Location Title / Name</label>
+                            <input type="text" value={currentBranchDetails.title} onChange={e => setCurrentBranchDetails(prev => ({ ...prev, title: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" required />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Contact Phone</label>
+                              <input type="text" value={currentBranchDetails.phone} onChange={e => setCurrentBranchDetails(prev => ({ ...prev, phone: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" required />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Google Rating</label>
+                              <input type="number" step="0.1" max="5" min="0" value={currentBranchDetails.googleRating} onChange={e => setCurrentBranchDetails(prev => ({ ...prev, googleRating: parseFloat(e.target.value) }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" required />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Address Text</label>
+                            <input type="text" value={currentBranchDetails.address} onChange={e => setCurrentBranchDetails(prev => ({ ...prev, address: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" required />
+                          </div>
+                          <div>
+                            <div className="flex justify-between items-center mb-1">
+                              <label className="block text-[10px] uppercase font-extrabold text-slate-400">Exterior Building Image URL</label>
+                              <button 
+                                type="button" 
+                                onClick={() => {
+                                  setMediaTargetField(() => (url) => setCurrentBranchDetails(prev => ({ ...prev, heroImage: url })))
+                                  setShowMediaPickerModal(true)
+                                }}
+                                className="text-[10px] font-black uppercase text-[#8B1A4A] hover:underline"
+                              >
+                                Select from Gallery
+                              </button>
+                            </div>
+                            <input type="text" value={currentBranchDetails.heroImage} onChange={e => setCurrentBranchDetails(prev => ({ ...prev, heroImage: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" placeholder="https://..." required />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Google Maps Embed URL (src parameter)</label>
+                            <input type="text" value={currentBranchDetails.googleMapEmbed} onChange={e => setCurrentBranchDetails(prev => ({ ...prev, googleMapEmbed: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" placeholder="https://www.google.com/maps/embed?..." required />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Highlights (comma separated)</label>
+                            <input type="text" value={currentBranchDetails.highlights} onChange={e => setCurrentBranchDetails(prev => ({ ...prev, highlights: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" placeholder="Robotic Surgery, 24/7 Trauma, Rehabilitation" />
+                          </div>
+
+                          <div className="flex gap-2 pt-2">
+                            {isEditingBranch && (
+                              <button 
+                                type="button" 
+                                onClick={() => {
+                                  setIsEditingBranch(false)
+                                  setCurrentBranchDetails({
+                                    slug: '',
+                                    title: '',
+                                    phone: '',
+                                    address: '',
+                                    googleRating: 4.8,
+                                    googleMapEmbed: '',
+                                    heroImage: '',
+                                    highlights: '24/7 Trauma, Robotic Surgery, Rehabilitation'
+                                  })
+                                }}
+                                className="w-1/2 h-12 border border-slate-200 text-slate-500 hover:bg-slate-50 rounded-full text-xs font-bold uppercase transition-all"
+                              >
+                                Cancel
+                              </button>
+                            )}
+                            <button type="submit" className={`h-12 bg-[#8B1A4A] text-white hover:bg-[#2D3A4A] rounded-full text-xs font-bold uppercase transition-all shadow-md ${isEditingBranch ? 'w-1/2' : 'w-full'}`}>
+                              {isEditingBranch ? 'Update Location' : 'Add Location'}
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    </motion.div>
+                  )}
+
                   {/* TAB: Media Library */}
                   {activeTab === 'media' && activeGroup === 'category' && (
                     <motion.div key="media" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
@@ -2965,7 +3426,7 @@ export function AdminDashboard() {
                       <div className="grid grid-cols-1 xl:grid-cols-12 gap-10">
                         {/* File Grid */}
                         <div className="xl:col-span-8 glass-card-admin rounded-[32px] p-8 shadow-sm">
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-h-[600px] overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin' }}>
                             {mediaFiles.map((media) => (
                               <div key={media.id} className="p-4 bg-white border border-slate-100 rounded-2xl flex flex-col justify-between min-h-[160px] shadow-sm relative group hover:border-[#8B1A4A]/25 transition-all">
                                 <div className="h-24 bg-slate-55 rounded-xl overflow-hidden flex items-center justify-center relative">
@@ -3063,7 +3524,7 @@ export function AdminDashboard() {
                             <textarea value={pageData.homepage.description} onChange={e => savePageData('homepage', { ...pageData.homepage, description: e.target.value })} className="w-full h-20 p-3 rounded-xl border bg-white text-xs" />
                           </div>
 
-                          <div className="grid grid-cols-3 gap-4">
+                           <div className="grid grid-cols-3 gap-4">
                             <div>
                               <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Emergency Hotline Number</label>
                               <input type="text" value={pageData.homepage.emergencyNumber} onChange={e => savePageData('homepage', { ...pageData.homepage, emergencyNumber: e.target.value })} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" />
@@ -3088,6 +3549,7 @@ export function AdminDashboard() {
                               <input type="text" value={pageData.homepage.heroVideo || ''} onChange={e => savePageData('homepage', { ...pageData.homepage, heroVideo: e.target.value })} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" placeholder="https://..." />
                             </div>
                           </div>
+
                         </div>
                       </div>
 
@@ -3136,6 +3598,7 @@ export function AdminDashboard() {
                             <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Milestones & History Summary</label>
                             <textarea value={pageData.about.milestones} onChange={e => savePageData('about', { ...pageData.about, milestones: e.target.value })} className="w-full h-20 p-3 rounded-xl border bg-white text-xs" />
                           </div>
+
                         </div>
                       </div>
 
@@ -3169,7 +3632,7 @@ export function AdminDashboard() {
 
                           <div>
                             <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Hiring Subtitle Tagline</label>
-                            <input type="text" value={pageData.careers_page.bannerSubtitle} onChange={e => savePageData('careers_page', { ...pageData.careers_page, bannerSubtitle: e.target.value })} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" />
+                            <textarea value={pageData.careers_page.bannerSubtitle} onChange={e => savePageData('careers_page', { ...pageData.careers_page, bannerSubtitle: e.target.value })} className="w-full h-16 p-3 rounded-xl border bg-white text-xs" />
                           </div>
 
                           <div>
@@ -3209,16 +3672,7 @@ export function AdminDashboard() {
                                 className="h-11 px-4 rounded-xl border border-slate-200 bg-white text-xs font-extrabold text-slate-700 flex items-center justify-between gap-3 min-w-[160px] shadow-sm hover:border-[#8B1A4A]/30 transition-all focus:outline-none"
                               >
                                 <span>{
-                                  selectedBranchSlug === 'ecil' ? 'ECIL' :
-                                  selectedBranchSlug === 'lb-nagar' ? 'LB Nagar' :
-                                  selectedBranchSlug === 'kompally' ? 'Kompally' :
-                                  selectedBranchSlug === 'peerzadiguda' ? 'Peerzadiguda' :
-                                  selectedBranchSlug === 'lakdikapul' ? 'Lakdikapul' :
-                                  selectedBranchSlug === 'miyapur' ? 'Miyapur' :
-                                  selectedBranchSlug === 'vijayawada' ? 'Vijayawada' :
-                                  selectedBranchSlug === 'rajahmundry' ? 'Rajahmundry' :
-                                  selectedBranchSlug === 'rtc-x-roads' ? 'RTC X Roads' :
-                                  selectedBranchSlug === 'secunderabad' ? 'Secunderabad' : 'Select Branch'
+                                  branchesList.find(b => b.slug === selectedBranchSlug)?.title || selectedBranchSlug.toUpperCase()
                                 }</span>
                                 <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${branchDropdownOpen ? 'rotate-180' : ''}`} />
                               </button>
@@ -3231,33 +3685,22 @@ export function AdminDashboard() {
                                   />
                                   
                                   <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-100 bg-white p-2 shadow-xl z-50 focus:outline-none max-h-[300px] overflow-y-auto space-y-1">
-                                    {[
-                                      { value: "ecil", label: "ECIL" },
-                                      { value: "lb-nagar", label: "LB Nagar" },
-                                      { value: "kompally", label: "Kompally" },
-                                      { value: "peerzadiguda", label: "Peerzadiguda" },
-                                      { value: "lakdikapul", label: "Lakdikapul" },
-                                      { value: "miyapur", label: "Miyapur" },
-                                      { value: "vijayawada", label: "Vijayawada" },
-                                      { value: "rajahmundry", label: "Rajahmundry" },
-                                      { value: "rtc-x-roads", label: "RTC X Roads" },
-                                      { value: "secunderabad", label: "Secunderabad" }
-                                    ].map(opt => (
+                                    {branchesList.map(opt => (
                                       <button
-                                        key={opt.value}
+                                        key={opt.slug}
                                         type="button"
                                         onClick={() => {
-                                          setSelectedBranchSlug(opt.value)
+                                          setSelectedBranchSlug(opt.slug)
                                           setBranchDropdownOpen(false)
                                         }}
                                         className={`w-full text-left flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                                          selectedBranchSlug === opt.value 
+                                          selectedBranchSlug === opt.slug 
                                             ? 'bg-[#8B1A4A] text-white shadow-sm' 
                                             : 'text-slate-600 hover:bg-[#8B1A4A]/5 hover:text-[#8B1A4A]'
                                         }`}
                                       >
-                                        <span>{opt.label}</span>
-                                        {selectedBranchSlug === opt.value && <Check className="w-3.5 h-3.5" />}
+                                        <span>{opt.title}</span>
+                                        {selectedBranchSlug === opt.slug && <Check className="w-3.5 h-3.5" />}
                                       </button>
                                     ))}
                                   </div>
@@ -3376,7 +3819,8 @@ export function AdminDashboard() {
                                 />
                               </div>
                             </div>
-                          </div>
+
+                        </div>
                         ) : (
                           <div className="text-center py-10">
                             <button 

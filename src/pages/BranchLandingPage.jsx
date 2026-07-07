@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Helmet } from 'react-helmet-async'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { Star, MapPin } from 'lucide-react'
 import { StickyNavbar } from '@/components/layout/StickyNavbar'
 import { BranchSideNav } from '@/components/layout/BranchSideNav'
@@ -8,6 +8,7 @@ import { Footer } from '@/components/layout/Footer'
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
 import { db } from '@/lib/firebase'
 import { doc, getDoc } from 'firebase/firestore'
+import { useBranches } from '@/hooks/useBranches'
 import { AppointmentWidget } from '@/components/sections/AppointmentWidget'
 import { VideoHero } from '@/components/sections/VideoHero'
 import { AlphabetDiseaseSearch } from '@/components/sections/AlphabetDiseaseSearch'
@@ -36,11 +37,16 @@ const GALLERY_SPANS = [
   'md:col-span-2 md:row-span-2 col-span-1',
 ]
 
-export function BranchLandingPage({ branch: initialBranch }) {
+export function BranchLandingPage({ branch: initialBranchProp }) {
+  const { slug } = useParams()
+  const { branches, loading: branchesLoading } = useBranches()
+  const initialBranch = initialBranchProp || branches.find(b => b.slug === slug)
+
   const navigate = useNavigate()
   const [branch, setBranch] = useState(initialBranch)
 
   useEffect(() => {
+    if (!initialBranch) return
     setBranch(initialBranch)
     const loadDynamicBranch = async () => {
       try {
@@ -79,6 +85,14 @@ export function BranchLandingPage({ branch: initialBranch }) {
     }
     loadDynamicBranch()
   }, [initialBranch])
+
+  if (branchesLoading || !branch) {
+    return (
+      <div className="min-h-screen bg-[#0a1628] flex items-center justify-center">
+        <div className="w-10 h-10 border-2 border-[#cca830] border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
 
   const galleryItems = branch.specialtiesCards?.map((item, i) => ({
     id: i + 1,

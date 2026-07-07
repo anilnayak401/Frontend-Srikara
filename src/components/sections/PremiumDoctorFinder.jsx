@@ -182,7 +182,7 @@ function DoctorCard({ doctor, isActive, transitionEnabled, onClick, getHasDragge
             className="overflow-hidden w-full flex justify-center flex-shrink-0"
           >
             <p className="text-slate-600 text-[8px] sm:text-[10px] leading-relaxed text-center px-1 font-semibold">
-              {doctor.tagline || doctor.about || 'Expert clinical mastery with dedicated care.'}
+              {doctor.tagline || doctor.about || doctor.bio || 'Expert clinical mastery with dedicated care.'}
             </p>
           </motion.div>
         </div>

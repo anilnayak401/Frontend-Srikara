@@ -1,7 +1,10 @@
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Helmet } from 'react-helmet-async'
 import { Calendar, Heart, Shield, Award, Users, MapPin, Activity, Star, Building2, Globe, Clock, Quote } from 'lucide-react'
 import { StickyNavbar } from '@/components/layout/StickyNavbar'
+import { db } from '@/lib/firebase'
+import { doc, getDoc } from 'firebase/firestore'
 
 import { Footer } from '@/components/layout/Footer'
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
@@ -48,6 +51,45 @@ const CORE_VALUES = [
 ]
 
 export function AboutPage() {
+  const [aboutData, setAboutData] = useState({
+    chairmanName: 'Dr. Akhil Dadi',
+    chairmanSubtitle: 'Chairman & Chief Joint Replacement Surgeon',
+    chairmanBio: 'Pioneered robotic joint surgeries in South India and envisioned premium hospital modules to deliver patient care with transparency.',
+    milestones: 'Over 30,000+ joint replacements and 9 centers across Telangana and Andhra Pradesh.'
+  })
+
+  useEffect(() => {
+    const loadAboutData = async () => {
+      try {
+        if (db) {
+          const docRef = doc(db, 'site_contents', 'pages')
+          const docSnap = await getDoc(docRef)
+          if (docSnap.exists()) {
+            const data = docSnap.data()
+            if (data.about) {
+              setAboutData(prev => ({ ...prev, ...data.about }))
+              return
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Firestore load failed for about:', err)
+      }
+      try {
+        const cached = localStorage.getItem('srikara_cms_data')
+        if (cached) {
+          const parsed = JSON.parse(cached)
+          if (parsed.pageData && parsed.pageData.about) {
+            setAboutData(prev => ({ ...prev, ...parsed.pageData.about }))
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to parse cached about page:', e)
+      }
+    }
+    loadAboutData()
+  }, [])
+
   return (
     <>
       <Helmet>
@@ -112,13 +154,13 @@ export function AboutPage() {
                viewport={{ once: true }}
                className="space-y-10"
              >
-                <div className="space-y-4">
-                  <span className="text-[#8B1A4A] text-[11px] font-black uppercase tracking-[0.4em]">Our Reach</span>
-                  <h2 className="text-5xl font-garamond font-bold leading-tight text-[#1A202C]">Strategically Located for <span className="brand-gradient-text italic">Absolute Access</span></h2>
-                </div>
-                <p className="text-[#4A4A4A] text-lg leading-relaxed font-light">
-                  Operating across 9 strategic units including RTC X Roads, Miyapur, LB Nagar, and Vijayawada, our locations are situated at key entry points to major cities. This ensures that world-class orthopedic and multispeciality care is always within reach.
-                </p>
+                 <div className="space-y-4">
+                   <span className="text-[#8B1A4A] text-[11px] font-black uppercase tracking-[0.4em]">Our Reach</span>
+                   <h2 className="text-5xl font-garamond font-bold leading-tight text-[#1A202C]">Strategically Located for Absolute Access</h2>
+                 </div>
+                 <p className="text-[#4A4A4A] text-lg leading-relaxed font-light">
+                   Operating across 9 strategic units including RTC X Roads, Miyapur, LB Nagar, and Vijayawada, our locations are situated at key entry points to major cities. This ensures that world-class orthopedic and multispeciality care is always within reach.
+                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                    {CORE_VALUES.map((val) => (
                      <div key={val.title} className="space-y-3">
@@ -143,16 +185,16 @@ export function AboutPage() {
                viewport={{ once: true }}
                className="text-center"
              >
-                <Quote className="text-[#8B1A4A]/40 w-16 h-16 mx-auto mb-10" />
-                <h2 className="font-garamond text-5xl md:text-6xl font-bold leading-[1.2] mb-12">
-                   "SRIKARA Multispeciality Hospitals is synonymous with quality, expertise, innovation, and international standards, offering a comprehensive spectrum of medical excellence under one roof."
-                </h2>
-                <div className="flex flex-col items-center">
-                   <span className="h-px w-20 bg-[#8B1A4A] mb-6" />
-                   <p className="text-2xl font-garamond font-bold text-[#1A202C]">Dr. Akhil Dadi</p>
-                   <p className="text-[10px] uppercase font-black tracking-[0.4em] text-[#8B1A4A] mt-2">Founder & Managing Director</p>
-                   <p className="text-[10px] text-[#1A202C]/40 uppercase tracking-widest mt-4">World Orthopaedic Concern Member</p>
-                </div>
+                 <Quote className="text-[#8B1A4A]/40 w-16 h-16 mx-auto mb-10" />
+                 <h2 className="font-garamond text-5xl md:text-6xl font-bold leading-[1.2] mb-12">
+                    "SRIKARA Multispeciality Hospitals is synonymous with quality, expertise, innovation, and international standards, offering a comprehensive spectrum of medical excellence under one roof."
+                 </h2>
+                 <div className="flex flex-col items-center">
+                    <span className="h-px w-20 bg-[#8B1A4A] mb-6" />
+                    <p className="text-2xl font-garamond font-bold text-[#1A202C]">Dr. Akhil Dadi</p>
+                    <p className="text-[10px] uppercase font-black tracking-[0.4em] text-[#8B1A4A] mt-2">Founder & Managing Director</p>
+                    <p className="text-[10px] text-[#1A202C]/40 uppercase tracking-widest mt-4">World Orthopaedic Concern Member</p>
+                 </div>
              </motion.div>
           </div>
         </section>

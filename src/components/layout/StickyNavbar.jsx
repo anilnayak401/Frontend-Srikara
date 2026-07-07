@@ -2,12 +2,13 @@ import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { ChevronDown, MapPin, Phone, Menu, X, Calendar, Search } from 'lucide-react'
 import { motion, AnimatePresence, useScroll } from 'framer-motion'
-import { branches } from '@/data/branches'
+import { useBranches } from '@/hooks/useBranches'
 
 const ACCENT = '#8B1A4A'
 const LOGO_SRC = `${import.meta.env.BASE_URL}Srikara Hospitals, LB Nagar.png`
 
 export function StickyNavbar({ currentBranch }) {
+  const { branches } = useBranches()
   const [scrolled, setScrolled] = useState(false)
   const [hideBar, setHideBar] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -53,6 +54,25 @@ export function StickyNavbar({ currentBranch }) {
   const phone = currentBranch?.phone || '040-6832-4800'
   // Always use the local Srikara Hospitals logo
   const logoSrc = LOGO_SRC
+
+  // Current branch caption shown under the brand name (only on branch pages)
+  const branchSlug = location.pathname.startsWith('/branches/') ? location.pathname.split('/')[2] : null
+  const activeBranch = branchSlug
+    ? ((currentBranch?.title && currentBranch) || branches.find(b => b.slug === branchSlug))
+    : null
+  const branchCity = (() => {
+    const a = activeBranch?.address || ''
+    let city = ''
+    if (a.includes('Hyderabad')) city = 'Hyderabad'
+    else {
+      const parts = a.split(',').map(s => s.trim()).filter(Boolean)
+      city = parts.length >= 2 ? parts[parts.length - 2].replace(/\s*\d+$/, '') : ''
+    }
+    // Avoid "Vijayawada Branch, Vijayawada"
+    if (city && activeBranch?.title?.toLowerCase().includes(city.toLowerCase())) city = ''
+    return city
+  })()
+  const branchLabel = activeBranch ? `${activeBranch.title} Branch${branchCity ? `, ${branchCity}` : ''}` : null
 
   return (
     <>
@@ -143,6 +163,7 @@ export function StickyNavbar({ currentBranch }) {
           <div ref={hospitalsRef} className="h-full flex items-center">
             <DropButton
               label="Find Hospitals"
+              caption={branchLabel}
               isOpen={hospitalsOpen}
               active={isActive('/branches')}
               isWhite={isWhite}
@@ -343,9 +364,14 @@ export function StickyNavbar({ currentBranch }) {
           className="lg:hidden flex items-center justify-between px-5"
           style={{ height: '64px' }}
         >
-          <Link to="/">
+          <Link to="/" className="flex items-center gap-2.5 min-w-0">
             <img src={logoSrc} alt="Srikara Hospitals"
-              style={{ height: '40px', width: 'auto', objectFit: 'contain', borderRadius: '4px' }} />
+              style={{ height: '40px', width: 'auto', objectFit: 'contain', borderRadius: '4px', flexShrink: 0 }} />
+            {branchLabel && (
+              <p className="text-[10px] font-bold truncate max-w-[180px]" style={{ color: isWhite ? '#64748b' : 'rgba(255,255,255,0.8)' }}>
+                {branchLabel}
+              </p>
+            )}
           </Link>
           <button
             className="p-2.5 rounded-xl transition-all"
@@ -436,17 +462,25 @@ function NavLink({ to, active, isWhite, children }) {
 }
 
 /* ── Dropdown trigger button ───────────────────── */
-function DropButton({ label, isOpen, active, isWhite, onClick }) {
+function DropButton({ label, caption, isOpen, active, isWhite, onClick }) {
   const textCol = isWhite ? '#222' : '#fff'
   return (
     <button onClick={onClick}
-      className="group relative h-full flex items-center gap-1 px-4 text-[13.5px] font-semibold uppercase tracking-wide outline-none transition-colors duration-200"
+      className="group relative h-full flex flex-col items-center justify-center px-4 outline-none transition-colors duration-200"
       style={{ color: isOpen || active ? ACCENT : textCol }}
     >
-      {label}
-      <ChevronDown size={13}
-        className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
-        style={{ color: isWhite ? '#888' : 'rgba(255,255,255,0.6)' }} />
+      <span className="flex items-center gap-1 text-[13.5px] font-semibold uppercase tracking-wide">
+        {label}
+        <ChevronDown size={13}
+          className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+          style={{ color: isWhite ? '#888' : 'rgba(255,255,255,0.6)' }} />
+      </span>
+      {caption && (
+        <span className="text-[10px] font-bold mt-0.5 whitespace-nowrap"
+          style={{ color: isWhite ? ACCENT : 'rgba(255,255,255,0.8)' }}>
+          {caption}
+        </span>
+      )}
       <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[2.5px] rounded-full transition-all duration-300"
         style={{ backgroundColor: ACCENT, width: (isOpen || active) ? '65%' : '0%' }} />
     </button>

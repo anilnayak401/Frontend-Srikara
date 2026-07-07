@@ -10,7 +10,7 @@ import {
 
 import { Footer } from '@/components/layout/Footer'
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
-import { branches } from '@/data/branches'
+import { useBranches } from '@/hooks/useBranches'
 import { assetUrl } from '@/lib/assetUrl'
 import { ALL_DOCTORS } from '@/data/doctors'
 import { useDoctors } from '@/hooks/useDoctors'
@@ -51,6 +51,7 @@ const ICON_MAP = {
 
 export function BookAppointmentPage() {
   const navigate = useNavigate()
+  const { branches } = useBranches()
   const { doctors } = useDoctors()
   const [step, setStep] = useState(1)
   const [selectedBranch, setSelectedBranch] = useState(null)
@@ -63,6 +64,8 @@ export function BookAppointmentPage() {
   const [bookingDate, setBookingDate] = useState('')
   const [bookingTime, setBookingTime] = useState('10:00 AM')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
+  const [successDetails, setSuccessDetails] = useState(null)
 
   const handleFormSubmit = async (e) => {
     e.preventDefault()
@@ -77,6 +80,8 @@ export function BookAppointmentPage() {
       doctor: selectedDoc?.name || 'Any Consultant',
       specialty: selectedSpec?.name || 'General Consultation',
       slot: `${bookingDate} at ${bookingTime}`,
+      status: 'Pending',
+      crmSync: 'Pending',
       timestamp: Date.now(),
       created_at: new Date().toISOString()
     }
@@ -88,7 +93,14 @@ export function BookAppointmentPage() {
         console.warn('Firebase DB is not initialized. Simulating success.', appointmentDetails)
       }
       
-      alert(`Appointment Confirmed! Our team will contact you shortly.`)
+      setSuccessDetails({
+        name: bookingName.trim(),
+        doctor: selectedDoc?.name || 'Any Consultant',
+        specialty: selectedSpec?.name || 'General Consultation',
+        slot: `${bookingDate} at ${bookingTime}`,
+        branch: selectedBranch?.title || 'Unknown Branch'
+      })
+      setIsSuccess(true)
       setIsBookingOpen(false)
       
       // Reset form
@@ -438,7 +450,70 @@ export function BookAppointmentPage() {
                </motion.div>
             </div>
           )}
-        </AnimatePresence>
+        {/* Premium Theme Success Modal */}
+        {isSuccess && successDetails && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 py-6">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsSuccess(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-md"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-md bg-white border border-[#E2E8F0] rounded-[32px] overflow-hidden shadow-2xl p-8 text-center space-y-6"
+            >
+              {/* Gold & Burgundy Header Graphic */}
+              <div className="w-20 h-20 bg-[#8B1A4A]/5 rounded-full flex items-center justify-center mx-auto text-[#8B1A4A] border-2 border-[#8B1A4A]/25 shadow-inner">
+                <ShieldCheck size={40} className="stroke-[1.5]" />
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="font-headline text-2xl font-black text-[#2D3A4A] leading-tight">
+                  Appointment Confirmed!
+                </h3>
+                <p className="text-xs text-gray-500 font-medium px-2 leading-relaxed">
+                  Your reservation request has been processed successfully. Our patient coordination team will call you within 15 minutes.
+                </p>
+              </div>
+
+              {/* Confirmation Details Card */}
+              <div className="bg-[#F8FAFC] rounded-2xl p-5 border border-slate-100/80 text-left space-y-3.5">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-400 font-bold uppercase tracking-wider text-[9px]">Patient</span>
+                  <span className="font-semibold text-slate-800">{successDetails.name}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-400 font-bold uppercase tracking-wider text-[9px]">Consultant</span>
+                  <span className="font-semibold text-[#8B1A4A]">{successDetails.doctor}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-400 font-bold uppercase tracking-wider text-[9px]">Department</span>
+                  <span className="font-semibold text-slate-800">{successDetails.specialty}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-400 font-bold uppercase tracking-wider text-[9px]">Preferred Slot</span>
+                  <span className="font-semibold text-slate-800">{successDetails.slot}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-400 font-bold uppercase tracking-wider text-[9px]">Branch</span>
+                  <span className="font-semibold text-slate-800">📍 {successDetails.branch}</span>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => setIsSuccess(false)}
+                className="w-full h-12 bg-[#8B1A4A] hover:bg-[#7a1640] text-white rounded-2xl font-bold text-xs uppercase tracking-widest transition-all duration-300 shadow-lg shadow-[#8B1A4A]/25 focus:scale-95"
+              >
+                Okay, Done
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       </div>{/* end light bg wrapper */}
 

@@ -5,9 +5,10 @@ import { Helmet } from 'react-helmet-async'
 import { StickyNavbar } from '@/components/layout/StickyNavbar'
 import { Footer } from '@/components/layout/Footer'
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
-import { branches } from '@/data/branches'
+import { useBranches } from '@/hooks/useBranches'
 
 export function BranchesIndex() {
+  const { branches } = useBranches()
   const getCardThemeVariables = (idx) => {
     const themeIndex = idx % 3
     if (themeIndex === 0) {
