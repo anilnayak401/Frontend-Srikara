@@ -30,13 +30,17 @@ const loadDynamicDoctors = async (force = false) => {
   }
 
   // Format dynamic doctors consistently with static schema
-  // Resolve image paths — full URLs (http, data:, blob:) are kept as-is,
-  // relative paths (e.g. 'doctors/akhil-dadi.png') are run through assetUrl
-  // so they resolve correctly on every deployment target.
+  // Resolve image paths — full URLs (http, data:, blob:) are kept as-is.
+  // Local paths may arrive from Firestore with a stale base-path prefix
+  // (e.g. '/sri/doctors/…' saved during a GitHub-Pages session).
+  // We strip ALL known prefixes and re-resolve through assetUrl so the
+  // path is correct for whatever deployment target is currently active.
   const resolveImage = (raw) => {
     if (!raw) return assetUrl('doctors/doctor-placeholder.png')
     if (/^(https?:\/\/|data:|blob:)/i.test(raw)) return raw
-    return assetUrl(raw.replace(/^\//, ''))
+    // Strip any leading slash and any known base-path prefix (e.g. /sri/)
+    const cleaned = raw.replace(/^\/?(sri\/)?/, '')
+    return cleaned ? assetUrl(cleaned) : assetUrl('doctors/doctor-placeholder.png')
   }
 
   const formatDoctor = (d) => {
@@ -46,8 +50,14 @@ const loadDynamicDoctors = async (force = false) => {
       : 'unknown-doctor'
     const resolvedBio = d.about || d.bio || ''
 
-    const imgSrc = resolveImage(d.photoUrl || d.image)
-    const fbSrc = resolveImage(d.photoUrl || d.image)
+    // Try to find the matching static doctor to use its pre-resolved image as fallback
+    const staticMatch = ALL_DOCTORS.find(
+      sd => String(sd.id) === String(d.id) || normalizeName(sd.name) === normalizeName(d.name)
+    )
+
+    const rawImg = d.photoUrl || d.image
+    const imgSrc = rawImg ? resolveImage(rawImg) : (staticMatch?.image || assetUrl('doctors/doctor-placeholder.png'))
+    const fbSrc = staticMatch?.image || assetUrl('doctors/doctor-placeholder.png')
 
     return {
       ...d,
