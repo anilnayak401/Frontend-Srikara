@@ -1,3 +1,5 @@
+import { assetUrl } from '@/lib/assetUrl'
+
 export function ChairmanSpotlight({ doctor }) {
   if (!doctor) return null
 
@@ -9,7 +11,7 @@ export function ChairmanSpotlight({ doctor }) {
           <div className="relative group">
             <div className="absolute -inset-4 bg-gradient-to-br from-primary to-primary-container opacity-10 rounded-2xl rotate-3 transition-transform group-hover:rotate-6" />
             <img
-              src={doctor.image || '/doctors/akhil-dadi.png'}
+              src={doctor.image || assetUrl('doctors/akhil-dadi.png')}
               alt={`Dr. ${doctor.name}`}
               className="relative z-10 w-full aspect-[3/4] object-cover object-top rounded-2xl transition-all duration-500 shadow-xl"
             />

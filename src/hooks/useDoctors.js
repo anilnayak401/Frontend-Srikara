@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { ALL_DOCTORS } from '@/data/doctors'
 import { db } from '@/lib/firebase'
 import { collection, getDocs } from 'firebase/firestore'
+import { assetUrl } from '@/lib/assetUrl'
 
 let cachedDoctorsList = [...ALL_DOCTORS]
 let isFetched = false
@@ -29,6 +30,15 @@ const loadDynamicDoctors = async (force = false) => {
   }
 
   // Format dynamic doctors consistently with static schema
+  // Resolve image paths — full URLs (http, data:, blob:) are kept as-is,
+  // relative paths (e.g. 'doctors/akhil-dadi.png') are run through assetUrl
+  // so they resolve correctly on every deployment target.
+  const resolveImage = (raw) => {
+    if (!raw) return assetUrl('doctors/doctor-placeholder.png')
+    if (/^(https?:\/\/|data:|blob:)/i.test(raw)) return raw
+    return assetUrl(raw.replace(/^\//, ''))
+  }
+
   const formatDoctor = (d) => {
     const rawSpecialty = d.specialty || 'Orthopedics'
     const generatedSlug = d.name
@@ -36,13 +46,16 @@ const loadDynamicDoctors = async (force = false) => {
       : 'unknown-doctor'
     const resolvedBio = d.about || d.bio || ''
 
+    const imgSrc = resolveImage(d.photoUrl || d.image)
+    const fbSrc = resolveImage(d.photoUrl || d.image)
+
     return {
       ...d,
       id: Number(d.id) || d.id,
       slug: d.slug || generatedSlug,
       specialtyId: mapSpecialtyToId(rawSpecialty),
-      image: d.photoUrl || d.image || 'doctors/doctor-placeholder.png',
-      fallback: d.photoUrl || d.image || 'doctors/doctor-placeholder.png',
+      image: imgSrc,
+      fallback: fbSrc,
       label: d.tagline || d.label || rawSpecialty,
       expertise: Array.isArray(d.expertise) ? d.expertise : [rawSpecialty],
       sub: d.sub || '',
