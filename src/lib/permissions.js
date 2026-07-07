@@ -10,7 +10,7 @@ export const MODULES = [
   'seo', 'admin_users',
 ]
 
-export const ROLES = ['Super Admin', 'Marketing Admin', 'HR', 'Doctor Admin', 'Reception']
+export const ROLES = ['Super Admin', 'Admin', 'Marketing Admin', 'HR', 'Doctor Admin', 'Reception']
 
 export const MODULE_LABELS = {
   analytics: 'Traffic Analytics',
@@ -38,6 +38,7 @@ export const MODULE_LABELS = {
 // extraPermissions, it is hardcoded to role === 'Super Admin' only.
 export const ROLE_DEFAULT_PERMISSIONS = {
   'Super Admin': MODULES.filter(m => m !== 'admin_users'),
+  'Admin': MODULES.filter(m => m !== 'admin_users'),
   'Marketing Admin': ['analytics', 'heatmaps', 'departments', 'blogs', 'news', 'gallery', 'testimonials', 'faqs', 'downloads', 'media', 'homepage', 'aboutpage', 'branches', 'seo'],
   'HR': ['jobs', 'careers_customizer'],
   'Doctor Admin': ['doctors'],

@@ -24,7 +24,8 @@ service cloud.firestore {
     }
 
     function roleDefault(role, mod) {
-      return (role == 'Marketing Admin' && mod in ['analytics','heatmaps','departments','blogs','news','gallery','testimonials','faqs','downloads','media','homepage','aboutpage','branches','seo']) ||
+      return (role == 'Admin' && mod in ['analytics','heatmaps','appointments','doctors','departments','blogs','news','gallery','jobs','testimonials','faqs','downloads','media','homepage','aboutpage','careers_customizer','branches','seo']) ||
+             (role == 'Marketing Admin' && mod in ['analytics','heatmaps','departments','blogs','news','gallery','testimonials','faqs','downloads','media','homepage','aboutpage','branches','seo']) ||
              (role == 'HR' && mod in ['jobs','careers_customizer']) ||
              (role == 'Doctor Admin' && mod in ['doctors']) ||
              (role == 'Reception' && mod in ['analytics','appointments']);

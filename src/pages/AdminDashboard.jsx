@@ -336,7 +336,7 @@ export function AdminDashboard() {
   const [userPermissions, setUserPermissions] = useState([])
   const [profileChecked, setProfileChecked] = useState(false)
   const [adminUsers, setAdminUsers] = useState([])
-  const [currentAdminUser, setCurrentAdminUser] = useState({ email: '', displayName: '', role: 'Reception', extraPermissions: [], revokedPermissions: [] })
+  const [currentAdminUser, setCurrentAdminUser] = useState({ email: '', displayName: '', password: '', role: 'Reception', extraPermissions: [], revokedPermissions: [] })
   const [creatingAdminUser, setCreatingAdminUser] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -850,9 +850,7 @@ export function AdminDashboard() {
         const secondaryApp = initializeApp(firebaseConfig, `secondary-${Date.now()}`)
         const secondaryAuth = getAuth(secondaryApp)
         try {
-          const tempPassword = (crypto.randomUUID ? crypto.randomUUID() : `Tmp-${Date.now()}-${Math.random()}`)
-          const cred = await createUserWithEmailAndPassword(secondaryAuth, currentAdminUser.email, tempPassword)
-          await sendPasswordResetEmail(secondaryAuth, currentAdminUser.email)
+          const cred = await createUserWithEmailAndPassword(secondaryAuth, currentAdminUser.email, currentAdminUser.password)
           const profile = {
             email: currentAdminUser.email,
             displayName: currentAdminUser.displayName || currentAdminUser.email,
@@ -864,13 +862,13 @@ export function AdminDashboard() {
           }
           await setDoc(doc(db, 'users', cred.user.uid), profile)
           setAdminUsers(prev => [...prev, { id: cred.user.uid, ...profile }])
-          notifyUser('success', `Admin account created. A password-setup email was sent to ${currentAdminUser.email}.`)
+          notifyUser('success', `Admin account created successfully. They can now log in using the specified password.`)
         } finally {
           await signOut(secondaryAuth).catch(() => {})
           await deleteApp(secondaryApp).catch(() => {})
         }
       }
-      setCurrentAdminUser({ email: '', displayName: '', role: 'Reception', extraPermissions: [], revokedPermissions: [] })
+      setCurrentAdminUser({ email: '', displayName: '', password: '', role: 'Reception', extraPermissions: [], revokedPermissions: [] })
     } catch (err) {
       notifyUser('error', err.code === 'auth/email-already-in-use' ? 'That email is already registered.' : `Failed to create admin: ${err.message}`)
     } finally {
@@ -2755,7 +2753,7 @@ export function AdminDashboard() {
                       {/* Left list */}
                       <div className="xl:col-span-7 glass-card-admin rounded-[32px] p-8 shadow-sm space-y-6">
                         <h3 className="font-garamond text-3xl font-bold text-[#2D3A4A]">Patient Testimonials ({testimonials.length})</h3>
-                        <div className="space-y-4">
+                        <div className="max-h-[600px] overflow-y-auto pr-2 space-y-4 custom-admin-scrollbar">
                           {testimonials.map(item => (
                             <div key={item.id} className="p-5 rounded-2xl bg-white border border-slate-100 flex justify-between items-start shadow-sm">
                               <div>
@@ -3571,6 +3569,12 @@ export function AdminDashboard() {
                               className="w-full h-11 px-3 rounded-xl border bg-white text-xs" />
                           </div>
                           <div>
+                            <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Password</label>
+                            <input type="password" required value={currentAdminUser.password || ''}
+                              onChange={e => setCurrentAdminUser(prev => ({ ...prev, password: e.target.value }))}
+                              className="w-full h-11 px-3 rounded-xl border bg-white text-xs" placeholder="Create temporary or permanent password" />
+                          </div>
+                          <div>
                             <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Role</label>
                             <ThemedDropdown
                               value={currentAdminUser.role}
@@ -3616,7 +3620,7 @@ export function AdminDashboard() {
                             className="w-full h-12 bg-[#8B1A4A] text-white rounded-full text-xs font-bold uppercase disabled:opacity-50">
                             {creatingAdminUser ? 'Creating…' : 'Create Admin Account'}
                           </button>
-                          {auth && <p className="text-[10px] text-slate-400 text-center">A password-setup email will be sent to the new admin — no password is ever shown here.</p>}
+                          {auth && <p className="text-[10px] text-slate-400 text-center">Set a temporary or permanent password. The new administrator can log in immediately.</p>}
                         </form>
                       </div>
                     </motion.div>
