@@ -871,7 +871,7 @@ export function DoctorsPage() {
                       }}
                       className="text-slate-600 text-xs lg:text-sm leading-relaxed font-medium"
                     >
-                      Dr. Akhil Dadi pioneered robotic joint replacement in South India by installing the revolutionary NAVIO robotic suite. With over 30,000 completed surgeries and 15+ years of leadership, his commitment to surgical excellence has set standard recovery benchmarks nationally.
+                      Dr. Akhil Dadi pioneered robotic joint replacement in South India by installing the revolutionary NAVIO robotic suite. With over 30,000 completed surgeries and 29+ years of leadership, his commitment to surgical excellence has set standard recovery benchmarks nationally.
                     </motion.p>
 
                     {/* Flat, Clean CTAs */}

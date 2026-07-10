@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Star, Quote, Video, FileText, Play } from 'lucide-react'
 import { useTestimonials } from '@/hooks/useTestimonials'
@@ -18,11 +18,44 @@ export function TestimonialsSection({ category = 'General / Home' }) {
     setActiveIndex(0)
   }, [category])
 
+  const current = filtered[activeIndex]
+
+  // ── Play the video only while the visitor can see it ──
+  // The iframe loads paused (no autoplay); an IntersectionObserver sends
+  // play/pause commands to the YouTube player as it enters/leaves the viewport.
+  const videoWrapRef = useRef(null)
+  const iframeRef = useRef(null)
+  const videoVisibleRef = useRef(false)
+  const [videoVisible, setVideoVisible] = useState(false)
+
+  const sendPlayerCommand = (func) => {
+    iframeRef.current?.contentWindow?.postMessage(
+      JSON.stringify({ event: 'command', func, args: [] }),
+      '*'
+    )
+  }
+
+  useEffect(() => {
+    const el = videoWrapRef.current
+    if (!el || !current?.videoUrl) return
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        videoVisibleRef.current = entry.isIntersecting
+        setVideoVisible(entry.isIntersecting)
+      },
+      { threshold: 0.45 }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [current?.videoUrl])
+
+  useEffect(() => {
+    sendPlayerCommand(videoVisible ? 'playVideo' : 'pauseVideo')
+  }, [videoVisible])
+
   if (loading || filtered.length === 0) {
     return null
   }
-
-  const current = filtered[activeIndex]
 
   const getYoutubeId = (url) => {
     if (!url) return null
@@ -45,27 +78,31 @@ export function TestimonialsSection({ category = 'General / Home' }) {
     return id ? `https://img.youtube.com/vi/${id}/mqdefault.jpg` : ''
   }
 
-  // Helper to extract YouTube video ID (supporting standard, watch, shorts, and embed formats)
+  // Helper to extract YouTube video ID (supporting standard, watch, shorts, and embed formats).
+  // Loads with the JS API enabled and NO autoplay — playback is driven by scroll visibility.
+  // mute=1 lets the scroll-triggered play succeed under browser autoplay policies;
+  // visitors can unmute via the player controls.
+  const EMBED_PARAMS = 'enablejsapi=1&mute=1&playsinline=1&rel=0'
   const getEmbedUrl = (url) => {
     if (!url) return ''
     let cleanUrl = url.trim()
-    
+
     // Check if it's already an embed URL
     if (cleanUrl.includes('youtube.com/embed')) {
-      return cleanUrl.includes('?') ? `${cleanUrl}&autoplay=1` : `${cleanUrl}?autoplay=1`
+      return cleanUrl.includes('?') ? `${cleanUrl}&${EMBED_PARAMS}` : `${cleanUrl}?${EMBED_PARAMS}`
     }
-    
+
     // Check if it is a YouTube Short
     if (cleanUrl.includes('/shorts/')) {
       const parts = cleanUrl.split('/shorts/')
       const videoId = parts[parts.length - 1].split(/[?#&]/)[0]
-      return `https://www.youtube.com/embed/${videoId}?autoplay=1`
+      return `https://www.youtube.com/embed/${videoId}?${EMBED_PARAMS}`
     }
 
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/
     const match = cleanUrl.match(regExp)
     const videoId = (match && match[2].length === 11) ? match[2] : null
-    return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1` : cleanUrl
+    return videoId ? `https://www.youtube.com/embed/${videoId}?${EMBED_PARAMS}` : cleanUrl
   }
 
   return (
@@ -139,8 +176,9 @@ export function TestimonialsSection({ category = 'General / Home' }) {
 
           {/* Right Column (Inline Iframe Player if Video exists, else blank/decorative quote column) */}
           {current.videoUrl ? (
-            <div className="w-full md:w-[460px] shrink-0 border-t md:border-t-0 md:border-l border-slate-100 bg-slate-950 flex items-center justify-center relative aspect-video md:aspect-auto">
+            <div ref={videoWrapRef} className="w-full md:w-[460px] shrink-0 border-t md:border-t-0 md:border-l border-slate-100 bg-slate-950 flex items-center justify-center relative aspect-video md:aspect-auto">
               <iframe
+                ref={iframeRef}
                 src={getEmbedUrl(current.videoUrl)}
                 width="100%"
                 height="100%"
@@ -149,6 +187,16 @@ export function TestimonialsSection({ category = 'General / Home' }) {
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
                 className="w-full h-full"
+                onLoad={() => {
+                  // Handshake so the YouTube player accepts our API commands, then
+                  // re-send the current visibility state once the iframe has loaded.
+                  iframeRef.current?.contentWindow?.postMessage(
+                    JSON.stringify({ event: 'listening', id: 'srikara-testimonial' }), '*'
+                  )
+                  setTimeout(() => {
+                    sendPlayerCommand(videoVisibleRef.current ? 'playVideo' : 'pauseVideo')
+                  }, 600)
+                }}
               />
             </div>
           ) : (

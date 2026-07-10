@@ -54,7 +54,6 @@ export const ACCENT_MAP = {
   psych:      { accent: '#9333ea', accentLight: '#faf5ff' },
   radio:      { accent: '#475569', accentLight: '#f8fafc' },
 }
-
 const slug = (name) => name.toLowerCase()
   .replace(/^dr\.\s*/i, '')
   .replace(/[^a-z0-9]+/g, '-')
@@ -62,13 +61,72 @@ const slug = (name) => name.toLowerCase()
 
 const dummy = (seed) => assetUrl('doctors/doctor-placeholder.png')
 
+const AKHIL_DADI_DETAILS = {
+  educationQualifications: [
+    'Fellowship in Joint Replacements (Germany)',
+    'Fellow in Spine Surgery (NIMS)',
+    'MS Orthopaedics, Nizam’s Institute of Medical Sciences (NIMS), Hyderabad, Telangana',
+    'MBBS'
+  ],
+  workExperience: [
+    {
+      role: 'Founder, CMD and Chief Joint Replacement Surgeon',
+      hospital: 'Srikara Hospitals',
+      period: 'August 2013 - Present',
+      desc: 'With the blessings of the Lord, now started off as a CMD and Chief Joint replacement Surgeon, of a Super speciality hospital, Srikara Hospitals, in August 2013. Already with the vast experience of having done more than 27000 joint replacement surgeries, we started doing more than 100 knees in the 1st month itself and over this short period, we successfully did more than 21000 knees in 11 years. Srikara is the leading centre in India for 30yrs Oxinium knee is rated as one of the top Centre’s in Asia. We the team of 35 orthopaedic surgeons with the consultants, registrars, and fellows been Blessed to serve society in the field of orthopaedics with the top care in Joint replacements, Arthroscopy, Spine, Trauma, Ilizarov and paediatric Orthopedics.'
+    },
+    {
+      role: 'Chief Joint Replacement Surgeon',
+      hospital: 'Sunshine Hospital, Secunderabad',
+      period: '2012 - 2013'
+    },
+    {
+      role: 'Head of Orthopedics',
+      hospital: 'Yashoda Hospital, Secunderabad',
+      period: '2004 - 2012'
+    },
+    {
+      role: 'Consultant Orthopedic Surgeon',
+      hospital: 'APSRTC Hospital',
+      period: '2001 - 2005'
+    }
+  ],
+  organisationsAssociated: [
+    'World Orthopaedic Concern',
+    'Indian Orthopaedic Association',
+    'Indian Arthroplasty Association',
+    'Indian Society of Hip and Knee Surgeon',
+    'Orthopaedic surgeons society of Andhra Pradesh'
+  ],
+  teachingExperience: {
+    dnb: 'As head of orthopedics at YASHODA, Secunderabad worked as a guide and tutor for DNB trainees over a period for 6years. During this time have trained more than 4 successful DNB graduates.',
+    fellowship: 'Have trained several young orthopedic surgeons as a part of 6 months Fellowship program in joint replacement surgery. This fellowship program has been mainly sponsored by several corporations like J&J, Smith & Nephew, Stryker and Zimmer. More than 10 surgeons from all over India were trained and completed their fellowship programs.',
+    observership: 'Also offer short term training program in joint replacement for which trainees come from all over India'
+  },
+  achievementsList: [
+    'First Centre in AP & TS with ROBOTICS for Joint Replacements',
+    'More than 27000 Joint Replacements',
+    'One of the top KNEE REPLACEMENT Centre in India for OXINIUM with ROBOTICS',
+    '11 Years of Experience & 21000+ Knee Replacements in Srikara',
+    '14 Years of Experience & 10000+ Oxinium',
+    '400+ TKR’s & 200+ OXINIUM with ROBOTICS in the month of March 2022',
+    '8 Branches in 11 years in TS & AP',
+    '700 bedded capacity',
+    '2000+ Staff',
+    '3 Robotic Knee Replacement Centers',
+    '6 Cathlabs Centers (RTC ‘X’ Roads, Miyapur, Vijayawada)',
+    '3 Laser Urology Centers',
+    'Holds a personal World Record of doing more than 30 knees in 13hrs'
+  ]
+}
+
 export const ALL_DOCTORS = [
   {
-    id: 303, branch: 'RTC X Roads', specialty: 'Orthopedics', specialtyId: 'ortho',
+    id: 303, branch: 'Kompally', specialty: 'Orthopedics', specialtyId: 'ortho',
     name: 'Dr. Akhil Dadi', slug: slug('Dr. Akhil Dadi'),
     label: 'Consultant Robotics Joint Replacement & Arthroscopy Surgeon',
     sub: 'MS (Ortho), FIJR',
-    rating: '5.0', exp: '15+ Years',
+    rating: '5.0', exp: '29+ Years',
     image: assetUrl('doctors/akhil-dadi.png'),
     fallback: dummy('akhil-dadi-kompally'),
     tagline: 'Chief Joint Replacement Surgeon.',
@@ -78,6 +136,7 @@ export const ALL_DOCTORS = [
     languages: ['Telugu', 'English', 'Hindi'],
     availability: 'Mon - Sat: 10:00 AM - 5:00 PM',
     phone: '04068324803', whatsapp: '914068324803',
+    ...AKHIL_DADI_DETAILS
   },
   {
     id: 1001, branch: 'RTC X Roads', specialty: 'Orthopedics', specialtyId: 'ortho',
@@ -724,7 +783,7 @@ export const ALL_DOCTORS = [
     name: 'Dr. Akhil Dadi', slug: slug('Dr. Akhil Dadi'),
     label: 'Chief Joint replacement Surgeon',
     sub: 'MBBS, MS (Orthopedics), Fellowship in Spine & Joint Replacement Surgery (Germany)',
-    rating: '5.0', exp: '15+ Years',
+    rating: '5.0', exp: '29+ Years',
     image: assetUrl('doctors/akhil-dadi.png'),
     fallback: dummy('akhil-dadi'),
     tagline: 'Chief Joint Replacement Surgeon.',
@@ -734,6 +793,7 @@ export const ALL_DOCTORS = [
     languages: ['Telugu', 'English', 'Hindi'],
     availability: 'Mon - Sat: 10:00 AM - 5:00 PM',
     phone: '04068324803', whatsapp: '914068324803',
+    ...AKHIL_DADI_DETAILS
   },
   {
     id: 204, branch: 'L.B. Nagar', specialty: 'Cardiology', specialtyId: 'cardio',
@@ -1764,7 +1824,7 @@ export const ALL_DOCTORS = [
     name: 'Dr. Akhil Dadi', slug: slug('Dr. Akhil Dadi'),
     label: 'Consultant Robotics Joint Replacement & Arthroscopy Surgeon',
     sub: 'MS (Ortho), FIJR',
-    rating: '5.0', exp: '15+ Years',
+    rating: '5.0', exp: '29+ Years',
     image: assetUrl('doctors/akhil-dadi.png'),
     fallback: dummy('akhil-dadi-kompally'),
     tagline: 'Chief Joint Replacement Surgeon.',
@@ -1774,6 +1834,7 @@ export const ALL_DOCTORS = [
     languages: ['Telugu', 'English', 'Hindi'],
     availability: 'Mon - Sat: 10:00 AM - 5:00 PM',
     phone: '04068324803', whatsapp: '914068324803',
+    ...AKHIL_DADI_DETAILS
   },
   {
     id: 704, branch: 'Rajahmundry', specialty: 'Orthopedics', specialtyId: 'ortho',
@@ -2356,7 +2417,7 @@ export const ALL_DOCTORS = [
     name: 'Dr. Akhil Dadi', slug: slug('Dr. Akhil Dadi'),
     label: 'Consultant Robotics Joint Replacement & Arthroscopy Surgeon',
     sub: 'Qualification of the Consultant',
-    rating: '5.0', exp: '15+ Years',
+    rating: '5.0', exp: '29+ Years',
     image: assetUrl('doctors/akhil-dadi.png'),
     fallback: dummy('akhil-dadi-kompally'),
     tagline: 'Chief Joint Replacement Surgeon.',
@@ -2366,6 +2427,7 @@ export const ALL_DOCTORS = [
     languages: ['Telugu', 'English', 'Hindi'],
     availability: 'Mon - Sat: 10:00 AM - 5:00 PM',
     phone: '04068324803', whatsapp: '914068324803',
+    ...AKHIL_DADI_DETAILS
   },
   {
     id: 903, branch: 'Vijayawada', specialty: 'Orthopedics', specialtyId: 'ortho',
@@ -2564,7 +2626,7 @@ export const ALL_DOCTORS = [
     name: 'Dr. Akhil Dadi', slug: slug('Dr. Akhil Dadi'),
     label: 'Consultant Orthopedics',
     sub: 'MBBS, MS (Orthopedics), Fellowship in Spine & Joint Replacement Surgery (Germany)',
-    rating: '5.0', exp: '15+ Years',
+    rating: '5.0', exp: '29+ Years',
     image: assetUrl('doctors/akhil-dadi.png'),
     fallback: dummy('akhil-dadi-kompally'),
     tagline: 'Chief Joint Replacement Surgeon.',
@@ -2574,6 +2636,7 @@ export const ALL_DOCTORS = [
     languages: ['Telugu', 'English', 'Hindi'],
     availability: 'Mon - Sat: 10:00 AM - 5:00 PM',
     phone: '04068324803', whatsapp: '914068324803',
+    ...AKHIL_DADI_DETAILS
   },
   {
     id: 1073, branch: 'Miyapur', specialty: 'Orthopedics', specialtyId: 'ortho',

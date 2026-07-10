@@ -6,7 +6,8 @@ import { motion } from 'framer-motion'
 import { 
   ArrowLeft, Star, Award, Calendar, Phone, MessageCircle, 
   MapPin, Clock, GraduationCap, Globe, Shield, Heart, 
-  Activity, Sparkles, Mail, ChevronRight, Play, BookOpen, Tv, X, ChevronLeft, Volume2, VolumeX, Pause, ArrowRight
+  Activity, Sparkles, Mail, ChevronRight, Play, BookOpen, Tv, X, ChevronLeft, Volume2, VolumeX, Pause, ArrowRight,
+  Briefcase, Trophy, Users
 } from 'lucide-react'
 import { StickyNavbar } from '@/components/layout/StickyNavbar'
 import { Footer } from '@/components/layout/Footer'
@@ -1325,17 +1326,24 @@ function DoctorProfilePageContent() {
                 <h4 className="text-[10px] font-black uppercase tracking-[0.25em] mb-3 text-slate-500">
                   Academic Credentials &amp; Fellowships
                 </h4>
-                <ul className="flex flex-wrap gap-x-6 gap-y-2">
-                  {doctor.education?.length > 0 ? (
+                <ul className="flex flex-col gap-2">
+                  {doctor.educationQualifications?.length > 0 ? (
+                    doctor.educationQualifications.map((edu, idx) => (
+                      <li key={idx} className="text-[12px] font-bold text-slate-700 flex items-start gap-1.5 leading-snug">
+                        <GraduationCap size={13} className="text-slate-400 shrink-0 mt-0.5" />
+                        <span>{edu}</span>
+                      </li>
+                    ))
+                  ) : doctor.education?.length > 0 ? (
                     doctor.education.map((edu, idx) => (
                       <li key={idx} className="text-[12px] font-bold text-slate-700 flex items-center gap-1.5">
-                        <GraduationCap size={13} className="text-slate-400" />
+                        <GraduationCap size={13} className="text-slate-400 shrink-0" />
                         <span>{edu}</span>
                       </li>
                     ))
                   ) : (
                     <li className="text-[12px] font-bold text-slate-700 flex items-center gap-1.5">
-                      <GraduationCap size={13} className="text-slate-400" />
+                      <GraduationCap size={13} className="text-slate-400 shrink-0" />
                       <span>{doctor.sub}</span>
                     </li>
                   )}
@@ -1358,6 +1366,194 @@ function DoctorProfilePageContent() {
         {/* ── SCROLL-BASED ADDITIONAL DETAILS (INTERACTIVE ACCORDION & KINETIC SCROLL REVEAL) ── */}
         <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16 mt-28 space-y-28 border-t border-slate-100 pt-20">
             
+            {/* Section 1.5: Professional Legacy, Experience & Achievements (ENHANCED DESIGN) */}
+            {(doctor.workExperience || doctor.achievementsList || doctor.teachingExperience || doctor.organisationsAssociated) && (
+              <motion.section 
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: "-100px" }}
+                variants={fadeInUpVariants}
+                className="bg-white space-y-16"
+              >
+                {/* Section Header */}
+                <div className="relative pb-6 border-b border-slate-100">
+                  <div className="flex items-center gap-2 mb-2 text-[#8B1A4A]">
+                    <Sparkles size={14} className="text-[#8B1A4A] animate-pulse" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: `${brandAccent}dd` }}>
+                      Professional Biography
+                    </span>
+                  </div>
+                  <h3 className="text-3xl md:text-5xl font-garamond font-bold text-slate-900 tracking-tight">
+                    Clinical Legacy &amp; Achievements
+                  </h3>
+                  {/* Luxury underline indicator */}
+                  <div className="absolute bottom-0 left-0 w-24 h-[2px]" style={{ backgroundColor: brandAccent }} />
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+                  {/* Left Column: Work Experience Timeline & Teaching Experience (7 cols) */}
+                  <div className="lg:col-span-7 space-y-16">
+                    
+                    {/* Work Experience */}
+                    {doctor.workExperience?.length > 0 && (
+                      <div className="space-y-8">
+                        <h4 className="text-xs font-black text-[#2D3A4A]/60 tracking-[0.2em] uppercase flex items-center gap-2">
+                          <Briefcase size={14} style={{ color: brandAccent }} />
+                          Professional Experience
+                        </h4>
+                        
+                        <div className="relative ml-4 pl-8 space-y-8">
+                          {/* Vertical timeline line with gradient wash */}
+                          <div className="absolute left-0 top-2 bottom-2 w-[2px] bg-gradient-to-b from-[#cca830] via-[#cca830]/40 to-slate-200" />
+
+                          {doctor.workExperience.map((job, idx) => (
+                            <div key={idx} className="relative group">
+                              {/* Double concentric glowing dot */}
+                              <div className="absolute -left-[41px] top-1.5 w-6 h-6 rounded-full bg-white flex items-center justify-center shadow-md border border-slate-100 group-hover:scale-110 transition-transform duration-300 z-10">
+                                <div className="w-3.5 h-3.5 rounded-full flex items-center justify-center" style={{ backgroundColor: `${brandAccent}20` }}>
+                                  <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: brandAccent }} />
+                                </div>
+                              </div>
+                              
+                              <div className="bg-slate-50/40 backdrop-blur-sm border border-slate-100/80 rounded-3xl p-6 hover:bg-white hover:border-[#cca830]/25 hover:shadow-lg transition-all duration-500 hover:-translate-y-1">
+                                <div className="flex flex-wrap justify-between items-start gap-2 mb-3">
+                                  <span className="inline-block text-[9px] font-black px-2.5 py-1 rounded-md bg-[#2D3A4A]/5 text-[#2D3A4A] uppercase tracking-wider">
+                                    {job.period}
+                                  </span>
+                                  <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1">
+                                    <MapPin size={10} /> {job.hospital}
+                                  </span>
+                                </div>
+                                
+                                <h5 className="text-base font-extrabold text-slate-800 mb-3 flex items-center gap-2">
+                                  {job.role}
+                                </h5>
+                                
+                                {job.desc && (
+                                  <p className="text-slate-600 text-[12px] font-light leading-relaxed border-l-2 border-[#8B1A4A]/25 pl-4 py-1 italic bg-[#8B1A4A]/[0.01]">
+                                    {job.desc}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Teaching Experience */}
+                    {doctor.teachingExperience && (
+                      <div className="space-y-8 pt-4">
+                        <h4 className="text-xs font-black text-[#2D3A4A]/60 tracking-[0.2em] uppercase flex items-center gap-2">
+                          <GraduationCap size={15} style={{ color: brandAccent }} />
+                          Academic &amp; Teaching Legacy
+                        </h4>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          {doctor.teachingExperience.dnb && (
+                            <div className="bg-gradient-to-b from-slate-50/50 to-white border border-slate-100 hover:border-[#cca830]/25 rounded-[24px] p-6 hover:shadow-md transition-all duration-300 flex flex-col justify-start">
+                              <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center mb-4 shrink-0 shadow-sm">
+                                <BookOpen size={18} />
+                              </div>
+                              <h6 className="text-[11px] font-black text-slate-800 uppercase tracking-widest mb-2">DNB trainees</h6>
+                              <p className="text-slate-500 text-[11px] font-light leading-relaxed">
+                                {doctor.teachingExperience.dnb}
+                              </p>
+                            </div>
+                          )}
+                          {doctor.teachingExperience.fellowship && (
+                            <div className="bg-gradient-to-b from-slate-50/50 to-white border border-slate-100 hover:border-[#cca830]/25 rounded-[24px] p-6 hover:shadow-md transition-all duration-300 flex flex-col justify-start">
+                              <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-4 shrink-0 shadow-sm">
+                                <Users size={18} />
+                              </div>
+                              <h6 className="text-[11px] font-black text-slate-800 uppercase tracking-widest mb-2">Fellowship Program</h6>
+                              <p className="text-slate-500 text-[11px] font-light leading-relaxed">
+                                {doctor.teachingExperience.fellowship}
+                              </p>
+                            </div>
+                          )}
+                          {doctor.teachingExperience.observership && (
+                            <div className="bg-gradient-to-b from-slate-50/50 to-white border border-slate-100 hover:border-[#cca830]/25 rounded-[24px] p-6 hover:shadow-md transition-all duration-300 flex flex-col justify-start">
+                              <div className="w-10 h-10 rounded-2xl bg-blue-500/10 text-blue-600 flex items-center justify-center mb-4 shrink-0 shadow-sm">
+                                <Globe size={18} />
+                              </div>
+                              <h6 className="text-[11px] font-black text-slate-800 uppercase tracking-widest mb-2">Observership</h6>
+                              <p className="text-slate-500 text-[11px] font-light leading-relaxed">
+                                {doctor.teachingExperience.observership}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Right Column: Achievements & Organisations (5 cols) */}
+                  <div className="lg:col-span-5 space-y-16">
+                    
+                    {/* Achievements List */}
+                    {doctor.achievementsList?.length > 0 && (
+                      <div className="space-y-8">
+                        <h4 className="text-xs font-black text-[#2D3A4A]/60 tracking-[0.2em] uppercase flex items-center gap-2">
+                          <Trophy size={14} style={{ color: brandAccent }} />
+                          Key Achievements &amp; Milestones
+                        </h4>
+                        
+                        <div className="grid grid-cols-1 gap-4">
+                          {doctor.achievementsList.map((ach, idx) => {
+                            const isRobotics = ach.toLowerCase().includes('robot') || ach.toLowerCase().includes('navio')
+                            const isRecord = ach.toLowerCase().includes('record') || ach.toLowerCase().includes('world')
+                            const isScale = ach.toLowerCase().includes('branch') || ach.toLowerCase().includes('capacity') || ach.toLowerCase().includes('bed') || ach.toLowerCase().includes('staff') || ach.toLowerCase().includes('cathlab')
+                            
+                            const IconComponent = isRobotics ? Sparkles : (isRecord ? Trophy : (isScale ? Globe : Award))
+                            const iconBgColor = isRobotics ? 'bg-purple-50 text-purple-600 border-purple-100' :
+                                              (isRecord ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                              (isScale ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-[#8B1A4A]/5 text-[#8B1A4A] border-[#8B1A4A]/10'))
+
+                            return (
+                              <div 
+                                key={idx} 
+                                className="bg-slate-50/30 border border-slate-100/80 rounded-[20px] p-4 hover:bg-white hover:border-[#cca830]/25 shadow-sm hover:shadow-md transition-all duration-300 flex items-start gap-4"
+                              >
+                                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 border ${iconBgColor} shadow-sm`}>
+                                  <IconComponent size={18} />
+                                </div>
+                                <div className="pt-0.5">
+                                  <p className="text-slate-700 text-[12px] font-bold leading-relaxed">
+                                    {ach}
+                                  </p>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Organisations Associated */}
+                    {doctor.organisationsAssociated?.length > 0 && (
+                      <div className="space-y-6">
+                        <h4 className="text-xs font-black text-[#2D3A4A]/60 tracking-[0.2em] uppercase flex items-center gap-2">
+                          <Shield size={14} style={{ color: brandAccent }} />
+                          Affiliations &amp; Organisations
+                        </h4>
+                        <div className="flex flex-wrap gap-2.5">
+                          {doctor.organisationsAssociated.map((org, idx) => (
+                            <span 
+                              key={idx} 
+                              className="px-4 py-2.5 rounded-[14px] text-[11px] font-black uppercase tracking-wider bg-[#2D3A4A]/5 border border-slate-100 hover:border-[#8B1A4A]/30 hover:bg-[#8B1A4A]/5 hover:text-[#8B1A4A] text-slate-700 transition-all duration-300 hover:-translate-y-0.5 cursor-default"
+                            >
+                              {org}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </motion.section>
+            )}
+
             {/* Section 3: Interactive Blogs & Video Lectures Showcase */}
             <InteractiveBlogsAndVideos slug={doctor.slug} name={doctor.name} brandAccent={brandAccent} />
 
@@ -1374,7 +1570,7 @@ function DoctorProfilePageContent() {
                   Evidence-based Practice
                 </span>
                 <h3 className="text-3xl md:text-4xl font-display font-black text-slate-900 tracking-tight">
-                  Clinical Milestones & Focus
+                  Clinical Milestones &amp; Focus
                 </h3>
               </div>
 

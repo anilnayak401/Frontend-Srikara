@@ -57,12 +57,14 @@
     letter-spacing: -0.01em;
   }
 
-  /* ── Links ── */
-  a {
+  /* ── Links ──
+     Scoped to unstyled anchors only, so links with utility classes
+     (e.g. white text on maroon buttons) keep their own colors on hover. */
+  a:not([class]) {
     color: #8B1A4A;
     transition: color 0.2s ease;
   }
-  a:hover { color: #2D3A4A; }
+  a:not([class]):hover { color: #2D3A4A; }
 
   /* Performance */
   section { contain: layout style; }

@@ -44,15 +44,20 @@ export function Footer() {
         <div>
           <h4 className="font-bold text-[#8B1A4A] mb-6 uppercase text-xs tracking-widest">Resources</h4>
           <ul className="space-y-4">
-            <li>
-              <Link to="/careers" className="text-[#4A4A4A] hover:text-[#2D3A4A] text-sm transition-colors">
-                Careers & Fellowship
-              </Link>
-            </li>
-            {["Chairman's Message", 'Privacy Policy', 'Patient Guide', 'International Patients'].map(item => (
-              <li key={item}>
-                <Link to="#" className="text-[#4A4A4A] hover:text-[#2D3A4A] text-sm transition-colors">
-                  {item}
+            {[
+              { label: 'Careers & Fellowship', to: '/careers' },
+              { label: 'Current Job Openings', to: '/careers/jobs' },
+              { label: 'Leadership Team', to: '/about/leadership' },
+              { label: 'Awards & Recognition', to: '/about/awards' },
+              { label: 'Achievements', to: '/about/achievements' },
+              { label: 'Gallery', to: '/gallery' },
+              { label: 'Events', to: '/news/events' },
+              { label: 'Medical Updates', to: '/news/medical-updates' },
+              { label: 'International Patients', to: '/international-patients' },
+            ].map(item => (
+              <li key={item.label}>
+                <Link to={item.to} className="text-[#4A4A4A] hover:text-[#2D3A4A] text-sm transition-colors">
+                  {item.label}
                 </Link>
               </li>
             ))}

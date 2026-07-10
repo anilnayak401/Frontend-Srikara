@@ -14,10 +14,16 @@ export function StickyNavbar({ currentBranch }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [hospitalsOpen, setHospitalsOpen] = useState(false)
   const [specOpen, setSpecOpen] = useState(false)
+  const [aboutOpen, setAboutOpen] = useState(false)
+  const [newsOpen, setNewsOpen] = useState(false)
+  const [careersOpen, setCareersOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
 
   const hospitalsRef = useRef(null)
   const specRef = useRef(null)
+  const aboutRef = useRef(null)
+  const newsRef = useRef(null)
+  const careersRef = useRef(null)
   const lastScrollY = useRef(0)
   const { scrollY } = useScroll()
   const navigate = useNavigate()
@@ -36,6 +42,9 @@ export function StickyNavbar({ currentBranch }) {
     const fn = e => {
       if (hospitalsRef.current && !hospitalsRef.current.contains(e.target)) setHospitalsOpen(false)
       if (specRef.current && !specRef.current.contains(e.target)) setSpecOpen(false)
+      if (aboutRef.current && !aboutRef.current.contains(e.target)) setAboutOpen(false)
+      if (newsRef.current && !newsRef.current.contains(e.target)) setNewsOpen(false)
+      if (careersRef.current && !careersRef.current.contains(e.target)) setCareersOpen(false)
     }
     document.addEventListener('mousedown', fn)
     return () => document.removeEventListener('mousedown', fn)
@@ -44,6 +53,9 @@ export function StickyNavbar({ currentBranch }) {
   useEffect(() => {
     setHospitalsOpen(false)
     setSpecOpen(false)
+    setAboutOpen(false)
+    setNewsOpen(false)
+    setCareersOpen(false)
     setMobileOpen(false)
   }, [location.pathname])
 
@@ -113,14 +125,14 @@ export function StickyNavbar({ currentBranch }) {
           <div ref={specRef} className="relative h-full flex items-center group/spec">
             <Link
               to="/specialties"
-              className="h-full flex items-center pl-4 pr-1 text-[13.5px] font-semibold uppercase tracking-wide transition-colors duration-200"
+              className="h-full flex items-center pl-2.5 min-[1400px]:pl-4 pr-1 text-[13px] min-[1400px]:text-[13.5px] font-semibold uppercase tracking-wide transition-colors duration-200"
               style={{ color: specOpen || isActive('/specialties') ? ACCENT : (isWhite ? '#222' : '#fff') }}
             >
               Specialties
             </Link>
             <button
               onClick={() => setSpecOpen(p => !p)}
-              className="h-full flex items-center pl-1 pr-4 outline-none transition-colors duration-200"
+              className="h-full flex items-center pl-1 pr-2.5 min-[1400px]:pr-4 outline-none transition-colors duration-200"
               aria-label="Toggle Specialties Dropdown"
             >
               <ChevronDown size={13}
@@ -261,8 +273,14 @@ export function StickyNavbar({ currentBranch }) {
             </AnimatePresence>
           </div>
 
+          {/* International Patients */}
+          <NavLink to="/international-patients" active={isActive('/international-patients')} isWhite={isWhite}>
+            <span className="hidden min-[1400px]:inline">International Patients</span>
+            <span className="min-[1400px]:hidden">Intl Patients</span>
+          </NavLink>
+
           {/* ── CENTER LOGO ── */}
-          <Link to="/" className="mx-6 flex-shrink-0">
+          <Link to="/" className="mx-3 min-[1400px]:mx-6 flex-shrink-0">
             <img
               src={logoSrc}
               alt="Srikara Hospitals"
@@ -283,31 +301,69 @@ export function StickyNavbar({ currentBranch }) {
             Doctors
           </NavLink>
 
-          {/* 7. Discover Srikara */}
-          <NavLink to="/about" active={isActive('/about')} isWhite={isWhite}>
-            Discover Srikara
-          </NavLink>
+          {/* 7. About (Discover Srikara) dropdown */}
+          <NavItemDropdown
+            label="About"
+            to="/about"
+            innerRef={aboutRef}
+            open={aboutOpen}
+            setOpen={setAboutOpen}
+            active={isActive('/about') || isActive('/gallery')}
+            isWhite={isWhite}
+            items={[
+              { to: '/about', label: 'Discover Srikara' },
+              { to: '/about/leadership', label: 'Leadership Team' },
+              { to: '/about/awards', label: 'Awards & Recognition' },
+              { to: '/about/achievements', label: 'Achievements' },
+              { to: '/gallery', label: 'Gallery' },
+            ]}
+          />
 
-          {/* 8. Blogs */}
+          {/* 8. News dropdown */}
+          <NavItemDropdown
+            label="News"
+            innerRef={newsRef}
+            open={newsOpen}
+            setOpen={setNewsOpen}
+            active={isActive('/news')}
+            isWhite={isWhite}
+            items={[
+              { to: '/news/events', label: 'Events' },
+              { to: '/news/medical-updates', label: 'Medical Updates' },
+            ]}
+          />
+
+          {/* 9. Blogs */}
           <NavLink to="/blogs" active={isActive('/blogs')} isWhite={isWhite}>
             Blogs
           </NavLink>
 
-          {/* 9. Careers */}
-          <NavLink to="/careers" active={isActive('/careers')} isWhite={isWhite}>
-            Careers
-          </NavLink>
+          {/* 10. Careers dropdown */}
+          <NavItemDropdown
+            label="Careers"
+            to="/careers"
+            innerRef={careersRef}
+            open={careersOpen}
+            setOpen={setCareersOpen}
+            active={isActive('/careers')}
+            isWhite={isWhite}
+            items={[
+              { to: '/careers', label: 'Academics & Fellowship' },
+              { to: '/careers/jobs', label: 'Current Job Openings' },
+            ]}
+          />
 
           {/* 7. Search Toggle - removed */}
 
           {/* Book Appointment button */}
           <button
             onClick={() => navigate('/book')}
-            className="flex items-center gap-2 rounded-full px-5 py-2 font-bold text-[13px] ml-2 transition-all hover:opacity-90"
+            className="flex items-center gap-2 rounded-full px-4 min-[1400px]:px-5 py-2 font-bold text-[12.5px] min-[1400px]:text-[13px] ml-2 transition-all hover:opacity-90"
             style={{ backgroundColor: '#2D3A4A', color: 'white', flexShrink: 0 }}
           >
             <Calendar size={13} />
-            Book Appointment
+            <span className="hidden min-[1400px]:inline">Book Appointment</span>
+            <span className="min-[1400px]:hidden">Book Now</span>
           </button>
 
         </div>
@@ -402,7 +458,7 @@ export function StickyNavbar({ currentBranch }) {
               transition={{ duration: 0.28, ease: [0.23, 1, 0.32, 1] }}
               className="fixed top-20 left-4 right-4 z-[190] p-5 bg-white/95 backdrop-blur-md rounded-[24px] shadow-[0_20px_50px_rgba(139,26,74,0.18)] border border-slate-100 lg:hidden overflow-hidden"
             >
-              <nav className="flex flex-col gap-0.5">
+              <nav className="flex flex-col gap-0.5 max-h-[60vh] overflow-y-auto custom-scrollbar">
                 {[
                   { label: 'Home', to: '/' },
                   { label: 'Find Hospitals', to: '/branches' },
@@ -410,8 +466,15 @@ export function StickyNavbar({ currentBranch }) {
                   { label: 'Specialties (3D)', to: '/specialties' },
                   { label: 'Specialties List', to: '/specialties-list' },
                   { label: 'Discover Srikara', to: '/about' },
+                  { label: 'Leadership Team', to: '/about/leadership' },
+                  { label: 'Awards & Achievements', to: '/about/awards' },
+                  { label: 'Gallery', to: '/gallery' },
+                  { label: 'Events', to: '/news/events' },
+                  { label: 'Medical Updates', to: '/news/medical-updates' },
+                  { label: 'International Patients', to: '/international-patients' },
                   { label: 'Blogs', to: '/blogs' },
                   { label: 'Careers', to: '/careers' },
+                  { label: 'Job Openings', to: '/careers/jobs' },
                 ].map(lnk => (
                   <Link key={lnk.label} to={lnk.to} onClick={() => setMobileOpen(false)}
                     className="flex items-center justify-between py-2.5 px-4 rounded-xl font-bold text-xs uppercase tracking-wider transition-all duration-300"
@@ -449,7 +512,7 @@ function NavLink({ to, active, isWhite, children }) {
   const textCol = isWhite ? '#222' : '#fff'
   return (
     <Link to={to}
-      className="group relative h-full flex items-center px-4 text-[13.5px] font-semibold uppercase tracking-wide transition-colors duration-200"
+      className="group relative h-full flex items-center px-2.5 min-[1400px]:px-4 text-[13px] min-[1400px]:text-[13.5px] font-semibold uppercase tracking-wide transition-colors duration-200"
       style={{ color: active ? ACCENT : textCol }}
     >
       {children}
@@ -461,15 +524,67 @@ function NavLink({ to, active, isWhite, children }) {
   )
 }
 
+/* ── Nav item with simple dropdown menu (Yashoda-style panel, Srikara theme) ── */
+function NavItemDropdown({ label, to, items, isWhite, active, open, setOpen, innerRef }) {
+  const color = open || active ? ACCENT : (isWhite ? '#222' : '#fff')
+  const labelClass = 'h-full flex items-center pl-2.5 min-[1400px]:pl-4 pr-1 text-[13px] min-[1400px]:text-[13.5px] font-semibold uppercase tracking-wide transition-colors duration-200'
+
+  return (
+    <div ref={innerRef} className="relative h-full flex items-center group/nd">
+      {to ? (
+        <Link to={to} className={labelClass} style={{ color }}>{label}</Link>
+      ) : (
+        <button onClick={() => setOpen(p => !p)} className={`${labelClass} outline-none`} style={{ color }}>{label}</button>
+      )}
+      <button
+        onClick={() => setOpen(p => !p)}
+        className="h-full flex items-center pl-1 pr-2.5 min-[1400px]:pr-4 outline-none transition-colors duration-200"
+        aria-label={`Toggle ${label} Dropdown`}
+      >
+        <ChevronDown size={13}
+          className={`transition-transform duration-300 ${open ? 'rotate-180' : ''}`}
+          style={{ color: open || active ? ACCENT : (isWhite ? '#888' : 'rgba(255,255,255,0.6)') }} />
+      </button>
+      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[2.5px] rounded-full transition-all duration-300"
+        style={{ backgroundColor: ACCENT, width: (open || active) ? '65%' : '0%' }} />
+      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[2.5px] rounded-full w-0 group-hover/nd:w-[65%] transition-all duration-300"
+        style={{ backgroundColor: ACCENT, opacity: 0.55 }} />
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.97 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
+            className="absolute top-[calc(100%+4px)] left-1/2 -translate-x-1/2 w-[240px] bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.14)] border border-black/5 overflow-hidden z-50"
+          >
+            {/* Accent top bar, like the reference dropdown */}
+            <span className="block h-[3px] w-full" style={{ backgroundColor: ACCENT }} />
+            <div className="py-2">
+              {items.map(item => (
+                <Link key={item.to} to={item.to} onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 text-[13px] font-semibold text-gray-700 hover:text-[#8B1A4A] hover:bg-[#8B1A4A]/5 transition-all">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#8B1A4A]/50 flex-shrink-0" />
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
 /* ── Dropdown trigger button ───────────────────── */
 function DropButton({ label, caption, isOpen, active, isWhite, onClick }) {
   const textCol = isWhite ? '#222' : '#fff'
   return (
     <button onClick={onClick}
-      className="group relative h-full flex flex-col items-center justify-center px-4 outline-none transition-colors duration-200"
+      className="group relative h-full flex flex-col items-center justify-center px-2.5 min-[1400px]:px-4 outline-none transition-colors duration-200"
       style={{ color: isOpen || active ? ACCENT : textCol }}
     >
-      <span className="flex items-center gap-1 text-[13.5px] font-semibold uppercase tracking-wide">
+      <span className="flex items-center gap-1 text-[13px] min-[1400px]:text-[13.5px] font-semibold uppercase tracking-wide">
         {label}
         <ChevronDown size={13}
           className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}

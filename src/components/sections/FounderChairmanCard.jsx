@@ -31,7 +31,7 @@ export function FounderChairmanCard() {
 
   const stats = [
     { value: '30,000+', label: 'Surgeries', accent: MAROON },
-    { value: '15+', label: 'Years Exp.', accent: '#2D3A4A' },
+    { value: '29+', label: 'Years Exp.', accent: '#2D3A4A' },
     { value: '99%', label: 'Success Rate', accent: GOLD },
   ]
 
@@ -142,7 +142,7 @@ export function FounderChairmanCard() {
               >
                 <Stethoscope size={16} style={{ color: MAROON }} />
                 <div className="leading-none">
-                  <span className="block text-sm font-black text-[#2D3A4A]">15+ Years</span>
+                  <span className="block text-sm font-black text-[#2D3A4A]">29+ Years</span>
                   <span className="block text-[8px] font-bold uppercase tracking-wider text-[#2D3A4A]/50">
                     Surgical Mastery
                   </span>

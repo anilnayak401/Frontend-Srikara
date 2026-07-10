@@ -23,6 +23,14 @@ const AboutPage         = lazy(() => import('./pages/AboutPage').then(m => ({ de
 const PlaceholderPage   = lazy(() => import('./pages/PlaceholderPage').then(m => ({ default: m.PlaceholderPage })))
 const AnatomyExplorerPage = lazy(() => import('./pages/AnatomyExplorerPage').then(m => ({ default: m.AnatomyExplorerPage })))
 const CareersPage       = lazy(() => import('./pages/CareersPage').then(m => ({ default: m.CareersPage })))
+const JobOpeningsPage   = lazy(() => import('./pages/JobOpeningsPage').then(m => ({ default: m.JobOpeningsPage })))
+const GalleryPage       = lazy(() => import('./pages/GalleryPage').then(m => ({ default: m.GalleryPage })))
+const LeadershipTeamPage = lazy(() => import('./pages/LeadershipTeamPage').then(m => ({ default: m.LeadershipTeamPage })))
+const AwardsPage        = lazy(() => import('./pages/AwardsPage').then(m => ({ default: m.AwardsPage })))
+const AchievementsPage  = lazy(() => import('./pages/AchievementsPage').then(m => ({ default: m.AchievementsPage })))
+const EventsPage        = lazy(() => import('./pages/EventsPage').then(m => ({ default: m.EventsPage })))
+const MedicalUpdatesPage = lazy(() => import('./pages/MedicalUpdatesPage').then(m => ({ default: m.MedicalUpdatesPage })))
+const InternationalPatientsPage = lazy(() => import('./pages/InternationalPatientsPage').then(m => ({ default: m.InternationalPatientsPage })))
 const AdminDashboard    = lazy(() => import('./pages/AdminDashboard').then(m => ({ default: m.AdminDashboard })))
 
 import { VisitorTracker } from './components/shared/VisitorTracker'
@@ -113,10 +121,19 @@ function App() {
             <Route path="/anatomy-explorer" element={<Navigate to="/specialties" replace />} />
             <Route path="/services"     element={<ServicesPage />} />
             <Route path="/about"        element={<AboutPage />} />
+            <Route path="/about/leadership"   element={<LeadershipTeamPage />} />
+            <Route path="/about/awards"       element={<AwardsPage />} />
+            <Route path="/about/achievements" element={<AchievementsPage />} />
+            <Route path="/gallery"            element={<GalleryPage />} />
+            <Route path="/news"               element={<Navigate to="/news/medical-updates" replace />} />
+            <Route path="/news/events"        element={<EventsPage />} />
+            <Route path="/news/medical-updates" element={<MedicalUpdatesPage />} />
+            <Route path="/international-patients" element={<InternationalPatientsPage />} />
             <Route path="/book"          element={<BookAppointmentPage />} />
             <Route path="/book/:slug"    element={<IndividualBookingPage />} />
             <Route path="/blogs"         element={<BlogsPage />} />
             <Route path="/careers"       element={<CareersPage />} />
+            <Route path="/careers/jobs"  element={<JobOpeningsPage />} />
             <Route path="/admin"         element={<AdminDashboard />} />
 
             <Route path="*" element={<PlaceholderPage title="Page Not Found" />} />

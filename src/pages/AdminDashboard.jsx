@@ -77,7 +77,7 @@ const MOCK_CLICKS = [
 ]
 
 const DEFAULT_DOCTORS = [
-  { id: '1', name: 'Dr. Akhil Dadi', specialty: 'Orthopedics', specialtyId: 'ortho', sub: 'MS (Ortho), FIJR', exp: '15+ Years', branch: 'LB Nagar', availability: 'Mon - Sat: 10 AM - 5 PM', photoUrl: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300', status: 'Active', bio: 'Pioneer in robotic surgery and chief surgeon.', languages: 'English, Telugu, Hindi', tagline: 'Leading Robotics Joint Replacement', education: 'MBBS, MS (Orthopedics)' },
+  { id: '1', name: 'Dr. Akhil Dadi', specialty: 'Orthopedics', specialtyId: 'ortho', sub: 'MS (Ortho), FIJR', exp: '29+ Years', branch: 'LB Nagar', availability: 'Mon - Sat: 10 AM - 5 PM', photoUrl: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300', status: 'Active', bio: 'Pioneer in robotic surgery and chief surgeon.', languages: 'English, Telugu, Hindi', tagline: 'Leading Robotics Joint Replacement', education: 'MBBS, MS (Orthopedics)' },
   { id: '2', name: 'Dr. Radhika Sen', specialty: 'Cardiology', specialtyId: 'cardio', sub: 'MD, DM (Cardiology)', exp: '12+ Years', branch: 'Kompally', availability: 'Mon - Fri: 9 AM - 4 PM', photoUrl: 'https://images.unsplash.com/photo-1594824813573-246434de83fb?auto=format&fit=crop&q=80&w=300', status: 'Active', bio: 'Expert interventional cardiologist specialising in valve repairs.', languages: 'English, Hindi', tagline: 'Heart Care Excellence', education: 'MBBS, MD, DM' }
 ]
 

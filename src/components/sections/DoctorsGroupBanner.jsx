@@ -128,22 +128,28 @@ export function DoctorsGroupBanner({ branchName }) {
                   </h3>
 
                   <p className="text-slate-600 text-base md:text-lg font-light leading-relaxed mb-8">
-                    {globalAkhilDadi.about || globalAkhilDadi.bio || 'A visionary in robotic arthroplasty, Dr. Akhil Dadi brings world-class German fellowship expertise to Srikara Hospitals, leading the team with over 15+ years of clinical mastery.'}
+                    {globalAkhilDadi.about || globalAkhilDadi.bio || 'A visionary in robotic arthroplasty, Dr. Akhil Dadi brings world-class German fellowship expertise to Srikara Hospitals, leading the team with over 29+ years of clinical mastery.'}
                   </p>
 
                   <div className="flex flex-wrap gap-4 mb-8">
                     <div className="bg-[#8B1A4A]/5 backdrop-blur-md border border-[#8B1A4A]/10 rounded-2xl px-5 py-3 text-center">
-                      <span className="block text-2xl font-black text-[#2D3A4A] leading-none mb-1">15+ Yrs</span>
+                      <span className="block text-2xl font-black text-[#2D3A4A] leading-none mb-1">
+                        {globalAkhilDadi.slug?.includes('akhil-dadi') ? '29+ Yrs' : (globalAkhilDadi.exp || '15+ Yrs')}
+                      </span>
                       <span className="block text-[9px] uppercase tracking-wider text-slate-500 font-bold">Experience</span>
                     </div>
                     <div className="bg-[#8B1A4A]/5 backdrop-blur-md border border-[#8B1A4A]/10 rounded-2xl px-5 py-3 text-center">
-                      <span className="block text-2xl font-black text-[#8B1A4A] leading-none mb-1">5.0</span>
+                      <span className="block text-2xl font-black text-[#8B1A4A] leading-none mb-1">
+                        {globalAkhilDadi.rating || '5.0'}
+                      </span>
                       <span className="block text-[9px] uppercase tracking-wider text-slate-500 font-bold">Rating ★</span>
                     </div>
-                    <div className="bg-[#8B1A4A]/5 backdrop-blur-md border border-[#8B1A4A]/10 rounded-2xl px-5 py-3 text-center">
-                      <span className="block text-2xl font-black text-[#2D3A4A] leading-none mb-1">{globalAkhilDadi.branch}</span>
-                      <span className="block text-[9px] uppercase tracking-wider text-slate-500 font-bold">Branch</span>
-                    </div>
+                    {!globalAkhilDadi.slug?.includes('akhil-dadi') && (
+                      <div className="bg-[#8B1A4A]/5 backdrop-blur-md border border-[#8B1A4A]/10 rounded-2xl px-5 py-3 text-center">
+                        <span className="block text-2xl font-black text-[#2D3A4A] leading-none mb-1">{globalAkhilDadi.branch}</span>
+                        <span className="block text-[9px] uppercase tracking-wider text-slate-500 font-bold">Branch</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex gap-4">

@@ -1,13 +1,13 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { Shapes, Send, Check, Repeat, Download } from "lucide-react";
+import { CalendarCheck, Stethoscope, ClipboardList, HeartPulse, Home } from "lucide-react";
 
 const LucideIcons = {
-  Shapes,
-  Send,
-  Check,
-  Repeat,
-  Download
+  CalendarCheck,
+  Stethoscope,
+  ClipboardList,
+  HeartPulse,
+  Home,
 };
 
 /**
@@ -36,21 +36,21 @@ export function TimelineEvent({
       <div className="relative">
         <div
           className={cn(
-            "rounded-full border bg-background p-2",
+            "rounded-full border bg-white p-2 shadow-sm",
             icon.borderColor
           )}
         >
           {Icon ? <Icon className={cn("h-4 w-4", icon.textColor)} /> : <div className="h-4 w-4 bg-gray-200 rounded-full" />}
         </div>
         {!isLast ? (
-          <div className="absolute inset-x-0 mx-auto h-full w-[2px] bg-muted mt-2" />
+          <div className="absolute inset-x-0 mx-auto h-full w-[2px] bg-[#8B1A4A]/10 mt-2" />
         ) : null}
       </div>
       <div className="mt-1 flex flex-1 flex-col gap-1">
         <div className="flex items-center justify-between gap-4">
-          <p className="text-lg font-semibold text-white/90">{label}</p>
+          <p className="text-lg font-semibold text-[#1A202C]">{label}</p>
         </div>
-        <p className="text-sm text-white/50 leading-relaxed">{message}</p>
+        <p className="text-sm text-[#4A4A4A] leading-relaxed">{message}</p>
       </div>
     </div>
   );
@@ -58,46 +58,46 @@ export function TimelineEvent({
 
 const timelineData = [
   {
-    label: "Choose Your Design",
-    message: "Browse and select a design that fits your needs, then access your personalized dashboard.",
+    label: "Book Your Appointment",
+    message: "Reach us by phone, WhatsApp or the website and get a confirmed slot with the right specialist.",
     icon: {
-      name: "Shapes",
-      textColor: "text-orange-500",
-      borderColor: "border-orange-500/40",
+      name: "CalendarCheck",
+      textColor: "text-[#8B1A4A]",
+      borderColor: "border-[#8B1A4A]/40",
     },
   },
   {
-    label: "Provide Your Brief",
-    message: "Share your design preferences and requirements with us.",
+    label: "Consultation & Diagnosis",
+    message: "A detailed evaluation with advanced imaging and diagnostics for a complete clinical picture.",
     icon: {
-      name: "Send",
+      name: "Stethoscope",
       textColor: "text-amber-500",
       borderColor: "border-amber-500/40",
     },
   },
   {
-    label: "Receive Your Designs",
-    message: "Get your initial designs within 48 hours.",
+    label: "Personalised Treatment Plan",
+    message: "Your specialist walks you through the options, expected outcomes and transparent costs.",
     icon: {
-      name: "Check",
+      name: "ClipboardList",
       textColor: "text-blue-500",
       borderColor: "border-blue-500/40",
     },
   },
   {
-    label: "Request Revisions",
-    message: "We’re committed to perfection—request as many revisions as needed until you’re satisfied.",
+    label: "Advanced Treatment",
+    message: "Robotic-assisted surgery and evidence-based protocols inside NABH-standard operating theatres.",
     icon: {
-      name: "Repeat",
-      textColor: "text-green-500",
-      borderColor: "border-green-500/40",
+      name: "HeartPulse",
+      textColor: "text-rose-500",
+      borderColor: "border-rose-500/40",
     },
   },
   {
-    label: "Get Final Files",
-    message: "Once approved, we’ll deliver the final files to you.",
+    label: "Recovery & Follow-up",
+    message: "Structured rehabilitation and scheduled reviews until you are back to the life you love.",
     icon: {
-      name: "Download",
+      name: "Home",
       textColor: "text-green-500",
       borderColor: "border-green-500/40",
     },

@@ -60,6 +60,7 @@ const loadDynamicDoctors = async (force = false) => {
     const fbSrc = staticMatch?.image || assetUrl('doctors/doctor-placeholder.png')
 
     return {
+      ...staticMatch,
       ...d,
       id: Number(d.id) || d.id,
       slug: d.slug || generatedSlug,
