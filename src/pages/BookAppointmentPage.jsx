@@ -14,6 +14,7 @@ import { useBranches } from '@/hooks/useBranches'
 import { assetUrl } from '@/lib/assetUrl'
 import { ALL_DOCTORS } from '@/data/doctors'
 import { useDoctors } from '@/hooks/useDoctors'
+import { TestimonialsSection } from '@/components/sections/TestimonialsSection'
 import { db } from '@/lib/firebase'
 import { collection, addDoc } from 'firebase/firestore'
 
@@ -517,6 +518,7 @@ export function BookAppointmentPage() {
 
       </div>{/* end light bg wrapper */}
 
+      <TestimonialsSection category="Book Appointment" />
       <Footer />
       <MobileBottomNav />
     </>

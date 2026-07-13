@@ -11,6 +11,7 @@ import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
 import { assetUrl } from '@/lib/assetUrl'
 import { ALL_DOCTORS } from '@/data/doctors'
 import { useDoctors } from '@/hooks/useDoctors'
+import { TestimonialsSection } from '@/components/sections/TestimonialsSection'
 
 // Premium Glassmorphic Doctor Card Component (Screenshot 2 Style - DETTO MATCH)
 function PremiumDoctorCard({ doc, accentColor }) {
@@ -568,6 +569,7 @@ export function SpecialtyDetailPage() {
 
         </main>
 
+        <TestimonialsSection category={dept.name} />
         <Footer />
         <MobileBottomNav />
       </div>

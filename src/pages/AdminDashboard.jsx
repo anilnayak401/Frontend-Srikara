@@ -218,7 +218,30 @@ const missingDefaultDepartments = (stored) => {
 }
 
 const DEFAULT_TESTIMONIALS = [
-  { id: '1', patientName: 'Lakshmi Devi', rating: 5, review: 'Fantastic robotic surgery care at Srikara Hospital. I walked within 3 days without pain!', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }
+  { 
+    id: '1', 
+    patientName: 'Lakshmi Devi', 
+    rating: 5, 
+    review: 'Fantastic robotic surgery care at Srikara Hospital. I walked within 3 days without pain!', 
+    videoUrl: 'https://www.youtube.com/embed/ho9JlBnrGWg',
+    page: 'General / Home' 
+  },
+  {
+    id: '2',
+    patientName: 'Srinivas Rao',
+    rating: 5,
+    review: 'Highly satisfied with the cardiology treatment at Srikara ECIL branch. The doctors and staff were very professional.',
+    videoUrl: 'https://www.youtube.com/embed/ox2rT1KRkFI',
+    page: 'ECIL'
+  },
+  {
+    id: '3',
+    patientName: 'Radhika Reddy',
+    rating: 5,
+    review: 'Excellent joint replacement care at Miyapur branch. The robotic technique made recovery very quick.',
+    videoUrl: 'https://www.youtube.com/embed/ho9JlBnrGWg',
+    page: 'Miyapur'
+  }
 ]
 
 const DEFAULT_DOWNLOADS = [
@@ -649,13 +672,19 @@ export function AdminDashboard() {
 
           // 7. Load Testimonials
           const testSnap = await getDocs(collection(db, 'testimonials'))
-          if (testSnap.empty) {
+          const storedTestimonials = testSnap.docs.map(t => ({ id: t.id, ...t.data() }))
+          const testMetaRef = doc(db, 'site_contents', 'meta')
+          const testMetaSnap = await getDoc(testMetaRef)
+          const testimonialsSeeded = testMetaSnap.exists() ? (testMetaSnap.data().testimonialsSeededVersion || 0) : 0
+          
+          if (testSnap.empty && testimonialsSeeded < 1) {
             for (const testItem of DEFAULT_TESTIMONIALS) {
               await setDoc(doc(db, 'testimonials', String(testItem.id)), testItem)
             }
+            await setDoc(testMetaRef, { testimonialsSeededVersion: 1 }, { merge: true })
             setTestimonials(DEFAULT_TESTIMONIALS)
           } else {
-            setTestimonials(testSnap.docs.map(t => ({ id: t.id, ...t.data() })))
+            setTestimonials(storedTestimonials)
           }
 
           // 8. Load Downloads
@@ -3097,26 +3126,34 @@ export function AdminDashboard() {
                       <div className="xl:col-span-7 glass-card-admin rounded-[32px] p-8 shadow-sm space-y-6">
                         <h3 className="font-garamond text-3xl font-bold text-[#2D3A4A]">Patient Testimonials ({testimonials.length})</h3>
                         <div className="max-h-[600px] overflow-y-auto pr-2 space-y-4 custom-admin-scrollbar">
-                          {testimonials.map(item => (
-                            <div key={item.id} className="p-5 rounded-2xl bg-white border border-slate-100 flex justify-between items-start shadow-sm">
-                              <div>
-                                <div className="flex items-center gap-1.5 text-amber-500 mb-2">
-                                  {Array.from({ length: item.rating }).map((_, i) => (
-                                    <Star key={i} className="w-4 h-4 fill-amber-500" />
-                                  ))}
-                                </div>
-                                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                                  <h4 className="font-bold text-slate-800 text-base">{item.patientName}</h4>
-                                  <span className="px-2 py-0.5 rounded-full bg-[#8B1A4A]/5 text-[#8B1A4A] text-[9px] font-black uppercase tracking-wider">{item.page || 'General / Home'}</span>
-                                </div>
-                                <p className="text-xs text-gray-500 mt-1 font-semibold">"{item.review}"</p>
-                                {item.videoUrl && <p className="text-xs text-[#8B1A4A] font-mono mt-2 font-bold">{item.videoUrl}</p>}
-                              </div>
-                              <button onClick={() => requestConfirm('Remove Testimonial?', `The testimonial from "${item.patientName}" will be permanently deleted.`, () => deleteTestimonial(item.id))} className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg">
-                                <Trash2 className="w-4 h-4" />
-                              </button>
+                          {testimonials.length === 0 ? (
+                            <div className="p-10 text-center border-2 border-dashed border-slate-200/80 rounded-2xl bg-slate-50/50 flex flex-col items-center justify-center">
+                              <Quote className="w-8 h-8 text-slate-300 mb-3" />
+                              <p className="text-sm font-bold text-slate-500">No Patient Testimonials Added Yet</p>
+                              <p className="text-xs text-gray-400 mt-1 max-w-sm">Publish inspiring recovery stories using the creator form on the right to display them on the website.</p>
                             </div>
-                          ))}
+                          ) : (
+                            testimonials.map(item => (
+                              <div key={item.id} className="p-5 rounded-2xl bg-white border border-slate-100 flex justify-between items-start shadow-sm">
+                                <div>
+                                  <div className="flex items-center gap-1.5 text-amber-500 mb-2">
+                                    {Array.from({ length: item.rating }).map((_, i) => (
+                                      <Star key={i} className="w-4 h-4 fill-amber-500" />
+                                    ))}
+                                  </div>
+                                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                                    <h4 className="font-bold text-slate-800 text-base">{item.patientName}</h4>
+                                    <span className="px-2 py-0.5 rounded-full bg-[#8B1A4A]/5 text-[#8B1A4A] text-[9px] font-black uppercase tracking-wider">{item.page || 'General / Home'}</span>
+                                  </div>
+                                  <p className="text-xs text-gray-500 mt-1 font-semibold">"{item.review}"</p>
+                                  {item.videoUrl && <p className="text-xs text-[#8B1A4A] font-mono mt-2 font-bold">{item.videoUrl}</p>}
+                                </div>
+                                <button onClick={() => requestConfirm('Remove Testimonial?', `The testimonial from "${item.patientName}" will be permanently deleted.`, () => deleteTestimonial(item.id))} className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg">
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ))
+                          )}
                         </div>
                       </div>
 

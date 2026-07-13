@@ -12,6 +12,7 @@ import { Footer } from '@/components/layout/Footer'
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
 import { ALL_DOCTORS, getSpecialties, ACCENT_MAP } from '@/data/doctors'
 import { useDoctors } from '@/hooks/useDoctors'
+import { TestimonialsSection } from '@/components/sections/TestimonialsSection'
 
 // Custom Tilt Hover Effect Hook for a premium feel
 function useTiltEffect(ref, active = true) {
@@ -1104,6 +1105,7 @@ export function DoctorsPage() {
 
         </div>
 
+        <TestimonialsSection category="Doctors" />
         <Footer />
         <MobileBottomNav />
       </div>

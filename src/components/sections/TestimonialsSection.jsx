@@ -10,7 +10,20 @@ export function TestimonialsSection({ category = 'General / Home' }) {
   // Filter testimonials matching the category, fallback to General if none exist
   const filtered = useMemo(() => {
     const matched = testimonials.filter(t => t.page?.toLowerCase() === category.toLowerCase())
-    return matched.length > 0 ? matched : testimonials.filter(t => t.page?.toLowerCase() === 'general / home')
+    if (matched.length > 0) return matched
+    
+    const general = testimonials.filter(t => t.page?.toLowerCase() === 'general / home')
+    if (general.length > 0) return general
+    
+    // Catchy placeholder invitation if no testimonials exist in store
+    return [{
+      id: 'invite-placeholder',
+      patientName: 'Your Srikara Experience',
+      rating: 5,
+      review: 'Every patient journey is unique. Share your recovery story and inspire others. If you have been treated at Srikara Hospitals, we would love to hear your feedback!',
+      videoUrl: '',
+      page: category
+    }]
   }, [testimonials, category])
 
   // Reset active index when category changes
@@ -169,7 +182,7 @@ export function TestimonialsSection({ category = 'General / Home' }) {
             <div className="mt-8">
               <h4 className="font-bold text-slate-950 text-lg leading-none">{current.patientName}</h4>
               <span className="text-[10px] text-[#8B1A4A] mt-2 inline-block font-black uppercase tracking-wider bg-[#8B1A4A]/5 px-2 py-0.5 rounded-full">
-                Verified Story ({current.page || 'General'})
+                {current.id === 'invite-placeholder' ? 'Patient Invitation' : `Verified Story (${current.page || 'General'})`}
               </span>
             </div>
           </div>
