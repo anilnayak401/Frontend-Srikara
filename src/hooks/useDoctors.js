@@ -99,7 +99,7 @@ const loadDynamicDoctors = async (force = false) => {
           !formatted.some(fd => String(fd.id) === String(sd.id) || normalizeName(fd.name) === normalizeName(sd.name))
         )
         
-        cachedDoctorsList = [...filteredStatic, ...formatted]
+        cachedDoctorsList = [...filteredStatic, ...formatted].filter(d => d.status !== 'Deleted' && d.status !== 'Inactive')
         isFetched = true
         listeners.forEach(l => l(cachedDoctorsList))
         return // success
@@ -122,7 +122,7 @@ const loadDynamicDoctors = async (force = false) => {
           !formatted.some(fd => String(fd.id) === String(sd.id) || normalizeName(fd.name) === normalizeName(sd.name))
         )
         
-        cachedDoctorsList = [...filteredStatic, ...formatted]
+        cachedDoctorsList = [...filteredStatic, ...formatted].filter(d => d.status !== 'Deleted' && d.status !== 'Inactive')
         isFetched = true
         listeners.forEach(l => l(cachedDoctorsList))
       }

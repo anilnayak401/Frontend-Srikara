@@ -30,7 +30,7 @@ export function TestimonialsSection({ category = 'General / Home' }) {
 
   const sendPlayerCommand = (func) => {
     iframeRef.current?.contentWindow?.postMessage(
-      JSON.stringify({ event: 'command', func, args: [] }),
+      JSON.stringify({ event: 'command', func, args: [], id: 1, channel: 'widget' }),
       '*'
     )
   }
@@ -82,7 +82,7 @@ export function TestimonialsSection({ category = 'General / Home' }) {
   // Loads with the JS API enabled and NO autoplay — playback is driven by scroll visibility.
   // mute=1 lets the scroll-triggered play succeed under browser autoplay policies;
   // visitors can unmute via the player controls.
-  const EMBED_PARAMS = 'enablejsapi=1&mute=1&playsinline=1&rel=0'
+  const EMBED_PARAMS = `enablejsapi=1&mute=1&playsinline=1&rel=0&origin=${encodeURIComponent(window.location.origin)}`
   const getEmbedUrl = (url) => {
     if (!url) return ''
     let cleanUrl = url.trim()
@@ -191,7 +191,7 @@ export function TestimonialsSection({ category = 'General / Home' }) {
                   // Handshake so the YouTube player accepts our API commands, then
                   // re-send the current visibility state once the iframe has loaded.
                   iframeRef.current?.contentWindow?.postMessage(
-                    JSON.stringify({ event: 'listening', id: 'srikara-testimonial' }), '*'
+                    JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }), '*'
                   )
                   setTimeout(() => {
                     sendPlayerCommand(videoVisibleRef.current ? 'playVideo' : 'pauseVideo')

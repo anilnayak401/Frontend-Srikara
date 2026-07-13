@@ -1011,10 +1011,31 @@ export function AdminDashboard() {
     e.preventDefault()
     let updated
     const newDocId = isEditingDoc ? currentDoctor.id : Date.now().toString()
-    const payload = { ...currentDoctor, id: newDocId, slug: currentDoctor.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'), about: currentDoctor.bio }
+    const timestamp = new Date().toISOString()
+    const adminEmail = user?.email || 'Admin Editor'
+
+    const payload = { 
+      ...currentDoctor, 
+      id: newDocId, 
+      slug: currentDoctor.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'), 
+      about: currentDoctor.bio,
+      status: 'Active',
+      updatedAt: timestamp
+    }
+
+    if (!isEditingDoc) {
+      payload.createdAt = timestamp
+      payload.createdBy = adminEmail
+    } else {
+      const existing = doctors.find(d => String(d.id) === String(currentDoctor.id))
+      if (existing) {
+        payload.createdAt = existing.createdAt || timestamp
+        payload.createdBy = existing.createdBy || adminEmail
+      }
+    }
 
     if (isEditingDoc) {
-      updated = doctors.map(d => d.id === currentDoctor.id ? payload : d)
+      updated = doctors.map(d => String(d.id) === String(currentDoctor.id) ? payload : d)
       setIsEditingDoc(false)
     } else {
       updated = [...doctors, payload]
@@ -1032,10 +1053,25 @@ export function AdminDashboard() {
   }
 
   const deleteDoctor = async (id) => {
-    const updated = doctors.filter(d => d.id !== id)
+    const docToDelete = doctors.find(d => String(d.id) === String(id))
+    if (!docToDelete) return
+
+    const timestamp = new Date().toISOString()
+    const adminEmail = user?.email || 'Admin Editor'
+
+    const updatedPayload = {
+      ...docToDelete,
+      status: 'Deleted',
+      deletedAt: timestamp,
+      deletedBy: adminEmail
+    }
+
+    const updated = doctors.map(d => String(d.id) === String(id) ? updatedPayload : d)
     setDoctors(updated)
     await persistToStore('doctors', updated)
-    if (db) await deleteDoc(doc(db, 'doctors', id))
+    if (db) {
+      await setDoc(doc(db, 'doctors', id), updatedPayload)
+    }
     notifyUser('success', 'Doctor profile deleted.')
   }
 
@@ -1480,6 +1516,7 @@ export function AdminDashboard() {
 
   // Search filter lists
   const filteredDoctors = doctors.filter(doc => {
+    if (doc.status === 'Deleted' || doc.status === 'Inactive') return false
     const matchesSearch = doc.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           doc.specialty.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesBranch = filterBranch === 'All' || doc.branch === filterBranch

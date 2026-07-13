@@ -19,6 +19,26 @@ const PHOTOS = Array.from({ length: 18 }, (_, i) => {
   }
 })
 
+/* Repeating collage rhythm: big feature tiles, tall portraits, wide banners and small squares.
+   `grid-flow-dense` lets the browser back-fill any holes so the collage stays packed. */
+const SPAN_PATTERN = [
+  { size: 'col-span-2 row-span-2', radius: 'rounded-[28px]', featured: true },   // big feature
+  { size: 'col-span-1 row-span-1', radius: 'rounded-2xl' },                      // small
+  { size: 'col-span-1 row-span-2', radius: 'rounded-[24px]' },                   // tall
+  { size: 'col-span-1 row-span-1', radius: 'rounded-xl' },                       // small
+  { size: 'col-span-2 row-span-1', radius: 'rounded-[24px]' },                   // wide
+  { size: 'col-span-1 row-span-2', radius: 'rounded-2xl' },                      // tall
+  { size: 'col-span-1 row-span-1', radius: 'rounded-[24px]' },                   // small
+  { size: 'col-span-2 row-span-2', radius: 'rounded-[28px]', featured: true },   // big feature
+  { size: 'col-span-1 row-span-1', radius: 'rounded-xl' },                       // small
+  { size: 'col-span-1 row-span-2', radius: 'rounded-2xl' },                      // tall
+  { size: 'col-span-2 row-span-1', radius: 'rounded-[24px]' },                   // wide
+  { size: 'col-span-1 row-span-1', radius: 'rounded-2xl' },                      // small
+]
+
+/* Alternating hover tilt (degrees) for a hand-placed, scrapbook feel */
+const TILT_PATTERN = [-1.2, 1, -0.8, 1.4, -1, 0.8]
+
 export function GalleryPage() {
   const [activeCategory, setActiveCategory] = useState('All')
   const [lightboxIndex, setLightboxIndex] = useState(null)
@@ -56,36 +76,50 @@ export function GalleryPage() {
         ))}
       </div>
 
-      {/* Photo grid */}
-      <motion.div layout className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5 mb-20">
+      {/* Uneven collage grid — mixed tile sizes packed densely for an editorial, scrapbook feel */}
+      <motion.div
+        layout
+        className="grid grid-cols-2 md:grid-cols-4 auto-rows-[110px] sm:auto-rows-[140px] md:auto-rows-[165px] gap-3 md:gap-4 grid-flow-dense mb-20"
+      >
         <AnimatePresence mode="popLayout">
-          {photos.map((photo, idx) => (
-            <motion.button
-              layout
-              key={photo.src}
-              initial={{ opacity: 0, scale: 0.92 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.92 }}
-              transition={{ duration: 0.35 }}
-              onClick={() => setLightboxIndex(idx)}
-              className={`group relative overflow-hidden rounded-2xl border border-white/80 shadow-[0_6px_20px_rgba(139,26,74,0.08)] bg-white outline-none ${
-                idx % 7 === 0 ? 'row-span-2' : ''
-              }`}
-            >
-              <img
-                src={photo.src}
-                alt={photo.caption}
-                loading="lazy"
-                className="w-full h-full min-h-[160px] object-cover transition-transform duration-700 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#2D0A1C]/85 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-4 text-left">
-                <span className="text-[9px] font-black uppercase tracking-widest text-white/60 flex items-center gap-1.5">
-                  <Camera className="w-3 h-3" /> {photo.category}
-                </span>
-                <p className="text-white text-xs font-bold mt-1 leading-snug">{photo.caption}</p>
-              </div>
-            </motion.button>
-          ))}
+          {photos.map((photo, idx) => {
+            const span = SPAN_PATTERN[idx % SPAN_PATTERN.length]
+            const tilt = TILT_PATTERN[idx % TILT_PATTERN.length]
+            return (
+              <motion.button
+                layout
+                key={photo.src}
+                initial={{ opacity: 0, scale: 0.9, rotate: tilt * 2 }}
+                animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                whileHover={{ rotate: tilt, scale: 1.02, zIndex: 20 }}
+                transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+                onClick={() => setLightboxIndex(idx)}
+                className={`group relative overflow-hidden bg-white outline-none border-[5px] border-white shadow-[0_10px_30px_rgba(139,26,74,0.12)] hover:shadow-[0_24px_50px_rgba(139,26,74,0.25)] transition-shadow duration-500 ${span.size} ${span.radius}`}
+              >
+                <img
+                  src={photo.src}
+                  alt={photo.caption}
+                  loading="lazy"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                />
+                {/* Feature tiles get an always-on label; the rest reveal on hover */}
+                <div className={`absolute inset-0 bg-gradient-to-t from-[#2D0A1C]/85 via-transparent to-transparent transition-opacity duration-500 flex flex-col justify-end p-4 text-left ${
+                  span.featured ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                }`}>
+                  <span className="text-[9px] font-black uppercase tracking-widest text-white/60 flex items-center gap-1.5">
+                    <Camera className="w-3 h-3" /> {photo.category}
+                  </span>
+                  <p className="text-white text-xs font-bold mt-1 leading-snug">{photo.caption}</p>
+                </div>
+                {span.featured && (
+                  <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-white/90 backdrop-blur-sm text-[#8B1A4A] text-[8px] font-black uppercase tracking-widest shadow-sm">
+                    Featured
+                  </span>
+                )}
+              </motion.button>
+            )
+          })}
         </AnimatePresence>
       </motion.div>
 
