@@ -9,7 +9,7 @@ import {
   CheckCircle2, AlertCircle, RefreshCw, Search, Sparkles, HelpCircle, Clock, Eye, 
   FileText, Sliders, DollarSign, Home, Building2, FolderOpen, Mail, ShieldCheck, 
   Calendar, Layers, Star, Settings, Image as ImageIcon, MapPin, Globe, Check, Info, FileCode, ChevronRight,
-  Folder, File, ChevronDown
+  Folder, File, ChevronDown, History, Quote
 } from 'lucide-react'
 
 import { ALL_DOCTORS } from '@/data/doctors'
@@ -1240,11 +1240,26 @@ export function AdminDashboard() {
   }
 
   const deleteTestimonial = async (id) => {
-    const updated = testimonials.filter(t => t.id !== id)
+    const testToDelete = testimonials.find(t => String(t.id) === String(id))
+    if (!testToDelete) return
+
+    const timestamp = new Date().toISOString()
+    const adminEmail = user?.email || 'Admin Editor'
+
+    const updatedPayload = {
+      ...testToDelete,
+      status: 'Deleted',
+      deletedAt: timestamp,
+      deletedBy: adminEmail
+    }
+
+    const updated = testimonials.map(t => String(t.id) === String(id) ? updatedPayload : t)
     setTestimonials(updated)
     await persistToStore('testimonials', updated)
-    if (db) await deleteDoc(doc(db, 'testimonials', id))
-    notifyUser('success', 'Testimonial removed.')
+    if (db) {
+      await setDoc(doc(db, 'testimonials', id), updatedPayload)
+    }
+    notifyUser('success', 'Testimonial deleted and moved to history log.')
   }
 
   // Downloads CRUD
@@ -2143,6 +2158,17 @@ export function AdminDashboard() {
                               <ShieldCheck className="w-3.5 h-3.5" />
                               <span>Admin Users & Roles</span>
                             </button>
+
+                            <button
+                              type="button"
+                              onClick={() => { setActiveGroup('admin'); setActiveTab('history'); }}
+                              className={`w-full text-left flex items-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
+                                activeTab === 'history' ? 'bg-[#8B1A4A] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'
+                              }`}
+                            >
+                              <History className="w-3.5 h-3.5" />
+                              <span>Audit & History Log</span>
+                            </button>
                           </div>
                         )}
                       </div>
@@ -2670,6 +2696,11 @@ export function AdminDashboard() {
                             <textarea value={currentDoctor.bio} onChange={e => setCurrentDoctor(prev => ({ ...prev, bio: e.target.value }))} className="w-full h-20 p-3 rounded-xl border bg-white text-xs" placeholder="Describe the doctor's achievements..." />
                           </div>
 
+                          <div>
+                            <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Academic Credentials & Fellowships</label>
+                            <input type="text" value={currentDoctor.education} onChange={e => setCurrentDoctor(prev => ({ ...prev, education: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" placeholder="e.g. MBBS, MD (General Medicine), DM (Cardiology)" />
+                          </div>
+
                           <div className="flex gap-3 pt-2">
                             <button type="submit" className="flex-1 h-12 bg-[#8B1A4A] text-white hover:bg-[#2D3A4A] rounded-full text-xs font-bold uppercase transition-all shadow-md">
                               {isEditingDoc ? 'Save Changes' : 'Publish Profile'}
@@ -3124,16 +3155,16 @@ export function AdminDashboard() {
                       
                       {/* Left list */}
                       <div className="xl:col-span-7 glass-card-admin rounded-[32px] p-8 shadow-sm space-y-6">
-                        <h3 className="font-garamond text-3xl font-bold text-[#2D3A4A]">Patient Testimonials ({testimonials.length})</h3>
+                        <h3 className="font-garamond text-3xl font-bold text-[#2D3A4A]">Patient Testimonials ({testimonials.filter(t => t.status !== 'Deleted').length})</h3>
                         <div className="max-h-[600px] overflow-y-auto pr-2 space-y-4 custom-admin-scrollbar">
-                          {testimonials.length === 0 ? (
+                          {testimonials.filter(t => t.status !== 'Deleted').length === 0 ? (
                             <div className="p-10 text-center border-2 border-dashed border-slate-200/80 rounded-2xl bg-slate-50/50 flex flex-col items-center justify-center">
                               <Quote className="w-8 h-8 text-slate-300 mb-3" />
                               <p className="text-sm font-bold text-slate-500">No Patient Testimonials Added Yet</p>
                               <p className="text-xs text-gray-400 mt-1 max-w-sm">Publish inspiring recovery stories using the creator form on the right to display them on the website.</p>
                             </div>
                           ) : (
-                            testimonials.map(item => (
+                            testimonials.filter(t => t.status !== 'Deleted').map(item => (
                               <div key={item.id} className="p-5 rounded-2xl bg-white border border-slate-100 flex justify-between items-start shadow-sm">
                                 <div>
                                   <div className="flex items-center gap-1.5 text-amber-500 mb-2">
@@ -4140,6 +4171,127 @@ export function AdminDashboard() {
                           </button>
                           {auth && <p className="text-[10px] text-slate-400 text-center">Set a temporary or permanent password. The new administrator can log in immediately.</p>}
                         </form>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* TAB: Audit & History Log */}
+                  {activeTab === 'history' && activeGroup === 'admin' && (
+                    <motion.div key="history" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 gap-10">
+                      
+                      <div className="glass-card-admin rounded-[32px] p-8 shadow-sm space-y-6">
+                        <div className="flex justify-between items-center border-b pb-4">
+                          <div>
+                            <h3 className="font-garamond text-3xl font-bold text-[#2D3A4A]">Recycle Bin & History Log</h3>
+                            <p className="text-xs text-slate-500 mt-1">Review soft-deleted profiles or items. Restore them back to the live site or delete them permanently.</p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                          
+                          {/* Deleted Doctors */}
+                          <div className="space-y-4">
+                            <h4 className="text-sm font-bold text-[#8B1A4A] uppercase tracking-wider flex items-center gap-2">
+                              <Users className="w-4 h-4" /> Deleted Doctor Profiles ({doctors.filter(d => d.status === 'Deleted').length})
+                            </h4>
+                            <div className="space-y-3 max-h-[450px] overflow-y-auto pr-1">
+                              {doctors.filter(d => d.status === 'Deleted').map(doc => (
+                                <div key={doc.id} className="p-4 rounded-2xl border border-slate-100 bg-white shadow-sm flex justify-between items-center gap-4">
+                                  <div className="flex gap-3 items-center min-w-0">
+                                    <img src={doc.photoUrl} className="w-10 h-10 rounded-full object-cover border shrink-0" onError={e => e.target.src = 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300'} />
+                                    <div className="min-w-0">
+                                      <p className="text-xs font-bold text-slate-800 truncate">{doc.name}</p>
+                                      <p className="text-[10px] text-gray-500">{doc.specialty} &middot; {doc.branch}</p>
+                                      <p className="text-[9px] text-rose-500 mt-1 font-semibold">Deleted on: {doc.deletedAt ? new Date(doc.deletedAt).toLocaleString() : 'N/A'}</p>
+                                    </div>
+                                  </div>
+                                  <div className="flex gap-1.5">
+                                    <button
+                                      type="button"
+                                      onClick={async () => {
+                                        const updated = doctors.map(d => d.id === doc.id ? { ...d, status: 'Active', deletedAt: null, deletedBy: null } : d)
+                                        setDoctors(updated)
+                                        await persistToStore('doctors', updated)
+                                        if (db) await setDoc(doc(db, 'doctors', doc.id), { ...doc, status: 'Active', deletedAt: null, deletedBy: null })
+                                        notifyUser('success', `Doctor "${doc.name}" restored successfully.`)
+                                      }}
+                                      className="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[10px] font-bold transition-all"
+                                    >
+                                      Restore
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => requestConfirm('Permanent Delete?', `Are you sure you want to permanently delete "${doc.name}"? This action is irreversible.`, async () => {
+                                        const updated = doctors.filter(d => d.id !== doc.id)
+                                        setDoctors(updated)
+                                        await persistToStore('doctors', updated)
+                                        if (db) await deleteDoc(doc(db, 'doctors', doc.id))
+                                        notifyUser('success', `Doctor "${doc.name}" permanently deleted.`)
+                                      })}
+                                      className="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold transition-all"
+                                    >
+                                      Purge
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                              {doctors.filter(d => d.status === 'Deleted').length === 0 && (
+                                <p className="text-xs text-slate-400 text-center py-8">No deleted doctor profiles in recycle bin.</p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Deleted Testimonials */}
+                          <div className="space-y-4">
+                            <h4 className="text-sm font-bold text-[#8B1A4A] uppercase tracking-wider flex items-center gap-2">
+                              <Quote className="w-4 h-4" /> Deleted Testimonials ({testimonials.filter(t => t.status === 'Deleted').length})
+                            </h4>
+                            <div className="space-y-3 max-h-[450px] overflow-y-auto pr-1">
+                              {testimonials.filter(t => t.status === 'Deleted').map(item => (
+                                <div key={item.id} className="p-4 rounded-2xl border border-slate-100 bg-white shadow-sm flex justify-between items-center gap-4">
+                                  <div className="min-w-0">
+                                    <p className="text-xs font-bold text-slate-800 truncate">{item.patientName}</p>
+                                    <p className="text-[10px] text-gray-500 italic line-clamp-2">"{item.review}"</p>
+                                    <p className="text-[9px] text-rose-500 mt-1 font-semibold">Deleted on: {item.deletedAt ? new Date(item.deletedAt).toLocaleString() : 'N/A'}</p>
+                                  </div>
+                                  <div className="flex gap-1.5 shrink-0">
+                                    <button
+                                      type="button"
+                                      onClick={async () => {
+                                        const updated = testimonials.map(t => t.id === item.id ? { ...t, status: 'Active', deletedAt: null, deletedBy: null } : t)
+                                        setTestimonials(updated)
+                                        await persistToStore('testimonials', updated)
+                                        if (db) await setDoc(doc(db, 'testimonials', item.id), { ...item, status: 'Active', deletedAt: null, deletedBy: null })
+                                        notifyUser('success', `Testimonial from "${item.patientName}" restored successfully.`)
+                                      }}
+                                      className="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[10px] font-bold transition-all"
+                                    >
+                                      Restore
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => requestConfirm('Permanent Delete?', `Are you sure you want to permanently delete this testimonial? This action is irreversible.`, async () => {
+                                        const updated = testimonials.filter(t => t.id !== item.id)
+                                        setTestimonials(updated)
+                                        await persistToStore('testimonials', updated)
+                                        if (db) await deleteDoc(doc(db, 'testimonials', item.id))
+                                        notifyUser('success', `Testimonial permanently deleted.`)
+                                      })}
+                                      className="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold transition-all"
+                                    >
+                                      Purge
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                              {testimonials.filter(t => t.status === 'Deleted').length === 0 && (
+                                <p className="text-xs text-slate-400 text-center py-8">No deleted testimonials in recycle bin.</p>
+                              )}
+                            </div>
+                          </div>
+
+                        </div>
+
                       </div>
                     </motion.div>
                   )}

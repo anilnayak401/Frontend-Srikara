@@ -75,7 +75,7 @@ const loadTestimonials = async (force = false) => {
   cachedTestimonials = list.map(t => ({
     page: 'General / Home',
     ...t
-  }))
+  })).filter(t => t.status !== 'Deleted')
   isFetched = true
   listeners.forEach(l => l(cachedTestimonials))
 }
