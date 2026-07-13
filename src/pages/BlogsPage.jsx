@@ -139,7 +139,7 @@ export function BlogsPage() {
             const filteredStatic = blogs.filter(sb => 
               !formatted.some(fb => fb.title.toLowerCase() === sb.title.toLowerCase())
             )
-            setAllBlogs([...filteredStatic, ...formatted])
+            setAllBlogs([...filteredStatic, ...formatted].filter(b => b.status !== 'Deleted'))
             return // success
           }
         }
@@ -162,7 +162,7 @@ export function BlogsPage() {
             const filteredStatic = blogs.filter(sb => 
               !formatted.some(fb => fb.title.toLowerCase() === sb.title.toLowerCase())
             )
-            setAllBlogs([...filteredStatic, ...formatted])
+            setAllBlogs([...filteredStatic, ...formatted].filter(b => b.status !== 'Deleted'))
           }
         }
       } catch (e) {

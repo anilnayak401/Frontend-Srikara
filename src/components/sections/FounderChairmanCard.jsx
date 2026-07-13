@@ -93,9 +93,9 @@ export function FounderChairmanCard() {
 
         <div className="relative flex flex-col lg:flex-row items-stretch gap-2">
           {/* ── Portrait panel ── */}
-          <div className="relative w-full lg:w-[42%] p-6 sm:p-8 lg:p-10 flex items-end justify-center">
+          <div className="relative w-full lg:w-[42%] p-6 sm:p-8 lg:p-8 flex items-stretch justify-center">
             <div
-              className="relative w-full max-w-[400px] aspect-[4/5] rounded-[2rem] overflow-hidden self-end"
+              className="relative w-full max-w-[400px] lg:max-w-none aspect-[4/5] lg:aspect-auto lg:h-full rounded-[2rem] overflow-hidden flex items-end justify-center self-stretch"
               style={{
                 background:
                   'linear-gradient(155deg, rgba(139,26,74,0.10), rgba(201,162,39,0.08) 60%, rgba(255,255,255,0.25))',
@@ -153,23 +153,75 @@ export function FounderChairmanCard() {
 
           {/* ── Content panel ── */}
           <div className="flex-1 px-7 sm:px-9 lg:px-12 py-10 lg:py-14">
-            {/* Title chip */}
+            {/* Slanted Parallelogram Burgundy Badge (Refined Size & Shifted Left) */}
             <div
-              className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-6"
+              className="relative inline-flex items-center -skew-x-[15deg] mb-6 transition-all hover:scale-105 duration-300"
               style={{
-                background: 'rgba(201,162,39,0.10)',
-                border: '1px solid rgba(201,162,39,0.40)',
-                backdropFilter: 'blur(6px)',
-                WebkitBackdropFilter: 'blur(6px)',
+                background: 'linear-gradient(135deg, #5c0f30 0%, #8B1A4A 50%, #a22453 100%)',
+                border: '2px solid #C9A227', // premium gold border
+                boxShadow: '0 8px 24px -6px rgba(139,26,74,0.4), inset 0 1px 1px rgba(255,255,255,0.25)',
+                padding: '10px 28px', // slightly reduced padding
+                marginLeft: '-16px', // shifted to the left to align with the name below
+                position: 'relative',
+                overflow: 'hidden',
               }}
             >
-              <Award size={14} style={{ color: GOLD }} />
-              <span className="text-[11px] font-black uppercase tracking-[0.32em]" style={{ color: '#9A7B12' }}>
-                Founder &amp; Chairman
-              </span>
+              {/* CSS style block for keyframe animation */}
+              <style>{`
+                @keyframes shiny-glare {
+                  0% { left: -260%; }
+                  100% { left: 260%; }
+                }
+              `}</style>
+              
+              {/* Shiny glare lines moving left to right slowly in a loop */}
+              <div
+                className="absolute top-0 bottom-0 w-[240px] pointer-events-none"
+                style={{
+                  background: 'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0.05) 75%, rgba(255,255,255,0) 100%)',
+                  animation: 'shiny-glare 7s infinite linear',
+                  opacity: 1.0,
+                }}
+              />
+
+              {/* Un-skew content inside so text and medal remain upright */}
+              <div className="relative z-10 skew-x-[15deg] flex items-center gap-3">
+                {/* 3D Medal SVG */}
+                <svg width="22" height="22" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 drop-shadow-[0_2px_6px_rgba(201,162,39,0.7)]">
+                  <defs>
+                    <linearGradient id="ribbonLeft" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#E13B30" />
+                      <stop offset="100%" stopColor="#8C1610" />
+                    </linearGradient>
+                    <linearGradient id="ribbonRight" x1="100%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#4A90E2" />
+                      <stop offset="100%" stopColor="#1B365D" />
+                    </linearGradient>
+                    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#FFF6D1" />
+                      <stop offset="30%" stopColor="#F5C400" />
+                      <stop offset="70%" stopColor="#B58900" />
+                      <stop offset="100%" stopColor="#735600" />
+                    </linearGradient>
+                    <linearGradient id="innerGold" x1="100%" y1="100%" x2="0%" y2="0%">
+                      <stop offset="0%" stopColor="#FFFAD9" />
+                      <stop offset="50%" stopColor="#FFD700" />
+                      <stop offset="100%" stopColor="#C9A227" />
+                    </linearGradient>
+                  </defs>
+                  <path d="M10 2 L16 16 L19 2 Z" fill="url(#ribbonLeft)" />
+                  <path d="M22 2 L16 16 L13 2 Z" fill="url(#ribbonRight)" />
+                  <circle cx="16" cy="18" r="9" fill="url(#goldGrad)" />
+                  <circle cx="16" cy="18" r="6.8" fill="url(#innerGold)" />
+                  <path d="M16 14.5 L17.2 16.9 L19.8 17.3 L17.9 19.1 L18.4 21.7 L16 20.5 L13.6 21.7 L14.1 19.1 L12.2 17.3 L14.8 16.9 Z" fill="#FFFFFF" opacity="0.95" />
+                </svg>
+                <span className="text-[15px] sm:text-[17px] font-black uppercase tracking-[0.20em] text-white">
+                  Founder &amp; Chairman
+                </span>
+              </div>
             </div>
 
-            <h3 className="font-garamond text-5xl sm:text-6xl font-bold leading-[1.02] mb-3 text-[#2D3A4A]">
+            <h3 className="editorial-title text-3xl sm:text-4xl md:text-[42px] font-black tracking-tight leading-[1.05] mb-4 text-[#2D3A4A]">
               {name}
             </h3>
 

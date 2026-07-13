@@ -475,6 +475,14 @@ export function AdminDashboard() {
   const [pageData, setPageData] = useState(DEFAULT_PAGE_DATA)
   const [seoData, setSeoData] = useState(DEFAULT_SEO_DATA)
   const [analyticsEvents, setAnalyticsEvents] = useState([])
+  const [historyLogs, setHistoryLogs] = useState(() => {
+    try {
+      const stored = localStorage.getItem('history_logs')
+      return stored ? JSON.parse(stored) : []
+    } catch {
+      return []
+    }
+  })
 
   // Dynamic Location Management States
   const { branches: hookBranches, refetch: refetchBranches } = useBranches()
@@ -744,6 +752,12 @@ export function AdminDashboard() {
           const analyticsSnap = await getDocs(collection(db, 'analytics_events'))
           setAnalyticsEvents(analyticsSnap.docs.map(e => ({ id: e.id, ...e.data() })))
 
+          // 14. Load Audit Logs
+          const auditSnap = await getDocs(collection(db, 'audit_logs'))
+          const loadedLogs = auditSnap.docs.map(e => ({ id: e.id, ...e.data() }))
+          loadedLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+          setHistoryLogs(loadedLogs)
+
         } catch (err) {
           console.error('Firestore loading failed, falling back to local storage', err)
           loadFromLocalStorage()
@@ -760,6 +774,12 @@ export function AdminDashboard() {
 
   const loadFromLocalStorage = () => {
     try {
+      const storedLogs = localStorage.getItem('history_logs')
+      if (storedLogs) {
+        setHistoryLogs(JSON.parse(storedLogs))
+      } else {
+        setHistoryLogs([])
+      }
       const data = localStorage.getItem('srikara_cms_data')
       let loadedDocs = []
       let loadedBlogs = []
@@ -962,6 +982,275 @@ export function AdminDashboard() {
     if (action) await action()
   }
 
+  const logChange = async (actionType, collectionName, itemId, itemName, previousState = null, currentState = null) => {
+    const timestamp = new Date().toISOString()
+    const performedBy = user?.email || 'Admin Editor'
+    const newLog = {
+      id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 9),
+      actionType,
+      collectionName,
+      itemId,
+      itemName,
+      previousState: previousState ? JSON.parse(JSON.stringify(previousState)) : null,
+      currentState: currentState ? JSON.parse(JSON.stringify(currentState)) : null,
+      timestamp,
+      performedBy
+    }
+    
+    setHistoryLogs(prev => {
+      const updated = [newLog, ...prev].slice(0, 100)
+      localStorage.setItem('history_logs', JSON.stringify(updated))
+      return updated
+    })
+    
+    if (db) {
+      try {
+        await setDoc(doc(db, 'audit_logs', newLog.id), newLog)
+      } catch (err) {
+        console.error('Failed to save audit log:', err)
+      }
+    }
+  }
+
+  const deleteLogEntry = (logId) => {
+    requestConfirm(
+      'Delete Log Entry',
+      'Delete this history log entry permanently?',
+      async () => {
+        const updated = historyLogs.filter(l => String(l.id) !== String(logId))
+        setHistoryLogs(updated)
+        localStorage.setItem('history_logs', JSON.stringify(updated))
+        if (db) {
+          try {
+            await deleteDoc(doc(db, 'audit_logs', logId))
+          } catch (err) {
+            console.error('Failed to delete log entry from firestore:', err)
+          }
+        }
+        notifyUser('success', 'Log entry removed.')
+      },
+      'Delete'
+    )
+  }
+
+  const revertLogEntry = (log) => {
+    requestConfirm(
+      'Revert Change',
+      `Are you sure you want to revert this "${log.actionType}" action on ${log.collectionName}?`,
+      async () => {
+        try {
+          const { collectionName, itemId, previousState, currentState, actionType } = log
+
+          if (actionType === 'Update') {
+            if (!previousState) return notifyUser('error', 'Cannot revert: no previous state recorded.')
+
+            if (collectionName === 'doctors') {
+              const updated = doctors.map(d => String(d.id) === String(itemId) ? previousState : d)
+              setDoctors(updated)
+              await persistToStore('doctors', updated)
+              if (db) await setDoc(doc(db, 'doctors', itemId), previousState)
+            }
+            else if (collectionName === 'testimonials') {
+              const updated = testimonials.map(t => String(t.id) === String(itemId) ? previousState : t)
+              setTestimonials(updated)
+              await persistToStore('testimonials', updated)
+              if (db) await setDoc(doc(db, 'testimonials', itemId), previousState)
+            }
+            else if (collectionName === 'blogs') {
+              const updated = blogs.map(b => String(b.id) === String(itemId) ? previousState : b)
+              setBlogs(updated)
+              await persistToStore('blogs', updated)
+              if (db) await setDoc(doc(db, 'blogs', itemId), previousState)
+            }
+            else if (collectionName === 'faqs') {
+              const updated = faqs.map(f => String(f.id) === String(itemId) ? previousState : f)
+              setFaqs(updated)
+              await persistToStore('faqs', updated)
+              if (db) await setDoc(doc(db, 'faqs', itemId), previousState)
+            }
+            else if (collectionName === 'jobs') {
+              const updated = jobs.map(j => String(j.id) === String(itemId) ? previousState : j)
+              setJobs(updated)
+              await persistToStore('jobs', updated)
+              if (db) await setDoc(doc(db, 'jobs', itemId), previousState)
+            }
+            else if (collectionName === 'downloads') {
+              const updated = downloads.map(d => String(d.id) === String(itemId) ? previousState : d)
+              setDownloads(updated)
+              await persistToStore('downloads', updated)
+              if (db) await setDoc(doc(db, 'downloads', itemId), previousState)
+            }
+            else if (collectionName === 'departments') {
+              const updated = departments.map(d => String(d.id) === String(itemId) ? previousState : d)
+              setDepartments(updated)
+              await persistToStore('departments', updated)
+              if (db) await setDoc(doc(db, 'departments', itemId), previousState)
+            }
+            else if (collectionName === 'news') {
+              const updated = news.map(n => String(n.id) === String(itemId) ? previousState : n)
+              setNews(updated)
+              await persistToStore('news', updated)
+              if (db) await setDoc(doc(db, 'news', itemId), previousState)
+            }
+            else if (collectionName === 'site_contents') {
+              if (itemId === 'homepage') {
+                setHomepageData(previousState)
+                if (db) await setDoc(doc(db, 'site_contents', 'homepage'), previousState)
+              } else if (itemId === 'aboutpage') {
+                setAboutpageData(previousState)
+                if (db) await setDoc(doc(db, 'site_contents', 'aboutpage'), previousState)
+              } else if (itemId === 'careers_customizer') {
+                setCareersData(previousState)
+                if (db) await setDoc(doc(db, 'site_contents', 'careers_customizer'), previousState)
+              }
+            }
+            else if (collectionName === 'branches') {
+              if (db) await setDoc(doc(db, 'branches', itemId), previousState)
+            }
+            else if (collectionName === 'seo') {
+              if (db) await setDoc(doc(db, 'seo', itemId), previousState)
+            }
+
+            await logChange('Restore', collectionName, itemId, log.itemName, currentState, previousState)
+            notifyUser('success', 'Changes reverted successfully.')
+          }
+
+          else if (actionType === 'Delete') {
+            const stateToRestore = previousState || currentState
+            if (!stateToRestore) return notifyUser('error', 'Cannot revert: no item state found.')
+
+            const restoredItem = { ...stateToRestore, status: 'Active', deletedAt: null, deletedBy: null }
+
+            if (collectionName === 'doctors') {
+              const exists = doctors.some(d => String(d.id) === String(itemId))
+              const updated = exists ? doctors.map(d => String(d.id) === String(itemId) ? restoredItem : d) : [...doctors, restoredItem]
+              setDoctors(updated)
+              await persistToStore('doctors', updated)
+              if (db) await setDoc(doc(db, 'doctors', itemId), restoredItem)
+            }
+            else if (collectionName === 'testimonials') {
+              const restoredTestimonial = { ...stateToRestore, status: 'Active', deletedAt: null, deletedBy: null }
+              const exists = testimonials.some(t => String(t.id) === String(itemId))
+              const updated = exists ? testimonials.map(t => String(t.id) === String(itemId) ? restoredTestimonial : t) : [...testimonials, restoredTestimonial]
+              setTestimonials(updated)
+              await persistToStore('testimonials', updated)
+              if (db) await setDoc(doc(db, 'testimonials', itemId), restoredTestimonial)
+            }
+            else if (collectionName === 'blogs') {
+              const restoredBlog = { ...stateToRestore, status: 'Active', deletedAt: null, deletedBy: null }
+              const exists = blogs.some(b => String(b.id) === String(itemId))
+              const updated = exists ? blogs.map(b => String(b.id) === String(itemId) ? restoredBlog : b) : [...blogs, restoredBlog]
+              setBlogs(updated)
+              await persistToStore('blogs', updated)
+              if (db) await setDoc(doc(db, 'blogs', itemId), restoredBlog)
+            }
+            else if (collectionName === 'faqs') {
+              const restoredFaq = { ...stateToRestore, status: 'Active', deletedAt: null, deletedBy: null }
+              const exists = faqs.some(f => String(f.id) === String(itemId))
+              const updated = exists ? faqs.map(f => String(f.id) === String(itemId) ? restoredFaq : f) : [...faqs, restoredFaq]
+              setFaqs(updated)
+              await persistToStore('faqs', updated)
+              if (db) await setDoc(doc(db, 'faqs', itemId), restoredFaq)
+            }
+            else if (collectionName === 'jobs') {
+              const restoredJob = { ...stateToRestore, status: 'Active', deletedAt: null, deletedBy: null }
+              const exists = jobs.some(j => String(j.id) === String(itemId))
+              const updated = exists ? jobs.map(j => String(j.id) === String(itemId) ? restoredJob : j) : [...jobs, restoredJob]
+              setJobs(updated)
+              await persistToStore('jobs', updated)
+              if (db) await setDoc(doc(db, 'jobs', itemId), restoredJob)
+            }
+            else if (collectionName === 'downloads') {
+              const restoredDownload = { ...stateToRestore, status: 'Active', deletedAt: null, deletedBy: null }
+              const exists = downloads.some(d => String(d.id) === String(itemId))
+              const updated = exists ? downloads.map(d => String(d.id) === String(itemId) ? restoredDownload : d) : [...downloads, restoredDownload]
+              setDownloads(updated)
+              await persistToStore('downloads', updated)
+              if (db) await setDoc(doc(db, 'downloads', itemId), restoredDownload)
+            }
+            else if (collectionName === 'departments') {
+              const restoredDept = { ...stateToRestore, status: 'Active', deletedAt: null, deletedBy: null }
+              const exists = departments.some(d => String(d.id) === String(itemId))
+              const updated = exists ? departments.map(d => String(d.id) === String(itemId) ? restoredDept : d) : [...departments, restoredDept]
+              setDepartments(updated)
+              await persistToStore('departments', updated)
+              if (db) await setDoc(doc(db, 'departments', itemId), restoredDept)
+            }
+            else if (collectionName === 'news') {
+              const restoredNews = { ...stateToRestore, status: 'Active', deletedAt: null, deletedBy: null }
+              const exists = news.some(n => String(n.id) === String(itemId))
+              const updated = exists ? news.map(n => String(n.id) === String(itemId) ? restoredNews : n) : [...news, restoredNews]
+              setNews(updated)
+              await persistToStore('news', updated)
+              if (db) await setDoc(doc(db, 'news', itemId), restoredNews)
+            }
+
+            await logChange('Restore', collectionName, itemId, log.itemName, null, restoredItem)
+            notifyUser('success', 'Item restored successfully.')
+          }
+
+          else if (actionType === 'Create') {
+            if (collectionName === 'doctors') {
+              const updated = doctors.filter(d => String(d.id) !== String(itemId))
+              setDoctors(updated)
+              await persistToStore('doctors', updated)
+              if (db) await deleteDoc(doc(db, 'doctors', itemId))
+            }
+            else if (collectionName === 'testimonials') {
+              const updated = testimonials.filter(t => String(t.id) !== String(itemId))
+              setTestimonials(updated)
+              await persistToStore('testimonials', updated)
+              if (db) await deleteDoc(doc(db, 'testimonials', itemId))
+            }
+            else if (collectionName === 'blogs') {
+              const updated = blogs.filter(b => String(b.id) !== String(itemId))
+              setBlogs(updated)
+              await persistToStore('blogs', updated)
+              if (db) await deleteDoc(doc(db, 'blogs', itemId))
+            }
+            else if (collectionName === 'faqs') {
+              const updated = faqs.filter(f => String(f.id) !== String(itemId))
+              setFaqs(updated)
+              await persistToStore('faqs', updated)
+              if (db) await deleteDoc(doc(db, 'faqs', itemId))
+            }
+            else if (collectionName === 'jobs') {
+              const updated = jobs.filter(j => String(j.id) !== String(itemId))
+              setJobs(updated)
+              await persistToStore('jobs', updated)
+              if (db) await deleteDoc(doc(db, 'jobs', itemId))
+            }
+            else if (collectionName === 'downloads') {
+              const updated = downloads.filter(d => String(d.id) !== String(itemId))
+              setDownloads(updated)
+              await persistToStore('downloads', updated)
+              if (db) await deleteDoc(doc(db, 'downloads', itemId))
+            }
+            else if (collectionName === 'departments') {
+              const updated = departments.filter(d => String(d.id) !== String(itemId))
+              setDepartments(updated)
+              await persistToStore('departments', updated)
+              if (db) await deleteDoc(doc(db, 'departments', itemId))
+            }
+            else if (collectionName === 'news') {
+              const updated = news.filter(n => String(n.id) !== String(itemId))
+              setNews(updated)
+              await persistToStore('news', updated)
+              if (db) await deleteDoc(doc(db, 'news', itemId))
+            }
+
+            await logChange('Delete', collectionName, itemId, log.itemName, currentState, null)
+            notifyUser('success', 'Creation reverted successfully (item deleted).')
+          }
+        } catch (err) {
+          console.error('Failed to revert log entry:', err)
+          notifyUser('error', 'Failed to revert action.')
+        }
+      },
+      'Revert'
+    )
+  }
+
   // 2b. Admin User Management (Super Admin only)
   const loadAdminUsers = async () => {
     if (!db) return
@@ -1064,10 +1353,13 @@ export function AdminDashboard() {
     }
 
     if (isEditingDoc) {
+      const prev = doctors.find(d => String(d.id) === String(currentDoctor.id))
       updated = doctors.map(d => String(d.id) === String(currentDoctor.id) ? payload : d)
       setIsEditingDoc(false)
+      await logChange('Update', 'doctors', newDocId, payload.name, prev, payload)
     } else {
       updated = [...doctors, payload]
+      await logChange('Create', 'doctors', newDocId, payload.name, null, payload)
     }
     setDoctors(updated)
     await persistToStore('doctors', updated)
@@ -1101,7 +1393,8 @@ export function AdminDashboard() {
     if (db) {
       await setDoc(doc(db, 'doctors', id), updatedPayload)
     }
-    notifyUser('success', 'Doctor profile deleted.')
+    await logChange('Delete', 'doctors', id, docToDelete.name, docToDelete, updatedPayload)
+    notifyUser('success', 'Doctor profile deleted and moved to recycle bin.')
   }
 
   // Blogs CRUD
@@ -1119,10 +1412,13 @@ export function AdminDashboard() {
 
     let updated
     if (isEditingBlog) {
+      const prev = blogs.find(b => String(b.id) === String(currentBlog.id))
       updated = blogs.map(b => b.id === currentBlog.id ? payload : b)
       setIsEditingBlog(false)
+      await logChange('Update', 'blogs', newBlogId, payload.title, prev, payload)
     } else {
       updated = [...blogs, payload]
+      await logChange('Create', 'blogs', newBlogId, payload.title, null, payload)
     }
     setBlogs(updated)
     await persistToStore('blogs', updated)
@@ -1133,11 +1429,22 @@ export function AdminDashboard() {
   }
 
   const deleteBlog = async (id) => {
-    const updated = blogs.filter(b => b.id !== id)
+    const blogToDelete = blogs.find(b => String(b.id) === String(id))
+    if (!blogToDelete) return
+    const timestamp = new Date().toISOString()
+    const adminEmail = user?.email || 'Admin Editor'
+    const updatedPayload = {
+      ...blogToDelete,
+      status: 'Deleted',
+      deletedAt: timestamp,
+      deletedBy: adminEmail
+    }
+    const updated = blogs.map(b => String(b.id) === String(id) ? updatedPayload : b)
     setBlogs(updated)
     await persistToStore('blogs', updated)
-    if (db) await deleteDoc(doc(db, 'blogs', id))
-    notifyUser('success', 'Blog article deleted.')
+    if (db) await setDoc(doc(db, 'blogs', id), updatedPayload)
+    await logChange('Delete', 'blogs', id, blogToDelete.title, blogToDelete, updatedPayload)
+    notifyUser('success', 'Blog article deleted and moved to recycle bin.')
   }
 
   // Jobs CRUD
@@ -1148,10 +1455,13 @@ export function AdminDashboard() {
 
     let updated
     if (isEditingJob) {
+      const prev = jobs.find(j => String(j.id) === String(currentJob.id))
       updated = jobs.map(j => j.id === currentJob.id ? payload : j)
       setIsEditingJob(false)
+      await logChange('Update', 'jobs', newJobId, payload.title, prev, payload)
     } else {
       updated = [...jobs, payload]
+      await logChange('Create', 'jobs', newJobId, payload.title, null, payload)
     }
     setJobs(updated)
     await persistToStore('jobs', updated)
@@ -1162,11 +1472,22 @@ export function AdminDashboard() {
   }
 
   const deleteJob = async (id) => {
-    const updated = jobs.filter(j => j.id !== id)
+    const jobToDelete = jobs.find(j => String(j.id) === String(id))
+    if (!jobToDelete) return
+    const timestamp = new Date().toISOString()
+    const adminEmail = user?.email || 'Admin Editor'
+    const updatedPayload = {
+      ...jobToDelete,
+      status: 'Deleted',
+      deletedAt: timestamp,
+      deletedBy: adminEmail
+    }
+    const updated = jobs.map(j => String(j.id) === String(id) ? updatedPayload : j)
     setJobs(updated)
     await persistToStore('jobs', updated)
-    if (db) await deleteDoc(doc(db, 'job_openings', id))
-    notifyUser('success', 'Job opening deleted.')
+    if (db) await setDoc(doc(db, 'job_openings', id), updatedPayload)
+    await logChange('Delete', 'jobs', id, jobToDelete.title, jobToDelete, updatedPayload)
+    notifyUser('success', 'Job opening deleted and moved to recycle bin.')
   }
 
   // FAQs CRUD
@@ -1177,10 +1498,13 @@ export function AdminDashboard() {
 
     let updated
     if (isEditingFaq) {
+      const prev = faqs.find(f => String(f.id) === String(currentFaq.id))
       updated = faqs.map(f => f.id === currentFaq.id ? payload : f)
       setIsEditingFaq(false)
+      await logChange('Update', 'faqs', newFaqId, payload.question, prev, payload)
     } else {
       updated = [...faqs, payload]
+      await logChange('Create', 'faqs', newFaqId, payload.question, null, payload)
     }
     setFaqs(updated)
     await persistToStore('faqs', updated)
@@ -1191,11 +1515,22 @@ export function AdminDashboard() {
   }
 
   const deleteFaq = async (id) => {
-    const updated = faqs.filter(f => f.id !== id)
+    const faqToDelete = faqs.find(f => String(f.id) === String(id))
+    if (!faqToDelete) return
+    const timestamp = new Date().toISOString()
+    const adminEmail = user?.email || 'Admin Editor'
+    const updatedPayload = {
+      ...faqToDelete,
+      status: 'Deleted',
+      deletedAt: timestamp,
+      deletedBy: adminEmail
+    }
+    const updated = faqs.map(f => String(f.id) === String(id) ? updatedPayload : f)
     setFaqs(updated)
     await persistToStore('faqs', updated)
-    if (db) await deleteDoc(doc(db, 'faqs', id))
-    notifyUser('success', 'FAQ deleted.')
+    if (db) await setDoc(doc(db, 'faqs', id), updatedPayload)
+    await logChange('Delete', 'faqs', id, faqToDelete.question, faqToDelete, updatedPayload)
+    notifyUser('success', 'FAQ deleted and moved to recycle bin.')
   }
 
   // Departments CMS Save (Add or Update)
@@ -1204,9 +1539,12 @@ export function AdminDashboard() {
     const exists = departments.find(d => d.id === currentDept.id)
     let updated
     if (exists) {
+      const prev = departments.find(d => d.id === currentDept.id)
       updated = departments.map(d => d.id === currentDept.id ? currentDept : d)
+      await logChange('Update', 'departments', currentDept.id, currentDept.name, prev, currentDept)
     } else {
       updated = [...departments, currentDept]
+      await logChange('Create', 'departments', currentDept.id, currentDept.name, null, currentDept)
     }
     setDepartments(updated)
     await persistToStore('departments', updated)
@@ -1217,13 +1555,29 @@ export function AdminDashboard() {
 
   // Departments CMS Delete
   const deleteDepartment = async (deptId) => {
-    if (!window.confirm('Are you sure you want to delete this department?')) return
-    const updated = departments.filter(d => d.id !== deptId)
-    setDepartments(updated)
-    await persistToStore('departments', updated)
-    if (db) await deleteDoc(doc(db, 'departments', deptId))
-    notifyUser('success', 'Department deleted.')
-    if (currentDept.id === deptId) setCurrentDept({ id: '', name: '', description: '', treatments: '', faqCategory: 'Treatments' })
+    requestConfirm(
+      'Delete Department',
+      'Are you sure you want to delete this department?',
+      async () => {
+        const deptToDelete = departments.find(d => String(d.id) === String(deptId))
+        if (!deptToDelete) return
+        const timestamp = new Date().toISOString()
+        const adminEmail = user?.email || 'Admin Editor'
+        const updatedPayload = {
+          ...deptToDelete,
+          status: 'Deleted',
+          deletedAt: timestamp,
+          deletedBy: adminEmail
+        }
+        const updated = departments.map(d => String(d.id) === String(deptId) ? updatedPayload : d)
+        setDepartments(updated)
+        await persistToStore('departments', updated)
+        if (db) await setDoc(doc(db, 'departments', deptId), updatedPayload)
+        await logChange('Delete', 'departments', deptId, deptToDelete.name, deptToDelete, updatedPayload)
+        notifyUser('success', 'Department deleted and moved to recycle bin.')
+        if (currentDept.id === deptId) setCurrentDept({ id: '', name: '', description: '', treatments: '', faqCategory: 'Treatments' })
+      }
+    )
   }
 
   // Testimonials CRUD
@@ -1235,6 +1589,7 @@ export function AdminDashboard() {
     setTestimonials(updated)
     await persistToStore('testimonials', updated)
     if (db) await setDoc(doc(db, 'testimonials', newId), payload)
+    await logChange('Create', 'testimonials', newId, payload.patientName, null, payload)
     setCurrentTestimonial({ patientName: '', rating: 5, review: '', videoUrl: '', page: 'General / Home' })
     notifyUser('success', 'Testimonial added.')
   }
@@ -1271,16 +1626,28 @@ export function AdminDashboard() {
     setDownloads(updated)
     await persistToStore('downloads', updated)
     if (db) await setDoc(doc(db, 'downloads', newId), payload)
+    await logChange('Create', 'downloads', newId, payload.name, null, payload)
     setCurrentDownload({ name: '', url: '', category: 'PDFs', size: '1.2 MB' })
     notifyUser('success', 'Download link added.')
   }
 
   const deleteDownload = async (id) => {
-    const updated = downloads.filter(d => d.id !== id)
+    const dlToDelete = downloads.find(d => String(d.id) === String(id))
+    if (!dlToDelete) return
+    const timestamp = new Date().toISOString()
+    const adminEmail = user?.email || 'Admin Editor'
+    const updatedPayload = {
+      ...dlToDelete,
+      status: 'Deleted',
+      deletedAt: timestamp,
+      deletedBy: adminEmail
+    }
+    const updated = downloads.map(d => String(d.id) === String(id) ? updatedPayload : d)
     setDownloads(updated)
     await persistToStore('downloads', updated)
-    if (db) await deleteDoc(doc(db, 'downloads', id))
-    notifyUser('success', 'Download item removed.')
+    if (db) await setDoc(doc(db, 'downloads', id), updatedPayload)
+    await logChange('Delete', 'downloads', id, dlToDelete.name, dlToDelete, updatedPayload)
+    notifyUser('success', 'Download item deleted and moved to recycle bin.')
   }
 
   // News CRUD
@@ -1292,16 +1659,28 @@ export function AdminDashboard() {
     setNews(updated)
     await persistToStore('news', updated)
     if (db) await setDoc(doc(db, 'news', newId), payload)
+    await logChange('Create', 'news', newId, payload.title, null, payload)
     setCurrentNews({ title: '', type: 'News', date: '', content: '' })
     notifyUser('success', 'News item created.')
   }
 
   const deleteNews = async (id) => {
-    const updated = news.filter(n => n.id !== id)
+    const newsToDelete = news.find(n => String(n.id) === String(id))
+    if (!newsToDelete) return
+    const timestamp = new Date().toISOString()
+    const adminEmail = user?.email || 'Admin Editor'
+    const updatedPayload = {
+      ...newsToDelete,
+      status: 'Deleted',
+      deletedAt: timestamp,
+      deletedBy: adminEmail
+    }
+    const updated = news.map(n => String(n.id) === String(id) ? updatedPayload : n)
     setNews(updated)
     await persistToStore('news', updated)
-    if (db) await deleteDoc(doc(db, 'news', id))
-    notifyUser('success', 'News item removed.')
+    if (db) await setDoc(doc(db, 'news', id), updatedPayload)
+    await logChange('Delete', 'news', id, newsToDelete.title, newsToDelete, updatedPayload)
+    notifyUser('success', 'News item deleted and moved to recycle bin.')
   }
 
   // Appointments Management & CRM sync retry simulation
@@ -1360,19 +1739,23 @@ export function AdminDashboard() {
 
   // 4. Page-wise editing
   const savePageData = async (section, data) => {
+    const prev = pageData[section] ? JSON.parse(JSON.stringify(pageData[section])) : null
     const updated = { ...pageData }
     updated[section] = data
     setPageData(updated)
     await persistToStore('pageData', updated)
+    await logChange('Update', 'site_contents', section, `Page Section: ${section}`, prev, data)
     notifyUser('success', `Page edits for "${section}" saved successfully!`)
   }
 
   const saveBranchData = async (slug, data) => {
+    const prev = pageData.branches?.[slug] ? JSON.parse(JSON.stringify(pageData.branches[slug])) : null
     const updated = { ...pageData }
     updated.branches = updated.branches || {}
     updated.branches[slug] = data
     setPageData(updated)
     await persistToStore('pageData', updated)
+    await logChange('Update', 'branches', slug, `Branch Page Layout: ${slug}`, prev, data)
     notifyUser('success', `Branch details for ${slug.toUpperCase()} updated.`)
   }
 
@@ -1396,9 +1779,15 @@ export function AdminDashboard() {
     }
 
     // 1. Local Cache Sync
-    const updated = isEditingBranch 
-      ? branchesList.map(b => b.slug === slug ? payload : b)
-      : [...branchesList.filter(b => b.slug !== slug), payload]
+    let updated
+    if (isEditingBranch) {
+      const prev = branchesList.find(b => b.slug === slug)
+      updated = branchesList.map(b => b.slug === slug ? payload : b)
+      await logChange('Update', 'branches', slug, `Location details: ${payload.title}`, prev, payload)
+    } else {
+      updated = [...branchesList.filter(b => b.slug !== slug), payload]
+      await logChange('Create', 'branches', slug, `Location details: ${payload.title}`, null, payload)
+    }
 
     setBranchesList(updated)
     localStorage.setItem('srikara_branches', JSON.stringify(updated))
@@ -1440,6 +1829,7 @@ export function AdminDashboard() {
 
   const handleDeleteBranch = (slug) => {
     requestConfirm('Delete Location', `Are you sure you want to delete the "${slug}" location? This cannot be undone.`, async () => {
+      const branchToDelete = branchesList.find(b => b.slug === slug)
       const updated = branchesList.filter(b => b.slug !== slug)
       setBranchesList(updated)
       localStorage.setItem('srikara_branches', JSON.stringify(updated))
@@ -1451,6 +1841,7 @@ export function AdminDashboard() {
       setPageData(updatedPageData)
       await persistToStore('pageData', updatedPageData)
 
+      await logChange('Delete', 'branches', slug, `Location details: ${branchToDelete?.title || slug}`, branchToDelete, null)
       notifyUser('success', 'Location removed successfully.')
       refetchBranches()
     })
@@ -1458,10 +1849,12 @@ export function AdminDashboard() {
 
   // 5. SEO metadata management
   const saveSeoData = async (pageKey, data) => {
+    const prev = seoData[pageKey] ? JSON.parse(JSON.stringify(seoData[pageKey])) : null
     const updated = { ...seoData }
     updated[pageKey] = data
     setSeoData(updated)
     await persistToStore('seoData', updated)
+    await logChange('Update', 'seo', pageKey, `SEO metadata: ${pageKey}`, prev, data)
     notifyUser('success', `SEO meta tags for "${pageKey}" synchronized!`)
   }
 
@@ -1568,13 +1961,17 @@ export function AdminDashboard() {
   })
 
   const filteredBlogs = blogs.filter(b => 
-    b.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    b.category.toLowerCase().includes(searchTerm.toLowerCase())
+    b.status !== 'Deleted' && (
+      b.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      b.category.toLowerCase().includes(searchTerm.toLowerCase())
+    )
   )
 
   const filteredJobs = jobs.filter(j => 
-    j.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    j.department.toLowerCase().includes(searchTerm.toLowerCase())
+    j.status !== 'Deleted' && (
+      j.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      j.department.toLowerCase().includes(searchTerm.toLowerCase())
+    )
   )
 
   const filteredAppointments = appointments.filter(app => {
@@ -2752,7 +3149,7 @@ export function AdminDashboard() {
                           </button>
                         </div>
                         <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin' }}>
-                          {departments.map(dept => (
+                          {departments.filter(d => d.status !== 'Deleted').map(dept => (
                             <div key={dept.id} className={`p-5 rounded-2xl bg-white border flex justify-between items-start transition-all ${currentDept.id === dept.id ? 'border-[#8B1A4A]/40 shadow-md' : 'border-slate-100 hover:border-slate-200'}`}>
                               <div className="space-y-1 flex-1 min-w-0 mr-3">
                                 <h4 className="text-base font-bold text-slate-800 truncate">{dept.name}</h4>
@@ -2962,9 +3359,9 @@ export function AdminDashboard() {
                       
                       {/* Left list */}
                       <div className="xl:col-span-7 glass-card-admin rounded-[32px] p-8 shadow-sm space-y-6">
-                        <h3 className="font-garamond text-3xl font-bold text-[#2D3A4A]">Announcements & News ({news.length})</h3>
+                        <h3 className="font-garamond text-3xl font-bold text-[#2D3A4A]">Announcements & News ({news.filter(n => n.status !== 'Deleted').length})</h3>
                         <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin' }}>
-                          {news.map(item => (
+                          {news.filter(n => n.status !== 'Deleted').map(item => (
                             <div key={item.id} className="p-5 rounded-2xl bg-white border border-slate-100 flex justify-between items-center shadow-sm">
                               <div>
                                 <span className="bg-amber-100 text-amber-800 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md">{item.type}</span>
@@ -3249,9 +3646,9 @@ export function AdminDashboard() {
                       
                       {/* Left list */}
                       <div className="xl:col-span-7 glass-card-admin rounded-[32px] p-8 shadow-sm space-y-6">
-                        <h3 className="font-garamond text-3xl font-bold text-[#2D3A4A]">FAQs Database ({faqs.length})</h3>
+                        <h3 className="font-garamond text-3xl font-bold text-[#2D3A4A]">FAQs Database ({faqs.filter(f => f.status !== 'Deleted').length})</h3>
                         <div className="space-y-4 max-h-[550px] overflow-y-auto pr-1">
-                          {faqs.map(faq => (
+                          {faqs.filter(f => f.status !== 'Deleted').map(faq => (
                             <div key={faq.id} className="p-5 rounded-2xl bg-white border border-slate-100 flex justify-between items-start gap-4">
                               <div>
                                 <h4 className="font-bold text-slate-800 text-sm">Q: {faq.question}</h4>
@@ -3313,9 +3710,9 @@ export function AdminDashboard() {
                       
                       {/* Left list */}
                       <div className="xl:col-span-7 glass-card-admin rounded-[32px] p-8 shadow-sm space-y-6">
-                        <h3 className="font-garamond text-3xl font-bold text-[#2D3A4A]">Downloadable PDFs & Brochures ({downloads.length})</h3>
+                        <h3 className="font-garamond text-3xl font-bold text-[#2D3A4A]">Downloadable PDFs & Brochures ({downloads.filter(d => d.status !== 'Deleted').length})</h3>
                         <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin' }}>
-                          {downloads.map(item => (
+                          {downloads.filter(d => d.status !== 'Deleted').map(item => (
                             <div key={item.id} className="p-5 rounded-2xl bg-white border border-slate-100 flex justify-between items-center shadow-sm">
                               <div>
                                 <h4 className="font-bold text-slate-800 text-base">{item.name}</h4>
@@ -4177,122 +4574,360 @@ export function AdminDashboard() {
 
                   {/* TAB: Audit & History Log */}
                   {activeTab === 'history' && activeGroup === 'admin' && (
-                    <motion.div key="history" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 gap-10">
+                    <motion.div key="history" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-10">
                       
-                      <div className="glass-card-admin rounded-[32px] p-8 shadow-sm space-y-6">
-                        <div className="flex justify-between items-center border-b pb-4">
-                          <div>
-                            <h3 className="font-garamond text-3xl font-bold text-[#2D3A4A]">Recycle Bin & History Log</h3>
-                            <p className="text-xs text-slate-500 mt-1">Review soft-deleted profiles or items. Restore them back to the live site or delete them permanently.</p>
+                      <div className="grid grid-cols-1 xl:grid-cols-12 gap-10">
+                        
+                        {/* LEFT: Recycle Bin (Soft-deleted Items) */}
+                        <div className="xl:col-span-6 glass-card-admin rounded-[32px] p-8 shadow-sm space-y-6">
+                          <h3 className="font-garamond text-3xl font-bold text-[#2D3A4A] flex items-center gap-2">
+                            <Trash2 className="w-6 h-6 text-rose-500" /> Recycle Bin
+                          </h3>
+                          <p className="text-xs text-gray-500">Restore soft-deleted items back to the live site or purge them forever.</p>
+                          
+                          <div className="space-y-6 max-h-[600px] overflow-y-auto pr-2 custom-admin-scrollbar">
+                            
+                            {/* Section: Doctors */}
+                            {doctors.filter(d => d.status === 'Deleted').length > 0 && (
+                              <div className="space-y-2">
+                                <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider">Deleted Doctor Profiles ({doctors.filter(d => d.status === 'Deleted').length})</h4>
+                                <div className="space-y-2">
+                                  {doctors.filter(d => d.status === 'Deleted').map(doc => (
+                                    <div key={doc.id} className="p-3 bg-slate-50 border rounded-xl flex justify-between items-center text-xs">
+                                      <span className="font-bold text-slate-800">{doc.name} ({doc.specialty})</span>
+                                      <div className="flex gap-2">
+                                        <button onClick={async () => {
+                                          const restoredItem = { ...doc, status: 'Active', deletedAt: null, deletedBy: null }
+                                          const updated = doctors.map(d => String(d.id) === String(doc.id) ? restoredItem : d)
+                                          setDoctors(updated)
+                                          await persistToStore('doctors', updated)
+                                          if (db) await setDoc(doc(db, 'doctors', doc.id), restoredItem)
+                                          await logChange('Restore', 'doctors', doc.id, doc.name, null, doc)
+                                          notifyUser('success', `Restored ${doc.name}`)
+                                        }} className="text-xs text-emerald-600 font-bold hover:underline">Restore</button>
+                                        <button onClick={() => requestConfirm('Purge Forever?', `Are you sure you want to permanently delete "${doc.name}"? This cannot be undone.`, async () => {
+                                          const updated = doctors.filter(d => String(d.id) !== String(doc.id))
+                                          setDoctors(updated)
+                                          await persistToStore('doctors', updated)
+                                          if (db) await deleteDoc(doc(db, 'doctors', doc.id))
+                                          notifyUser('success', `Permanently purged ${doc.name}`)
+                                        })} className="text-xs text-rose-600 font-bold hover:underline">Purge</button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Section: Testimonials */}
+                            {testimonials.filter(t => t.status === 'Deleted').length > 0 && (
+                              <div className="space-y-2">
+                                <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider">Deleted Testimonials ({testimonials.filter(t => t.status === 'Deleted').length})</h4>
+                                <div className="space-y-2">
+                                  {testimonials.filter(t => t.status === 'Deleted').map(item => (
+                                    <div key={item.id} className="p-3 bg-slate-50 border rounded-xl flex justify-between items-center text-xs">
+                                      <span className="font-bold text-slate-800">{item.patientName}</span>
+                                      <div className="flex gap-2">
+                                        <button onClick={async () => {
+                                          const restoredTestimonial = { ...item, status: 'Active', deletedAt: null, deletedBy: null }
+                                          const updated = testimonials.map(t => String(t.id) === String(item.id) ? restoredTestimonial : t)
+                                          setTestimonials(updated)
+                                          await persistToStore('testimonials', updated)
+                                          if (db) await setDoc(doc(db, 'testimonials', item.id), restoredTestimonial)
+                                          await logChange('Restore', 'testimonials', item.id, item.patientName, null, item)
+                                          notifyUser('success', `Restored testimonial from ${item.patientName}`)
+                                        }} className="text-xs text-emerald-600 font-bold hover:underline">Restore</button>
+                                        <button onClick={() => requestConfirm('Purge Forever?', `Are you sure you want to permanently delete this testimonial?`, async () => {
+                                          const updated = testimonials.filter(t => String(t.id) !== String(item.id))
+                                          setTestimonials(updated)
+                                          await persistToStore('testimonials', updated)
+                                          if (db) await deleteDoc(doc(db, 'testimonials', item.id))
+                                          notifyUser('success', `Permanently purged testimonial`)
+                                        })} className="text-xs text-rose-600 font-bold hover:underline">Purge</button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Section: Blogs */}
+                            {blogs.filter(b => b.status === 'Deleted').length > 0 && (
+                              <div className="space-y-2">
+                                <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider">Deleted Blogs ({blogs.filter(b => b.status === 'Deleted').length})</h4>
+                                <div className="space-y-2">
+                                  {blogs.filter(b => b.status === 'Deleted').map(item => (
+                                    <div key={item.id} className="p-3 bg-slate-50 border rounded-xl flex justify-between items-center text-xs">
+                                      <span className="font-bold text-slate-800">{item.title}</span>
+                                      <div className="flex gap-2">
+                                        <button onClick={async () => {
+                                          const restored = { ...item, status: 'Active', deletedAt: null, deletedBy: null }
+                                          const updated = blogs.map(b => String(b.id) === String(item.id) ? restored : b)
+                                          setBlogs(updated)
+                                          await persistToStore('blogs', updated)
+                                          if (db) await setDoc(doc(db, 'blogs', item.id), restored)
+                                          await logChange('Restore', 'blogs', item.id, item.title, null, item)
+                                          notifyUser('success', `Restored blog article`)
+                                        }} className="text-xs text-emerald-600 font-bold hover:underline">Restore</button>
+                                        <button onClick={() => requestConfirm('Purge Forever?', `Are you sure you want to permanently delete this blog?`, async () => {
+                                          const updated = blogs.filter(b => String(b.id) !== String(item.id))
+                                          setBlogs(updated)
+                                          await persistToStore('blogs', updated)
+                                          if (db) await deleteDoc(doc(db, 'blogs', item.id))
+                                          notifyUser('success', `Permanently purged blog article`)
+                                        })} className="text-xs text-rose-600 font-bold hover:underline">Purge</button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Section: FAQs */}
+                            {faqs.filter(f => f.status === 'Deleted').length > 0 && (
+                              <div className="space-y-2">
+                                <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider">Deleted FAQs ({faqs.filter(f => f.status === 'Deleted').length})</h4>
+                                <div className="space-y-2">
+                                  {faqs.filter(f => f.status === 'Deleted').map(item => (
+                                    <div key={item.id} className="p-3 bg-slate-50 border rounded-xl flex justify-between items-center text-xs">
+                                      <span className="font-bold text-slate-800">{item.question}</span>
+                                      <div className="flex gap-2">
+                                        <button onClick={async () => {
+                                          const restored = { ...item, status: 'Active', deletedAt: null, deletedBy: null }
+                                          const updated = faqs.map(f => String(f.id) === String(item.id) ? restored : f)
+                                          setFaqs(updated)
+                                          await persistToStore('faqs', updated)
+                                          if (db) await setDoc(doc(db, 'faqs', item.id), restored)
+                                          await logChange('Restore', 'faqs', item.id, item.question, null, item)
+                                          notifyUser('success', `Restored FAQ`)
+                                        }} className="text-xs text-emerald-600 font-bold hover:underline">Restore</button>
+                                        <button onClick={() => requestConfirm('Purge Forever?', `Are you sure you want to permanently delete this FAQ?`, async () => {
+                                          const updated = faqs.filter(f => String(f.id) !== String(item.id))
+                                          setFaqs(updated)
+                                          await persistToStore('faqs', updated)
+                                          if (db) await deleteDoc(doc(db, 'faqs', item.id))
+                                          notifyUser('success', `Permanently purged FAQ`)
+                                        })} className="text-xs text-rose-600 font-bold hover:underline">Purge</button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Section: Jobs */}
+                            {jobs.filter(j => j.status === 'Deleted').length > 0 && (
+                              <div className="space-y-2">
+                                <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider">Deleted Jobs ({jobs.filter(j => j.status === 'Deleted').length})</h4>
+                                <div className="space-y-2">
+                                  {jobs.filter(j => j.status === 'Deleted').map(item => (
+                                    <div key={item.id} className="p-3 bg-slate-50 border rounded-xl flex justify-between items-center text-xs">
+                                      <span className="font-bold text-slate-800">{item.title}</span>
+                                      <div className="flex gap-2">
+                                        <button onClick={async () => {
+                                          const restored = { ...item, status: 'Active', deletedAt: null, deletedBy: null }
+                                          const updated = jobs.map(j => String(j.id) === String(item.id) ? restored : j)
+                                          setJobs(updated)
+                                          await persistToStore('jobs', updated)
+                                          if (db) await setDoc(doc(db, 'job_openings', item.id), restored)
+                                          await logChange('Restore', 'jobs', item.id, item.title, null, item)
+                                          notifyUser('success', `Restored job opening`)
+                                        }} className="text-xs text-emerald-600 font-bold hover:underline">Restore</button>
+                                        <button onClick={() => requestConfirm('Purge Forever?', `Are you sure you want to permanently delete this job?`, async () => {
+                                          const updated = jobs.filter(j => String(j.id) !== String(item.id))
+                                          setJobs(updated)
+                                          await persistToStore('jobs', updated)
+                                          if (db) await deleteDoc(doc(db, 'job_openings', item.id))
+                                          notifyUser('success', `Permanently purged job opening`)
+                                        })} className="text-xs text-rose-600 font-bold hover:underline">Purge</button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Section: Downloads */}
+                            {downloads.filter(d => d.status === 'Deleted').length > 0 && (
+                              <div className="space-y-2">
+                                <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider">Deleted Downloads ({downloads.filter(d => d.status === 'Deleted').length})</h4>
+                                <div className="space-y-2">
+                                  {downloads.filter(d => d.status === 'Deleted').map(item => (
+                                    <div key={item.id} className="p-3 bg-slate-50 border rounded-xl flex justify-between items-center text-xs">
+                                      <span className="font-bold text-slate-800">{item.name}</span>
+                                      <div className="flex gap-2">
+                                        <button onClick={async () => {
+                                          const restored = { ...item, status: 'Active', deletedAt: null, deletedBy: null }
+                                          const updated = downloads.map(d => String(d.id) === String(item.id) ? restored : d)
+                                          setDownloads(updated)
+                                          await persistToStore('downloads', updated)
+                                          if (db) await setDoc(doc(db, 'downloads', item.id), restored)
+                                          await logChange('Restore', 'downloads', item.id, item.name, null, item)
+                                          notifyUser('success', `Restored download item`)
+                                        }} className="text-xs text-emerald-600 font-bold hover:underline">Restore</button>
+                                        <button onClick={() => requestConfirm('Purge Forever?', `Are you sure you want to permanently delete this download link?`, async () => {
+                                          const updated = downloads.filter(d => String(d.id) !== String(item.id))
+                                          setDownloads(updated)
+                                          await persistToStore('downloads', updated)
+                                          if (db) await deleteDoc(doc(db, 'downloads', item.id))
+                                          notifyUser('success', `Permanently purged download item`)
+                                        })} className="text-xs text-rose-600 font-bold hover:underline">Purge</button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Section: Departments */}
+                            {departments.filter(d => d.status === 'Deleted').length > 0 && (
+                              <div className="space-y-2">
+                                <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider">Deleted Departments ({departments.filter(d => d.status === 'Deleted').length})</h4>
+                                <div className="space-y-2">
+                                  {departments.filter(d => d.status === 'Deleted').map(item => (
+                                    <div key={item.id} className="p-3 bg-slate-50 border rounded-xl flex justify-between items-center text-xs">
+                                      <span className="font-bold text-slate-800">{item.name}</span>
+                                      <div className="flex gap-2">
+                                        <button onClick={async () => {
+                                          const restored = { ...item, status: 'Active', deletedAt: null, deletedBy: null }
+                                          const updated = departments.map(d => String(d.id) === String(item.id) ? restored : d)
+                                          setDepartments(updated)
+                                          await persistToStore('departments', updated)
+                                          if (db) await setDoc(doc(db, 'departments', item.id), restored)
+                                          await logChange('Restore', 'departments', item.id, item.name, null, item)
+                                          notifyUser('success', `Restored department`)
+                                        }} className="text-xs text-emerald-600 font-bold hover:underline">Restore</button>
+                                        <button onClick={() => requestConfirm('Purge Forever?', `Are you sure you want to permanently delete this department?`, async () => {
+                                          const updated = departments.filter(d => String(d.id) !== String(item.id))
+                                          setDepartments(updated)
+                                          await persistToStore('departments', updated)
+                                          if (db) await deleteDoc(doc(db, 'departments', item.id))
+                                          notifyUser('success', `Permanently purged department`)
+                                        })} className="text-xs text-rose-600 font-bold hover:underline">Purge</button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Section: News */}
+                            {news.filter(n => n.status === 'Deleted').length > 0 && (
+                              <div className="space-y-2">
+                                <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider">Deleted News ({news.filter(n => n.status === 'Deleted').length})</h4>
+                                <div className="space-y-2">
+                                  {news.filter(n => n.status === 'Deleted').map(item => (
+                                    <div key={item.id} className="p-3 bg-slate-50 border rounded-xl flex justify-between items-center text-xs">
+                                      <span className="font-bold text-slate-800">{item.title}</span>
+                                      <div className="flex gap-2">
+                                        <button onClick={async () => {
+                                          const restored = { ...item, status: 'Active', deletedAt: null, deletedBy: null }
+                                          const updated = news.map(n => String(n.id) === String(item.id) ? restored : n)
+                                          setNews(updated)
+                                          await persistToStore('news', updated)
+                                          if (db) await setDoc(doc(db, 'news', item.id), restored)
+                                          await logChange('Restore', 'news', item.id, item.title, null, item)
+                                          notifyUser('success', `Restored news item`)
+                                        }} className="text-xs text-emerald-600 font-bold hover:underline">Restore</button>
+                                        <button onClick={() => requestConfirm('Purge Forever?', `Are you sure you want to permanently delete this news article?`, async () => {
+                                          const updated = news.filter(n => String(n.id) !== String(item.id))
+                                          setNews(updated)
+                                          await persistToStore('news', updated)
+                                          if (db) await deleteDoc(doc(db, 'news', item.id))
+                                          notifyUser('success', `Permanently purged news article`)
+                                        })} className="text-xs text-rose-600 font-bold hover:underline">Purge</button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Absolute Empty State */}
+                            {doctors.filter(d => d.status === 'Deleted').length === 0 &&
+                             testimonials.filter(t => t.status === 'Deleted').length === 0 &&
+                             blogs.filter(b => b.status === 'Deleted').length === 0 &&
+                             faqs.filter(f => f.status === 'Deleted').length === 0 &&
+                             jobs.filter(j => j.status === 'Deleted').length === 0 &&
+                             downloads.filter(d => d.status === 'Deleted').length === 0 &&
+                             departments.filter(d => d.status === 'Deleted').length === 0 &&
+                             news.filter(n => n.status === 'Deleted').length === 0 && (
+                              <p className="text-xs text-slate-400 text-center py-8">Recycle bin is completely empty.</p>
+                            )}
+
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {/* RIGHT: Activity Timeline & Audit Logs */}
+                        <div className="xl:col-span-6 glass-card-admin rounded-[32px] p-8 shadow-sm space-y-6">
+                          <div className="flex justify-between items-center">
+                            <h3 className="font-garamond text-3xl font-bold text-[#2D3A4A] flex items-center gap-2">
+                              <History className="w-6 h-6 text-[#cca830]" /> Live Audit Timeline
+                            </h3>
+                            {historyLogs.length > 0 && (
+                              <button onClick={() => {
+                                requestConfirm(
+                                  'Clear Audit Logs',
+                                  'Are you sure you want to clear all history log entries? This will empty the audit log dashboard.',
+                                  () => {
+                                    setHistoryLogs([])
+                                    localStorage.setItem('history_logs', '[]')
+                                  },
+                                  'Clear All'
+                                )
+                              }} className="text-[10px] uppercase font-bold text-rose-600 hover:underline">Clear Logs</button>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500">Track all changes, updates, additions, and deletions with a 1-click **Revert** capability.</p>
                           
-                          {/* Deleted Doctors */}
-                          <div className="space-y-4">
-                            <h4 className="text-sm font-bold text-[#8B1A4A] uppercase tracking-wider flex items-center gap-2">
-                              <Users className="w-4 h-4" /> Deleted Doctor Profiles ({doctors.filter(d => d.status === 'Deleted').length})
-                            </h4>
-                            <div className="space-y-3 max-h-[450px] overflow-y-auto pr-1">
-                              {doctors.filter(d => d.status === 'Deleted').map(doc => (
-                                <div key={doc.id} className="p-4 rounded-2xl border border-slate-100 bg-white shadow-sm flex justify-between items-center gap-4">
-                                  <div className="flex gap-3 items-center min-w-0">
-                                    <img src={doc.photoUrl} className="w-10 h-10 rounded-full object-cover border shrink-0" onError={e => e.target.src = 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300'} />
-                                    <div className="min-w-0">
-                                      <p className="text-xs font-bold text-slate-800 truncate">{doc.name}</p>
-                                      <p className="text-[10px] text-gray-500">{doc.specialty} &middot; {doc.branch}</p>
-                                      <p className="text-[9px] text-rose-500 mt-1 font-semibold">Deleted on: {doc.deletedAt ? new Date(doc.deletedAt).toLocaleString() : 'N/A'}</p>
-                                    </div>
-                                  </div>
-                                  <div className="flex gap-1.5">
-                                    <button
-                                      type="button"
-                                      onClick={async () => {
-                                        const updated = doctors.map(d => d.id === doc.id ? { ...d, status: 'Active', deletedAt: null, deletedBy: null } : d)
-                                        setDoctors(updated)
-                                        await persistToStore('doctors', updated)
-                                        if (db) await setDoc(doc(db, 'doctors', doc.id), { ...doc, status: 'Active', deletedAt: null, deletedBy: null })
-                                        notifyUser('success', `Doctor "${doc.name}" restored successfully.`)
-                                      }}
-                                      className="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[10px] font-bold transition-all"
-                                    >
-                                      Restore
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => requestConfirm('Permanent Delete?', `Are you sure you want to permanently delete "${doc.name}"? This action is irreversible.`, async () => {
-                                        const updated = doctors.filter(d => d.id !== doc.id)
-                                        setDoctors(updated)
-                                        await persistToStore('doctors', updated)
-                                        if (db) await deleteDoc(doc(db, 'doctors', doc.id))
-                                        notifyUser('success', `Doctor "${doc.name}" permanently deleted.`)
-                                      })}
-                                      className="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold transition-all"
-                                    >
-                                      Purge
-                                    </button>
-                                  </div>
-                                </div>
-                              ))}
-                              {doctors.filter(d => d.status === 'Deleted').length === 0 && (
-                                <p className="text-xs text-slate-400 text-center py-8">No deleted doctor profiles in recycle bin.</p>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Deleted Testimonials */}
-                          <div className="space-y-4">
-                            <h4 className="text-sm font-bold text-[#8B1A4A] uppercase tracking-wider flex items-center gap-2">
-                              <Quote className="w-4 h-4" /> Deleted Testimonials ({testimonials.filter(t => t.status === 'Deleted').length})
-                            </h4>
-                            <div className="space-y-3 max-h-[450px] overflow-y-auto pr-1">
-                              {testimonials.filter(t => t.status === 'Deleted').map(item => (
-                                <div key={item.id} className="p-4 rounded-2xl border border-slate-100 bg-white shadow-sm flex justify-between items-center gap-4">
+                          <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-admin-scrollbar">
+                            {historyLogs.map(log => (
+                              <div key={log.id} className="p-4 rounded-2xl bg-white border border-slate-100 shadow-sm space-y-3">
+                                <div className="flex justify-between items-start gap-4">
                                   <div className="min-w-0">
-                                    <p className="text-xs font-bold text-slate-800 truncate">{item.patientName}</p>
-                                    <p className="text-[10px] text-gray-500 italic line-clamp-2">"{item.review}"</p>
-                                    <p className="text-[9px] text-rose-500 mt-1 font-semibold">Deleted on: {item.deletedAt ? new Date(item.deletedAt).toLocaleString() : 'N/A'}</p>
+                                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                                        log.actionType === 'Create' ? 'bg-emerald-50 text-emerald-700' :
+                                        log.actionType === 'Update' ? 'bg-sky-50 text-sky-700' :
+                                        log.actionType === 'Delete' ? 'bg-rose-50 text-rose-700' :
+                                        'bg-purple-50 text-purple-700'
+                                      }`}>
+                                        {log.actionType}
+                                      </span>
+                                      <span className="text-[10px] text-slate-400 font-semibold">{log.collectionName}</span>
+                                    </div>
+                                    <h4 className="font-bold text-slate-800 text-sm leading-snug">{log.itemName || `ID: ${log.itemId}`}</h4>
+                                    <p className="text-[10px] text-gray-400 mt-1">Performed by: {log.performedBy}</p>
+                                    <p className="text-[9px] text-gray-400">{new Date(log.timestamp).toLocaleString()}</p>
                                   </div>
-                                  <div className="flex gap-1.5 shrink-0">
+                                  
+                                  <div className="flex gap-2">
+                                    {log.actionType !== 'Restore' && (
+                                      <button
+                                        onClick={() => revertLogEntry(log)}
+                                        className="px-2 py-1 rounded bg-[#8B1A4A]/5 hover:bg-[#8B1A4A]/10 text-[#8B1A4A] text-[10px] font-bold"
+                                      >
+                                        Revert
+                                      </button>
+                                    )}
                                     <button
-                                      type="button"
-                                      onClick={async () => {
-                                        const updated = testimonials.map(t => t.id === item.id ? { ...t, status: 'Active', deletedAt: null, deletedBy: null } : t)
-                                        setTestimonials(updated)
-                                        await persistToStore('testimonials', updated)
-                                        if (db) await setDoc(doc(db, 'testimonials', item.id), { ...item, status: 'Active', deletedAt: null, deletedBy: null })
-                                        notifyUser('success', `Testimonial from "${item.patientName}" restored successfully.`)
-                                      }}
-                                      className="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[10px] font-bold transition-all"
+                                      onClick={() => deleteLogEntry(log.id)}
+                                      className="p-1 text-slate-400 hover:text-rose-600 transition-colors"
                                     >
-                                      Restore
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => requestConfirm('Permanent Delete?', `Are you sure you want to permanently delete this testimonial? This action is irreversible.`, async () => {
-                                        const updated = testimonials.filter(t => t.id !== item.id)
-                                        setTestimonials(updated)
-                                        await persistToStore('testimonials', updated)
-                                        if (db) await deleteDoc(doc(db, 'testimonials', item.id))
-                                        notifyUser('success', `Testimonial permanently deleted.`)
-                                      })}
-                                      className="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold transition-all"
-                                    >
-                                      Purge
+                                      <Trash2 className="w-3.5 h-3.5" />
                                     </button>
                                   </div>
                                 </div>
-                              ))}
-                              {testimonials.filter(t => t.status === 'Deleted').length === 0 && (
-                                <p className="text-xs text-slate-400 text-center py-8">No deleted testimonials in recycle bin.</p>
-                              )}
-                            </div>
+                              </div>
+                            ))}
+                            {historyLogs.length === 0 && (
+                              <p className="text-xs text-slate-400 text-center py-8">No actions logged in timeline yet.</p>
+                            )}
                           </div>
-
                         </div>
 
                       </div>
+
                     </motion.div>
                   )}
                   </>)}
