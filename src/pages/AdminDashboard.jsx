@@ -9,10 +9,11 @@ import {
   CheckCircle2, AlertCircle, RefreshCw, Search, Sparkles, HelpCircle, Clock, Eye, 
   FileText, Sliders, DollarSign, Home, Building2, FolderOpen, Mail, ShieldCheck, 
   Calendar, Layers, Star, Settings, Image as ImageIcon, MapPin, Globe, Check, Info, FileCode, ChevronRight,
-  Folder, File, ChevronDown, History, Quote
+  Folder, File, ChevronDown, History, Quote, Play, Video
 } from 'lucide-react'
 
 import { ALL_DOCTORS } from '@/data/doctors'
+import { DOCTOR_MEDIA } from '@/data/doctorMedia'
 import { useBranches } from '@/hooks/useBranches'
 
 // Import Firebase SDK safely
@@ -434,6 +435,7 @@ export function AdminDashboard() {
   const [userPermissions, setUserPermissions] = useState([])
   const [profileChecked, setProfileChecked] = useState(false)
   const [adminUsers, setAdminUsers] = useState([])
+  const [editingAdminId, setEditingAdminId] = useState(null)
   const [currentAdminUser, setCurrentAdminUser] = useState({ email: '', displayName: '', password: '', role: 'Reception', extraPermissions: [], revokedPermissions: [] })
   const [creatingAdminUser, setCreatingAdminUser] = useState(false)
   const [email, setEmail] = useState('')
@@ -510,8 +512,25 @@ export function AdminDashboard() {
   const [filterBranch, setFilterBranch] = useState('All')
 
   // Edit / Creation States
-  const [currentDoctor, setCurrentDoctor] = useState({ name: '', specialty: '', specialtyId: 'ortho', sub: '', exp: '', branch: 'LB Nagar', availability: '', photoUrl: '', status: 'Active', bio: '', languages: 'English', tagline: '', education: '' })
+  const [currentDoctor, setCurrentDoctor] = useState({ name: '', specialty: '', specialtyId: 'ortho', sub: '', exp: '', branch: 'LB Nagar', availability: '', photoUrl: '', status: 'Active', bio: '', languages: 'English', tagline: '', education: '', blogs: [] })
   const [isEditingDoc, setIsEditingDoc] = useState(false)
+  const [doctorFormTab, setDoctorFormTab] = useState('details') // 'details' | 'blogs'
+  const [currentDoctorBlog, setCurrentDoctorBlog] = useState({
+    id: '',
+    title: '',
+    category: 'Orthopaedics',
+    tag: 'Case Study',
+    excerpt: '',
+    content: '',
+    date: '',
+    readTime: '5 min read',
+    image: '',
+    videoUrl: '',
+    mediaType: 'image' // 'image' | 'video'
+  })
+  const [isEditingDoctorBlog, setIsEditingDoctorBlog] = useState(false)
+  const [blogBlocks, setBlogBlocks] = useState([{ id: '1', type: 'paragraph', value: '' }])
+  const [doctorBlogBlocks, setDoctorBlogBlocks] = useState([{ id: '1', type: 'paragraph', value: '' }])
   const [currentJob, setCurrentJob] = useState({ title: '', department: 'Orthopedics', location: 'LB Nagar, Hyd', experience: '', description: '', status: 'Active' })
   const [isEditingJob, setIsEditingJob] = useState(false)
   const [currentBlog, setCurrentBlog] = useState({ title: '', category: 'Orthopaedics', tag: 'Case Study', body: '', status: 'Active', slug: '', seoTitle: '', seoDesc: '', readTime: '5 min read', image: '' })
@@ -588,24 +607,39 @@ export function AdminDashboard() {
           // 1. Load Doctors
           const docSnap = await getDocs(collection(db, 'doctors'))
           const fbDocs = docSnap.docs.map(d => ({ id: d.id, ...d.data() }))
-          const formattedStatic = ALL_DOCTORS.map(d => ({
-            id: String(d.id),
-            name: d.name,
-            specialty: d.specialty,
-            specialtyId: d.specialtyId || 'ortho',
-            sub: d.sub || '',
-            exp: d.exp || '10+ Years',
-            branch: d.branch || 'LB Nagar',
-            availability: d.availability || 'Mon - Sat: 10 AM - 5 PM',
-            photoUrl: d.image || d.photoUrl || '',
-            status: 'Active',
-            bio: d.about || d.bio || '',
-            languages: Array.isArray(d.languages) ? d.languages.join(', ') : d.languages || 'English',
-            tagline: d.tagline || '',
-            education: Array.isArray(d.education) ? d.education.join(', ') : d.education || ''
-          })).filter(sd => !fbDocs.some(fd => fd.name.toLowerCase() === sd.name.toLowerCase()))
+          const formattedFbDocs = fbDocs.map(d => {
+            const docSlug = d.slug || d.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+            const defaultMedia = DOCTOR_MEDIA[docSlug] || DOCTOR_MEDIA['default']
+            const initialBlogs = d.blogs !== undefined ? d.blogs : (defaultMedia?.blogs || [])
+            return {
+              ...d,
+              blogs: initialBlogs
+            }
+          })
+          const formattedStatic = ALL_DOCTORS.map(d => {
+            const docSlug = d.slug || d.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+            const defaultMedia = DOCTOR_MEDIA[docSlug] || DOCTOR_MEDIA['default']
+            const initialBlogs = d.blogs !== undefined ? d.blogs : (defaultMedia?.blogs || [])
+            return {
+              id: String(d.id),
+              name: d.name,
+              specialty: d.specialty,
+              specialtyId: d.specialtyId || 'ortho',
+              sub: d.sub || '',
+              exp: d.exp || '10+ Years',
+              branch: d.branch || 'LB Nagar',
+              availability: d.availability || 'Mon - Sat: 10 AM - 5 PM',
+              photoUrl: d.image || d.photoUrl || '',
+              status: 'Active',
+              bio: d.about || d.bio || '',
+              languages: Array.isArray(d.languages) ? d.languages.join(', ') : d.languages || 'English',
+              tagline: d.tagline || '',
+              education: Array.isArray(d.education) ? d.education.join(', ') : d.education || '',
+              blogs: initialBlogs
+            }
+          }).filter(sd => !formattedFbDocs.some(fd => fd.name.toLowerCase() === sd.name.toLowerCase()))
 
-          setDoctors([...fbDocs, ...formattedStatic])
+          setDoctors([...formattedFbDocs, ...formattedStatic])
           
           // 2. Load Jobs
           const jobSnap = await getDocs(collection(db, 'job_openings'))
@@ -786,7 +820,15 @@ export function AdminDashboard() {
       
       if (data) {
         const parsed = JSON.parse(data)
-        loadedDocs = parsed.doctors || []
+        loadedDocs = (parsed.doctors || []).map(d => {
+          const docSlug = d.slug || d.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+          const defaultMedia = DOCTOR_MEDIA[docSlug] || DOCTOR_MEDIA['default']
+          const initialBlogs = d.blogs !== undefined ? d.blogs : (defaultMedia?.blogs || [])
+          return {
+            ...d,
+            blogs: initialBlogs
+          }
+        })
         loadedBlogs = parsed.blogs || []
         
         setJobs(parsed.jobs || DEFAULT_JOBS)
@@ -824,22 +866,28 @@ export function AdminDashboard() {
       }
 
       // Merge ALL_DOCTORS static list
-      const formattedStatic = ALL_DOCTORS.map(d => ({
-        id: String(d.id),
-        name: d.name,
-        specialty: d.specialty,
-        specialtyId: d.specialtyId || 'ortho',
-        sub: d.sub || '',
-        exp: d.exp || '10+ Years',
-        branch: d.branch || 'LB Nagar',
-        availability: d.availability || 'Mon - Sat: 10 AM - 5 PM',
-        photoUrl: d.image || d.photoUrl || '',
-        status: 'Active',
-        bio: d.about || d.bio || '',
-        languages: Array.isArray(d.languages) ? d.languages.join(', ') : d.languages || 'English',
-        tagline: d.tagline || '',
-        education: Array.isArray(d.education) ? d.education.join(', ') : d.education || ''
-      })).filter(sd => !loadedDocs.some(fd => fd.name.toLowerCase() === sd.name.toLowerCase()))
+      const formattedStatic = ALL_DOCTORS.map(d => {
+        const docSlug = d.slug || d.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+        const defaultMedia = DOCTOR_MEDIA[docSlug] || DOCTOR_MEDIA['default']
+        const initialBlogs = d.blogs !== undefined ? d.blogs : (defaultMedia?.blogs || [])
+        return {
+          id: String(d.id),
+          name: d.name,
+          specialty: d.specialty,
+          specialtyId: d.specialtyId || 'ortho',
+          sub: d.sub || '',
+          exp: d.exp || '10+ Years',
+          branch: d.branch || 'LB Nagar',
+          availability: d.availability || 'Mon - Sat: 10 AM - 5 PM',
+          photoUrl: d.image || d.photoUrl || '',
+          status: 'Active',
+          bio: d.about || d.bio || '',
+          languages: Array.isArray(d.languages) ? d.languages.join(', ') : d.languages || 'English',
+          tagline: d.tagline || '',
+          education: Array.isArray(d.education) ? d.education.join(', ') : d.education || '',
+          blogs: initialBlogs
+        }
+      }).filter(sd => !loadedDocs.some(fd => fd.name.toLowerCase() === sd.name.toLowerCase()))
 
       setDoctors([...loadedDocs, ...formattedStatic])
 
@@ -1093,22 +1141,55 @@ export function AdminDashboard() {
               if (db) await setDoc(doc(db, 'news', itemId), previousState)
             }
             else if (collectionName === 'site_contents') {
-              if (itemId === 'homepage') {
-                setHomepageData(previousState)
-                if (db) await setDoc(doc(db, 'site_contents', 'homepage'), previousState)
-              } else if (itemId === 'aboutpage') {
-                setAboutpageData(previousState)
-                if (db) await setDoc(doc(db, 'site_contents', 'aboutpage'), previousState)
-              } else if (itemId === 'careers_customizer') {
-                setCareersData(previousState)
-                if (db) await setDoc(doc(db, 'site_contents', 'careers_customizer'), previousState)
-              }
+              const updated = { ...pageData, [itemId]: previousState }
+              setPageData(updated)
+              await persistToStore('pageData', updated)
             }
             else if (collectionName === 'branches') {
-              if (db) await setDoc(doc(db, 'branches', itemId), previousState)
+              if (log.itemName && log.itemName.startsWith('Location details:')) {
+                const updatedList = branchesList.map(b => b.slug === itemId ? previousState : b).filter(Boolean)
+                setBranchesList(updatedList)
+                localStorage.setItem('srikara_branches', JSON.stringify(updatedList))
+                
+                const pageDataBranchesCopy = { ...pageData.branches }
+                if (previousState) {
+                  pageDataBranchesCopy[itemId] = {
+                    ...pageDataBranchesCopy[itemId],
+                    phone: previousState.phone,
+                    address: previousState.address,
+                    rating: previousState.googleRating,
+                    heroImage: previousState.heroImage
+                  }
+                } else {
+                  delete pageDataBranchesCopy[itemId]
+                }
+                const updatedPageData = { ...pageData, branches: pageDataBranchesCopy, branchesList: updatedList }
+                setPageData(updatedPageData)
+                await persistToStore('pageData', updatedPageData)
+                refetchBranches()
+              } else {
+                const updatedBranches = { ...pageData.branches, [itemId]: previousState }
+                const updatedPageData = { ...pageData, branches: updatedBranches }
+                setPageData(updatedPageData)
+                await persistToStore('pageData', updatedPageData)
+              }
             }
             else if (collectionName === 'seo') {
-              if (db) await setDoc(doc(db, 'seo', itemId), previousState)
+              const updated = { ...seoData, [itemId]: previousState }
+              setSeoData(updated)
+              await persistToStore('seoData', updated)
+            }
+            else if (collectionName === 'users') {
+              setAdminUsers(prev => prev.map(a => a.id === itemId ? previousState : a))
+              if (db) {
+                await setDoc(doc(db, 'users', itemId), previousState)
+              } else {
+                const storedAdmins = localStorage.getItem('srikara_mock_admins')
+                if (storedAdmins) {
+                  const updatedAdmins = JSON.parse(storedAdmins).map(a => a.id === itemId ? previousState : a)
+                  localStorage.setItem('srikara_mock_admins', JSON.stringify(updatedAdmins))
+                }
+              }
             }
 
             await logChange('Restore', collectionName, itemId, log.itemName, currentState, previousState)
@@ -1184,6 +1265,56 @@ export function AdminDashboard() {
               await persistToStore('news', updated)
               if (db) await setDoc(doc(db, 'news', itemId), restoredNews)
             }
+            else if (collectionName === 'appointments') {
+              const exists = appointments.some(a => String(a.id) === String(itemId))
+              const updated = exists ? appointments.map(a => String(a.id) === String(itemId) ? stateToRestore : a) : [...appointments, stateToRestore]
+              setAppointments(updated)
+              await persistToStore('appointments', updated)
+              if (db) await setDoc(doc(db, 'appointments', itemId), stateToRestore)
+            }
+            else if (collectionName === 'branches') {
+              const exists = branchesList.some(b => b.slug === itemId)
+              const updatedList = exists ? branchesList.map(b => b.slug === itemId ? stateToRestore : b) : [...branchesList, stateToRestore]
+              setBranchesList(updatedList)
+              localStorage.setItem('srikara_branches', JSON.stringify(updatedList))
+              
+              const pageDataBranchesCopy = { ...pageData.branches }
+              pageDataBranchesCopy[itemId] = {
+                heroHeadline: pageDataBranchesCopy[itemId]?.heroHeadline || "Advanced Surgical Center",
+                heroHighlight: pageDataBranchesCopy[itemId]?.heroHighlight || "Orthopedic Excellence",
+                description: pageDataBranchesCopy[itemId]?.description || stateToRestore.address,
+                phone: stateToRestore.phone,
+                address: stateToRestore.address,
+                rating: stateToRestore.googleRating,
+                heroImage: stateToRestore.heroImage,
+                advantageTitle: pageDataBranchesCopy[itemId]?.advantageTitle || `The ${stateToRestore.title}`,
+                advantageHighlight: pageDataBranchesCopy[itemId]?.advantageHighlight || "Advantage",
+                infraTitle: pageDataBranchesCopy[itemId]?.infraTitle || "Precision",
+                infraHighlight: pageDataBranchesCopy[itemId]?.infraHighlight || "Ecosystem",
+                infraDesc: pageDataBranchesCopy[itemId]?.infraDesc || "We invest in the future of healthcare..."
+              }
+              const updatedPageData = { ...pageData, branches: pageDataBranchesCopy, branchesList: updatedList }
+              setPageData(updatedPageData)
+              await persistToStore('pageData', updatedPageData)
+              refetchBranches()
+            }
+            else if (collectionName === 'media') {
+              const exists = mediaFiles.some(m => String(m.id) === String(itemId))
+              const updated = exists ? mediaFiles.map(m => String(m.id) === String(itemId) ? stateToRestore : m) : [...mediaFiles, stateToRestore]
+              setMediaFiles(updated)
+              persistToStore('mediaFiles', updated)
+              if (db) await setDoc(doc(db, 'media', itemId), stateToRestore)
+            }
+            else if (collectionName === 'users') {
+              const exists = adminUsers.some(a => String(a.id) === String(itemId))
+              const updated = exists ? adminUsers.map(a => String(a.id) === String(itemId) ? stateToRestore : a) : [...adminUsers, stateToRestore]
+              setAdminUsers(updated)
+              if (db) {
+                await setDoc(doc(db, 'users', itemId), stateToRestore)
+              } else {
+                localStorage.setItem('srikara_mock_admins', JSON.stringify(updated))
+              }
+            }
 
             await logChange('Restore', collectionName, itemId, log.itemName, null, restoredItem)
             notifyUser('success', 'Item restored successfully.')
@@ -1238,6 +1369,39 @@ export function AdminDashboard() {
               await persistToStore('news', updated)
               if (db) await deleteDoc(doc(db, 'news', itemId))
             }
+            else if (collectionName === 'appointments') {
+              const updated = appointments.filter(a => String(a.id) !== String(itemId))
+              setAppointments(updated)
+              await persistToStore('appointments', updated)
+              if (db) await deleteDoc(doc(db, 'appointments', itemId))
+            }
+            else if (collectionName === 'branches') {
+              const updatedList = branchesList.filter(b => b.slug !== itemId)
+              setBranchesList(updatedList)
+              localStorage.setItem('srikara_branches', JSON.stringify(updatedList))
+              
+              const pageDataBranchesCopy = { ...pageData.branches }
+              delete pageDataBranchesCopy[itemId]
+              const updatedPageData = { ...pageData, branches: pageDataBranchesCopy, branchesList: updatedList }
+              setPageData(updatedPageData)
+              await persistToStore('pageData', updatedPageData)
+              refetchBranches()
+            }
+            else if (collectionName === 'media') {
+              const updated = mediaFiles.filter(m => String(m.id) !== String(itemId))
+              setMediaFiles(updated)
+              persistToStore('mediaFiles', updated)
+              if (db) await deleteDoc(doc(db, 'media', itemId))
+            }
+            else if (collectionName === 'users') {
+              const updated = adminUsers.filter(a => String(a.id) !== String(itemId))
+              setAdminUsers(updated)
+              if (db) {
+                await deleteDoc(doc(db, 'users', itemId))
+              } else {
+                localStorage.setItem('srikara_mock_admins', JSON.stringify(updated))
+              }
+            }
 
             await logChange('Delete', collectionName, itemId, log.itemName, currentState, null)
             notifyUser('success', 'Creation reverted successfully (item deleted).')
@@ -1253,7 +1417,25 @@ export function AdminDashboard() {
 
   // 2b. Admin User Management (Super Admin only)
   const loadAdminUsers = async () => {
-    if (!db) return
+    if (!db) {
+      try {
+        const storedAdmins = localStorage.getItem('srikara_mock_admins')
+        if (storedAdmins) {
+          setAdminUsers(JSON.parse(storedAdmins))
+        } else {
+          const defaultMockAdmins = [
+            { id: 'mock-admin-1', email: 'admin@srikara.com', displayName: 'General Admin', role: 'Admin', active: true, extraPermissions: [], revokedPermissions: [], createdAt: Date.now() },
+            { id: 'mock-admin-2', email: 'hr@srikara.com', displayName: 'HR Manager', role: 'HR', active: true, extraPermissions: [], revokedPermissions: [], createdAt: Date.now() },
+            { id: 'mock-admin-3', email: 'marketing@srikara.com', displayName: 'Marketing Manager', role: 'Marketing Admin', active: true, extraPermissions: [], revokedPermissions: [], createdAt: Date.now() }
+          ]
+          setAdminUsers(defaultMockAdmins)
+          localStorage.setItem('srikara_mock_admins', JSON.stringify(defaultMockAdmins))
+        }
+      } catch (err) {
+        console.error('Failed to load mock admins:', err)
+      }
+      return
+    }
     try {
       const snap = await getDocs(collection(db, 'users'))
       setAdminUsers(snap.docs.map(d => ({ id: d.id, ...d.data() })))
@@ -1274,7 +1456,10 @@ export function AdminDashboard() {
       if (!auth) {
         // Mock mode: no live Firebase, simulate locally.
         const newAdmin = { id: Date.now().toString(), ...currentAdminUser, active: true, createdAt: Date.now() }
-        setAdminUsers(prev => [...prev, newAdmin])
+        const updated = [...adminUsers, newAdmin]
+        setAdminUsers(updated)
+        localStorage.setItem('srikara_mock_admins', JSON.stringify(updated))
+        await logChange('Create', 'users', newAdmin.id, newAdmin.email, null, newAdmin)
         notifyUser('success', `Simulated admin "${currentAdminUser.email}" created (mock mode — no live Firebase).`)
       } else {
         // Create the Auth account on an isolated secondary App instance so the
@@ -1294,6 +1479,7 @@ export function AdminDashboard() {
           }
           await setDoc(doc(db, 'users', cred.user.uid), profile)
           setAdminUsers(prev => [...prev, { id: cred.user.uid, ...profile }])
+          await logChange('Create', 'users', cred.user.uid, profile.email, null, profile)
           notifyUser('success', `Admin account created successfully. They can now log in using the specified password.`)
         } finally {
           await signOut(secondaryAuth).catch(() => {})
@@ -1309,6 +1495,7 @@ export function AdminDashboard() {
   }
 
   const updateAdminUser = async (uid, patch) => {
+    const prev = adminUsers.find(a => a.id === uid)
     const updatedList = adminUsers.map(a => a.id === uid ? { ...a, ...patch } : a)
     setAdminUsers(updatedList)
     if (db) {
@@ -1317,11 +1504,68 @@ export function AdminDashboard() {
         notifyUser('success', 'Admin permissions updated.')
       } catch (err) {
         notifyUser('error', `Failed to update admin: ${err.message}`)
+        return
       }
+    } else {
+      localStorage.setItem('srikara_mock_admins', JSON.stringify(updatedList))
+      notifyUser('success', 'Admin permissions updated.')
     }
+    const updatedUser = { ...prev, ...patch }
+    await logChange('Update', 'users', uid, updatedUser.email || prev?.email || uid, prev, updatedUser)
   }
 
   const toggleAdminActive = (adminUser) => updateAdminUser(adminUser.id, { active: !(adminUser.active !== false) })
+
+  const deleteAdminUser = async (adminUser) => {
+    requestConfirm(
+      'Delete Admin Account',
+      `Are you sure you want to permanently delete admin account "${adminUser.email}"? This will revoke all their access.`,
+      async () => {
+        try {
+          if (!auth) {
+            const updated = adminUsers.filter(a => a.id !== adminUser.id)
+            setAdminUsers(updated)
+            localStorage.setItem('srikara_mock_admins', JSON.stringify(updated))
+          } else {
+            await deleteDoc(doc(db, 'users', adminUser.id))
+            setAdminUsers(prev => prev.filter(a => a.id !== adminUser.id))
+          }
+          await logChange('Delete', 'users', adminUser.id, adminUser.email, adminUser, null)
+          notifyUser('success', `Deleted admin account "${adminUser.email}".`)
+        } catch (err) {
+          notifyUser('error', `Failed to delete admin: ${err.message}`)
+        }
+      },
+      'Delete'
+    )
+  }
+
+  const saveAdminUser = async (e) => {
+    e.preventDefault()
+    if (editingAdminId) {
+      setCreatingAdminUser(true)
+      try {
+        const prev = adminUsers.find(a => a.id === editingAdminId)
+        if (!prev) return
+        
+        const patch = {
+          displayName: currentAdminUser.displayName,
+          role: currentAdminUser.role,
+          extraPermissions: currentAdminUser.extraPermissions,
+          revokedPermissions: currentAdminUser.revokedPermissions
+        }
+        await updateAdminUser(editingAdminId, patch)
+        setEditingAdminId(null)
+        setCurrentAdminUser({ email: '', displayName: '', password: '', role: 'Reception', extraPermissions: [], revokedPermissions: [] })
+      } catch (err) {
+        notifyUser('error', `Failed to update admin: ${err.message}`)
+      } finally {
+        setCreatingAdminUser(false)
+      }
+    } else {
+      await createAdminUser(e)
+    }
+  }
 
   // 3. Category CRUD Actions
   // Doctor CRUD
@@ -1332,13 +1576,18 @@ export function AdminDashboard() {
     const timestamp = new Date().toISOString()
     const adminEmail = user?.email || 'Admin Editor'
 
+    const docSlug = currentDoctor.slug || currentDoctor.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+    const defaultMedia = DOCTOR_MEDIA[docSlug] || DOCTOR_MEDIA['default']
+    const initialBlogs = currentDoctor.blogs !== undefined ? currentDoctor.blogs : (defaultMedia?.blogs || [])
+
     const payload = { 
       ...currentDoctor, 
       id: newDocId, 
-      slug: currentDoctor.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'), 
+      slug: docSlug, 
       about: currentDoctor.bio,
       status: 'Active',
-      updatedAt: timestamp
+      updatedAt: timestamp,
+      blogs: initialBlogs
     }
 
     if (!isEditingDoc) {
@@ -1369,8 +1618,271 @@ export function AdminDashboard() {
       await setDoc(doc(db, 'doctors', newDocId), payload)
     }
 
-    setCurrentDoctor({ name: '', specialty: '', specialtyId: 'ortho', sub: '', exp: '', branch: 'LB Nagar', availability: '', photoUrl: '', status: 'Active', bio: '', languages: 'English', tagline: '', education: '' })
+    setCurrentDoctor({ name: '', specialty: '', specialtyId: 'ortho', sub: '', exp: '', branch: 'LB Nagar', availability: '', photoUrl: '', status: 'Active', bio: '', languages: 'English', tagline: '', education: '', blogs: [] })
+    setDoctorFormTab('details')
     notifyUser('success', 'Doctor profile saved successfully!')
+  }
+
+  const handleVideoUpload = async (file, onUploaded) => {
+    if (!file) return
+
+    notifyUser('info', 'Uploading video...')
+
+    const readAsBase64 = (f) => new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result)
+      reader.onerror = reject
+      reader.readAsDataURL(f)
+    })
+
+    try {
+      if (storage) {
+        const fileRef = ref(storage, `videos/${Date.now()}_${file.name}`)
+        await uploadBytes(fileRef, file)
+        const downloadUrl = await getDownloadURL(fileRef)
+        
+        const newAsset = { 
+          id: Date.now().toString(),
+          name: file.name,
+          type: 'video',
+          size: `${Math.round(file.size / 1024)} KB`,
+          folder: 'Videos',
+          url: downloadUrl
+        }
+        const updated = [...mediaFiles, newAsset]
+        setMediaFiles(updated)
+        persistToStore('mediaFiles', updated)
+
+        onUploaded(downloadUrl)
+        notifyUser('success', 'Video uploaded successfully!')
+      } else {
+        const base64Url = await readAsBase64(file)
+        onUploaded(base64Url)
+        notifyUser('success', 'Video uploaded locally!')
+      }
+    } catch (err) {
+      console.error('Video upload failed:', err)
+      notifyUser('error', 'Video upload failed: ' + err.message)
+    }
+  }
+
+  const saveDoctorBlog = async (e) => {
+    if (e) e.preventDefault()
+    if (!currentDoctor.id) {
+      notifyUser('error', 'Please publish the doctor profile first.')
+      return
+    }
+
+    if (!currentDoctorBlog.title || !currentDoctorBlog.content) {
+      notifyUser('error', 'Please fill in the title and content.')
+      return
+    }
+
+    const blogId = isEditingDoctorBlog ? currentDoctorBlog.id : `b-doc-${Date.now()}`
+    const blogDate = currentDoctorBlog.date || new Date().toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' })
+    const blogContent = blocksToHtml(doctorBlogBlocks)
+    const blogPayload = {
+      ...currentDoctorBlog,
+      id: blogId,
+      date: blogDate,
+      content: blogContent,
+      image: currentDoctorBlog.mediaType === 'image' 
+        ? currentDoctorBlog.image 
+        : (currentDoctorBlog.image || 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&q=80&w=800'),
+    }
+
+    const docBlogs = currentDoctor.blogs || []
+    let updatedBlogs
+    if (isEditingDoctorBlog) {
+      updatedBlogs = docBlogs.map(b => b.id === currentDoctorBlog.id ? blogPayload : b)
+    } else {
+      updatedBlogs = [...docBlogs, blogPayload]
+    }
+
+    const updatedDoctor = {
+      ...currentDoctor,
+      blogs: updatedBlogs
+    }
+
+    // Update current doctor state
+    setCurrentDoctor(updatedDoctor)
+
+    // Update doctors list state
+    const prevDoctor = doctors.find(d => String(d.id) === String(currentDoctor.id))
+    const updatedDoctorsList = doctors.map(d => String(d.id) === String(currentDoctor.id) ? updatedDoctor : d)
+    setDoctors(updatedDoctorsList)
+    await persistToStore('doctors', updatedDoctorsList)
+
+    if (db) {
+      await setDoc(doc(db, 'doctors', currentDoctor.id), updatedDoctor)
+    }
+
+    await logChange(
+      isEditingDoctorBlog ? 'Update' : 'Create',
+      'doctors',
+      currentDoctor.id,
+      `Doctor Blog: ${blogPayload.title} (under ${currentDoctor.name})`,
+      prevDoctor ? JSON.parse(JSON.stringify(prevDoctor)) : null,
+      updatedDoctor
+    )
+
+    // Reset doctor blog form
+    setCurrentDoctorBlog({
+      id: '',
+      title: '',
+      category: currentDoctor.specialty || 'Orthopaedics',
+      tag: 'Case Study',
+      excerpt: '',
+      content: '',
+      date: '',
+      readTime: '5 min read',
+      image: '',
+      videoUrl: '',
+      mediaType: 'image'
+    })
+    setIsEditingDoctorBlog(false)
+    setDoctorBlogBlocks([{ id: Date.now().toString(), type: 'paragraph', value: '' }])
+    notifyUser('success', isEditingDoctorBlog ? 'Blog updated successfully!' : 'Blog added successfully!')
+  }
+
+  const deleteDoctorBlog = async (blogId) => {
+    if (!currentDoctor.id) return
+    
+    const docBlogs = currentDoctor.blogs || []
+    const blogToDelete = docBlogs.find(b => b.id === blogId)
+    const updatedBlogs = docBlogs.filter(b => b.id !== blogId)
+
+    const updatedDoctor = {
+      ...currentDoctor,
+      blogs: updatedBlogs
+    }
+
+    const prevDoctor = doctors.find(d => String(d.id) === String(currentDoctor.id))
+    setCurrentDoctor(updatedDoctor)
+
+    const updatedDoctorsList = doctors.map(d => String(d.id) === String(currentDoctor.id) ? updatedDoctor : d)
+    setDoctors(updatedDoctorsList)
+    await persistToStore('doctors', updatedDoctorsList)
+
+    if (db) {
+      await setDoc(doc(db, 'doctors', currentDoctor.id), updatedDoctor)
+    }
+    await logChange(
+      'Update',
+      'doctors',
+      currentDoctor.id,
+      `Delete Doctor Blog: ${blogToDelete?.title || blogId} (under ${currentDoctor.name})`,
+      prevDoctor ? JSON.parse(JSON.stringify(prevDoctor)) : null,
+      updatedDoctor
+    )
+    notifyUser('success', 'Blog deleted successfully!')
+  }
+
+  const formatInlineStyles = (text) => {
+    return (text || '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+  }
+
+  const blocksToHtml = (blocks) => {
+    return (blocks || []).map(b => {
+      const val = (b.value || '').trim()
+      if (!val) return ''
+      const formattedVal = formatInlineStyles(val)
+      if (b.type === 'heading') return `<h3>${formattedVal}</h3>`
+      if (b.type === 'quote') return `<blockquote>${formattedVal}</blockquote>`
+      if (b.type === 'list') {
+        const items = val.split('\n').map(i => i.trim()).filter(i => i.length > 0)
+        if (items.length === 0) return ''
+        return `<ul>\n` + items.map(i => `  <li>${formatInlineStyles(i)}</li>`).join('\n') + `\n</ul>`
+      }
+      return `<p>${formattedVal}</p>`
+    }).filter(html => html.length > 0).join('\n')
+  }
+
+  const parseHtmlToBlocks = (html) => {
+    if (!html) return [{ id: Date.now().toString(), type: 'paragraph', value: '' }]
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(html, 'text/html')
+    const blocks = []
+    doc.body.childNodes.forEach((node, i) => {
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const type = node.tagName.toLowerCase()
+        let innerHtml = node.innerHTML || ''
+        innerHtml = innerHtml.replace(/<strong[^>]*>(.*?)<\/strong>/gi, '**$1**')
+        innerHtml = innerHtml.replace(/<b[^>]*>(.*?)<\/b>/gi, '**$1**')
+        
+        const tempDiv = document.createElement('div')
+        tempDiv.innerHTML = innerHtml
+        let value = tempDiv.innerText || tempDiv.textContent || ''
+
+        let blockType = 'paragraph'
+        if (type === 'h3') {
+          blockType = 'heading'
+        } else if (type === 'blockquote') {
+          blockType = 'quote'
+        } else if (type === 'ul' || type === 'ol') {
+          blockType = 'list'
+          const items = []
+          node.childNodes.forEach(li => {
+            if (li.tagName && li.tagName.toLowerCase() === 'li') {
+              let liHtml = li.innerHTML || ''
+              liHtml = liHtml.replace(/<strong[^>]*>(.*?)<\/strong>/gi, '**$1**')
+              liHtml = liHtml.replace(/<b[^>]*>(.*?)<\/b>/gi, '**$1**')
+              const liDiv = document.createElement('div')
+              liDiv.innerHTML = liHtml
+              items.push(liDiv.innerText || liDiv.textContent || '')
+            }
+          })
+          value = items.join('\n')
+        }
+        blocks.push({
+          id: `${Date.now()}-${i}`,
+          type: blockType,
+          value: value
+        })
+      } else if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+        blocks.push({
+          id: `${Date.now()}-${i}`,
+          type: 'paragraph',
+          value: node.textContent.trim()
+        })
+      }
+    })
+    if (blocks.length === 0) {
+      blocks.push({ id: Date.now().toString(), type: 'paragraph', value: '' })
+    }
+    return blocks
+  }
+
+  const addMainBlock = (type) => {
+    setBlogBlocks(prev => [...prev, { id: `block-${Date.now()}-${Math.random()}`, type, value: '' }])
+  }
+  const updateMainBlockType = (id, type) => {
+    setBlogBlocks(prev => prev.map(b => b.id === id ? { ...b, type } : b))
+  }
+  const updateMainBlockValue = (id, value) => {
+    setBlogBlocks(prev => prev.map(b => b.id === id ? { ...b, value } : b))
+  }
+  const removeMainBlock = (id) => {
+    setBlogBlocks(prev => {
+      const filtered = prev.filter(b => b.id !== id)
+      return filtered.length ? filtered : [{ id: `block-${Date.now()}`, type: 'paragraph', value: '' }]
+    })
+  }
+
+  const addDoctorBlock = (type) => {
+    setDoctorBlogBlocks(prev => [...prev, { id: `block-${Date.now()}-${Math.random()}`, type, value: '' }])
+  }
+  const updateDoctorBlockType = (id, type) => {
+    setDoctorBlogBlocks(prev => prev.map(b => b.id === id ? { ...b, type } : b))
+  }
+  const updateDoctorBlockValue = (id, value) => {
+    setDoctorBlogBlocks(prev => prev.map(b => b.id === id ? { ...b, value } : b))
+  }
+  const removeDoctorBlock = (id) => {
+    setDoctorBlogBlocks(prev => {
+      const filtered = prev.filter(b => b.id !== id)
+      return filtered.length ? filtered : [{ id: `block-${Date.now()}`, type: 'paragraph', value: '' }]
+    })
   }
 
   const deleteDoctor = async (id) => {
@@ -1402,10 +1914,12 @@ export function AdminDashboard() {
     e.preventDefault()
     const newBlogId = isEditingBlog ? currentBlog.id : Date.now().toString()
     const slug = currentBlog.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+    const blogBody = blocksToHtml(blogBlocks)
     const payload = { 
       ...currentBlog, 
       id: newBlogId, 
       slug, 
+      body: blogBody,
       date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
       author: user?.email || 'Admin Editor'
     }
@@ -1425,6 +1939,7 @@ export function AdminDashboard() {
     if (db) await setDoc(doc(db, 'blogs', newBlogId), payload)
 
     setCurrentBlog({ title: '', category: 'Orthopaedics', tag: 'Case Study', body: '', status: 'Active', slug: '', seoTitle: '', seoDesc: '', readTime: '5 min read', image: '' })
+    setBlogBlocks([{ id: Date.now().toString(), type: 'paragraph', value: '' }])
     notifyUser('success', 'Blog article published successfully!')
   }
 
@@ -1723,7 +2238,10 @@ export function AdminDashboard() {
 
   const deleteAppointment = async (id) => {
     requestConfirm('Cancel Appointment', 'Are you sure you want to cancel and remove this appointment request?', async () => {
-      const updated = appointments.filter(a => a.id !== id)
+      const apptToDelete = appointments.find(a => String(a.id) === String(id))
+      if (!apptToDelete) return
+
+      const updated = appointments.filter(a => String(a.id) !== String(id))
       setAppointments(updated)
       await persistToStore('appointments', updated)
       if (db) {
@@ -1733,6 +2251,7 @@ export function AdminDashboard() {
           console.error('Failed to delete appointment in Firestore:', err)
         }
       }
+      await logChange('Delete', 'appointments', id, `Appointment: ${apptToDelete.patientName} (${apptToDelete.date})`, apptToDelete, null)
       notifyUser('success', 'Appointment request removed successfully.')
     })
   }
@@ -1866,21 +2385,40 @@ export function AdminDashboard() {
       return
     }
     setUploadingMedia(true)
-    setTimeout(() => {
+    setTimeout(async () => {
       const newAsset = { ...newMediaFile, id: Date.now().toString() }
       const updated = [...mediaFiles, newAsset]
       setMediaFiles(updated)
       persistToStore('mediaFiles', updated)
+      if (db) {
+        try {
+          await setDoc(doc(db, 'media', newAsset.id), newAsset)
+        } catch (err) {
+          console.error("Firebase media save error:", err)
+        }
+      }
+      await logChange('Create', 'media', newAsset.id, newAsset.name, null, newAsset)
       setNewMediaFile({ name: '', type: 'image', size: '120 KB', folder: 'Images', url: '' })
       setUploadingMedia(false)
       notifyUser('success', 'Media asset uploaded and indexed!')
     }, 1000)
   }
 
-  const deleteMediaFile = (id) => {
+  const deleteMediaFile = async (id) => {
+    const mediaToDelete = mediaFiles.find(m => m.id === id)
+    if (!mediaToDelete) return
+
     const updated = mediaFiles.filter(m => m.id !== id)
     setMediaFiles(updated)
     persistToStore('mediaFiles', updated)
+    if (db) {
+      try {
+        await deleteDoc(doc(db, 'media', id))
+      } catch (err) {
+        console.error('Failed to delete media in Firestore:', err)
+      }
+    }
+    await logChange('Delete', 'media', id, mediaToDelete.name, mediaToDelete, null)
     notifyUser('success', 'Media asset removed.')
   }
 
@@ -1918,6 +2456,10 @@ export function AdminDashboard() {
         const updated = [...mediaFiles, newAsset]
         setMediaFiles(updated)
         persistToStore('mediaFiles', updated)
+        if (db) {
+          await setDoc(doc(db, 'media', newAsset.id), newAsset)
+        }
+        await logChange('Create', 'media', newAsset.id, newAsset.name, null, newAsset)
 
         onUploaded(downloadUrl)
         notifyUser('success', 'Image uploaded successfully!')
@@ -1935,6 +2477,10 @@ export function AdminDashboard() {
         const updated = [...mediaFiles, newAsset]
         setMediaFiles(updated)
         persistToStore('mediaFiles', updated)
+        if (db) {
+          await setDoc(doc(db, 'media', newAsset.id), newAsset)
+        }
+        await logChange('Create', 'media', newAsset.id, newAsset.name, null, newAsset)
 
         onUploaded(base64Url)
         notifyUser('success', 'Saved image locally as data URL.')
@@ -2528,8 +3074,8 @@ export function AdminDashboard() {
                       )}
                     </div>
 
-                    {/* Folder 5: Admin & Security (Super Admin only) */}
-                    {hasAccess('admin_users') && (
+                    {/* Folder 5: Admin & Security */}
+                    {(hasAccess('admin_users') || hasAccess('history')) && (
                       <div className="space-y-1">
                         <button
                           type="button"
@@ -2545,27 +3091,31 @@ export function AdminDashboard() {
 
                         {expandedGroups.admin && (
                           <div className="pl-4 ml-4 border-l border-slate-100 space-y-1">
-                            <button
-                              type="button"
-                              onClick={() => { setActiveGroup('admin'); setActiveTab('admin_users'); }}
-                              className={`w-full text-left flex items-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
-                                activeTab === 'admin_users' ? 'bg-[#8B1A4A] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'
-                              }`}
-                            >
-                              <ShieldCheck className="w-3.5 h-3.5" />
-                              <span>Admin Users & Roles</span>
-                            </button>
+                            {hasAccess('admin_users') && (
+                              <button
+                                type="button"
+                                onClick={() => { setActiveGroup('admin'); setActiveTab('admin_users'); }}
+                                className={`w-full text-left flex items-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
+                                  activeTab === 'admin_users' ? 'bg-[#8B1A4A] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'
+                                }`}
+                              >
+                                <ShieldCheck className="w-3.5 h-3.5" />
+                                <span>Admin Users & Roles</span>
+                              </button>
+                            )}
 
-                            <button
-                              type="button"
-                              onClick={() => { setActiveGroup('admin'); setActiveTab('history'); }}
-                              className={`w-full text-left flex items-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
-                                activeTab === 'history' ? 'bg-[#8B1A4A] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'
-                              }`}
-                            >
-                              <History className="w-3.5 h-3.5" />
-                              <span>Audit & History Log</span>
-                            </button>
+                            {hasAccess('history') && (
+                              <button
+                                type="button"
+                                onClick={() => { setActiveGroup('admin'); setActiveTab('history'); }}
+                                className={`w-full text-left flex items-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
+                                  activeTab === 'history' ? 'bg-[#8B1A4A] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'
+                                }`}
+                              >
+                                <History className="w-3.5 h-3.5" />
+                                <span>Audit & History Log</span>
+                              </button>
+                            )}
                           </div>
                         )}
                       </div>
@@ -2997,138 +3547,466 @@ export function AdminDashboard() {
 
                       {/* Right: Creator Form & Live Preview */}
                       <div className="xl:col-span-5 space-y-6">
-                        <form onSubmit={saveDoctor} className="glass-card-admin rounded-[32px] p-8 shadow-sm space-y-4">
-                          <h3 className="font-garamond text-2xl font-bold text-[#2D3A4A]">
-                            {isEditingDoc ? 'Modify Profile' : 'Publish Doctor Profile'}
-                          </h3>
-                          
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Full Name</label>
-                              <input type="text" value={currentDoctor.name} onChange={e => setCurrentDoctor(prev => ({ ...prev, name: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" placeholder="Dr. Jane Smith" required />
-                            </div>
-                            <div>
-                              <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Specialty</label>
-                              <input 
-                                type="text" 
-                                value={currentDoctor.specialty} 
-                                onChange={e => {
-                                  const val = e.target.value;
-                                  let specId = 'ortho';
-                                  const clean = val.toLowerCase();
-                                  if (clean.includes('ortho')) specId = 'ortho';
-                                  else if (clean.includes('cardio')) specId = 'cardio';
-                                  else if (clean.includes('neuro')) specId = 'neuro';
-                                  else if (clean.includes('nephro')) specId = 'nephro';
-                                  else if (clean.includes('pulmo')) specId = 'pulmo';
-                                  else if (clean.includes('gastro')) specId = 'gastro';
-                                  else if (clean.includes('physician') || clean.includes('general')) specId = 'physician';
-                                  else if (clean.includes('urology')) specId = 'urology';
-                                  else if (clean.includes('gyn') || clean.includes('obstetric')) specId = 'gyn';
-                                  else specId = clean.slice(0, 5) || 'ortho';
-
-                                  setCurrentDoctor(prev => ({ ...prev, specialty: val, specialtyId: specId }));
-                                }} 
-                                className="w-full h-11 px-3 rounded-xl border bg-white text-xs" 
-                                placeholder="Cardiology" 
-                                required 
-                              />
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Branch</label>
-                              <ThemedDropdown
-                                value={currentDoctor.branch}
-                                onChange={e => setCurrentDoctor(prev => ({ ...prev, branch: e.target.value }))}
-                                options={['LB Nagar', 'Kompally', 'ECIL', 'Miyapur', 'Peerzadiguda', 'Lakdikapul', 'Vijayawada', 'Rajahmundry', 'RTC X Roads', 'Secunderabad']}
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Experience</label>
-                              <input type="text" value={currentDoctor.exp} onChange={e => setCurrentDoctor(prev => ({ ...prev, exp: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" placeholder="10+ Years" />
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Timings Availability</label>
-                            <input type="text" value={currentDoctor.availability} onChange={e => setCurrentDoctor(prev => ({ ...prev, availability: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" placeholder="Mon - Sat: 10 AM - 5 PM" />
-                          </div>
-
-                          <div>
-                            <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Photo URL</label>
-                            <div className="flex gap-2">
-                              <input type="text" value={currentDoctor.photoUrl} onChange={e => setCurrentDoctor(prev => ({ ...prev, photoUrl: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" placeholder="https://..." />
-                              <button 
-                                type="button"
-                                onClick={() => {
-                                  const input = document.createElement('input')
-                                  input.type = 'file'
-                                  input.accept = 'image/*'
-                                  input.onchange = (e) => {
-                                    const file = e.target.files[0]
-                                    handleImageUpload(file, (url) => {
-                                      setCurrentDoctor(prev => ({ ...prev, photoUrl: url }))
-                                    })
-                                  }
-                                  input.click()
-                                }}
-                                className="px-3 h-11 rounded-xl bg-[#8B1A4A] hover:bg-[#2D3A4A] text-white text-xs font-bold flex items-center justify-center gap-1 shrink-0 transition-colors"
-                              >
-                                <Upload className="w-4 h-4" /> Upload
-                              </button>
-                              <button 
-                                type="button" 
-                                onClick={() => triggerMediaPicker((url) => setCurrentDoctor(prev => ({ ...prev, photoUrl: url })))}
-                                className="px-3 h-11 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold flex items-center justify-center gap-1 shrink-0 text-slate-700"
-                              >
-                                <FolderOpen className="w-4 h-4" /> Pick
-                              </button>
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Doctor Bio / Statement</label>
-                            <textarea value={currentDoctor.bio} onChange={e => setCurrentDoctor(prev => ({ ...prev, bio: e.target.value }))} className="w-full h-20 p-3 rounded-xl border bg-white text-xs" placeholder="Describe the doctor's achievements..." />
-                          </div>
-
-                          <div>
-                            <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Academic Credentials & Fellowships</label>
-                            <input type="text" value={currentDoctor.education} onChange={e => setCurrentDoctor(prev => ({ ...prev, education: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" placeholder="e.g. MBBS, MD (General Medicine), DM (Cardiology)" />
-                          </div>
-
-                          <div className="flex gap-3 pt-2">
-                            <button type="submit" className="flex-1 h-12 bg-[#8B1A4A] text-white hover:bg-[#2D3A4A] rounded-full text-xs font-bold uppercase transition-all shadow-md">
-                              {isEditingDoc ? 'Save Changes' : 'Publish Profile'}
-                            </button>
-                            {isEditingDoc && (
-                              <button 
-                                type="button" 
-                                onClick={() => {
-                                  setIsEditingDoc(false)
-                                  setCurrentDoctor({ name: '', specialty: '', specialtyId: 'ortho', sub: '', exp: '', branch: 'LB Nagar', availability: '', photoUrl: '', status: 'Active', bio: '', languages: 'English', tagline: '', education: '' })
-                                }}
-                                className="h-12 px-6 bg-slate-200 rounded-full text-xs font-bold uppercase"
-                              >
-                                Cancel
-                              </button>
-                            )}
-                          </div>
-                        </form>
-
-                        {/* Live visual preview card */}
-                        <div className="p-6 rounded-[32px] bg-slate-50 border border-slate-200 shadow-inner space-y-4">
-                          <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Live Profile Card Preview</p>
-                          <div className="bg-white rounded-3xl p-5 shadow border flex items-center gap-4">
-                            <img src={currentDoctor.photoUrl || 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300'} className="w-16 h-16 rounded-full object-cover border" />
-                            <div>
-                              <h4 className="font-bold text-slate-800 text-lg">{currentDoctor.name || 'Doctor Name'}</h4>
-                              <p className="text-xs text-[#8B1A4A] font-extrabold uppercase">{currentDoctor.specialty || 'Specialty'}</p>
-                              <p className="text-[11px] text-gray-500 mt-1 font-semibold">{currentDoctor.branch} · {currentDoctor.exp || 'Yrs experience'}</p>
-                            </div>
-                          </div>
+                        {/* Form Tab Switcher */}
+                        <div className="flex gap-2 p-1.5 bg-slate-100/80 rounded-2xl border border-slate-200/50">
+                          <button
+                            type="button"
+                            onClick={() => setDoctorFormTab('details')}
+                            className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 ${doctorFormTab === 'details' ? 'bg-[#8B1A4A] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'}`}
+                          >
+                            Doctor Details
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDoctorFormTab('blogs')
+                              if (!currentDoctorBlog.category && currentDoctor.specialty) {
+                                setCurrentDoctorBlog(prev => ({ ...prev, category: currentDoctor.specialty }))
+                              }
+                            }}
+                            className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 ${doctorFormTab === 'blogs' ? 'bg-[#8B1A4A] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'}`}
+                          >
+                            Blogs ({currentDoctor?.blogs?.length || 0})
+                          </button>
                         </div>
+
+                        {doctorFormTab === 'details' ? (
+                          <>
+                            <form onSubmit={saveDoctor} className="glass-card-admin rounded-[32px] p-8 shadow-sm space-y-4">
+                              <h3 className="font-garamond text-2xl font-bold text-[#2D3A4A]">
+                                {isEditingDoc ? 'Modify Profile' : 'Publish Doctor Profile'}
+                              </h3>
+                              
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Full Name</label>
+                                  <input type="text" value={currentDoctor.name} onChange={e => setCurrentDoctor(prev => ({ ...prev, name: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" placeholder="Dr. Jane Smith" required />
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Specialty</label>
+                                  <input 
+                                    type="text" 
+                                    value={currentDoctor.specialty} 
+                                    onChange={e => {
+                                      const val = e.target.value;
+                                      let specId = 'ortho';
+                                      const clean = val.toLowerCase();
+                                      if (clean.includes('ortho')) specId = 'ortho';
+                                      else if (clean.includes('cardio')) specId = 'cardio';
+                                      else if (clean.includes('neuro')) specId = 'neuro';
+                                      else if (clean.includes('nephro')) specId = 'nephro';
+                                      else if (clean.includes('pulmo')) specId = 'pulmo';
+                                      else if (clean.includes('gastro')) specId = 'gastro';
+                                      else if (clean.includes('physician') || clean.includes('general')) specId = 'physician';
+                                      else if (clean.includes('urology')) specId = 'urology';
+                                      else if (clean.includes('gyn') || clean.includes('obstetric')) specId = 'gyn';
+                                      else specId = clean.slice(0, 5) || 'ortho';
+
+                                      setCurrentDoctor(prev => ({ ...prev, specialty: val, specialtyId: specId }));
+                                    }} 
+                                    className="w-full h-11 px-3 rounded-xl border bg-white text-xs" 
+                                    placeholder="Cardiology" 
+                                    required 
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Branch</label>
+                                  <ThemedDropdown
+                                    value={currentDoctor.branch}
+                                    onChange={e => setCurrentDoctor(prev => ({ ...prev, branch: e.target.value }))}
+                                    options={['LB Nagar', 'Kompally', 'ECIL', 'Miyapur', 'Peerzadiguda', 'Lakdikapul', 'Vijayawada', 'Rajahmundry', 'RTC X Roads', 'Secunderabad']}
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Experience</label>
+                                  <input type="text" value={currentDoctor.exp} onChange={e => setCurrentDoctor(prev => ({ ...prev, exp: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" placeholder="10+ Years" />
+                                </div>
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Timings Availability</label>
+                                <input type="text" value={currentDoctor.availability} onChange={e => setCurrentDoctor(prev => ({ ...prev, availability: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" placeholder="Mon - Sat: 10 AM - 5 PM" />
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Photo URL</label>
+                                <div className="flex gap-2">
+                                  <input type="text" value={currentDoctor.photoUrl} onChange={e => setCurrentDoctor(prev => ({ ...prev, photoUrl: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" placeholder="https://..." />
+                                  <button 
+                                    type="button"
+                                    onClick={() => {
+                                      const input = document.createElement('input')
+                                      input.type = 'file'
+                                      input.accept = 'image/*'
+                                      input.onchange = (e) => {
+                                        const file = e.target.files[0]
+                                        handleImageUpload(file, (url) => {
+                                          setCurrentDoctor(prev => ({ ...prev, photoUrl: url }))
+                                        })
+                                      }
+                                      input.click()
+                                    }}
+                                    className="px-3 h-11 rounded-xl bg-[#8B1A4A] hover:bg-[#2D3A4A] text-white text-xs font-bold flex items-center justify-center gap-1 shrink-0 transition-colors"
+                                  >
+                                    <Upload className="w-4 h-4" /> Upload
+                                  </button>
+                                  <button 
+                                    type="button" 
+                                    onClick={() => triggerMediaPicker((url) => setCurrentDoctor(prev => ({ ...prev, photoUrl: url })))}
+                                    className="px-3 h-11 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold flex items-center justify-center gap-1 shrink-0 text-slate-700"
+                                  >
+                                    <FolderOpen className="w-4 h-4" /> Pick
+                                  </button>
+                                </div>
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Doctor Bio / Statement</label>
+                                <textarea value={currentDoctor.bio} onChange={e => setCurrentDoctor(prev => ({ ...prev, bio: e.target.value }))} className="w-full h-20 p-3 rounded-xl border bg-white text-xs" placeholder="Describe the doctor's achievements..." />
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Academic Credentials & Fellowships</label>
+                                <input type="text" value={currentDoctor.education} onChange={e => setCurrentDoctor(prev => ({ ...prev, education: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" placeholder="e.g. MBBS, MD (General Medicine), DM (Cardiology)" />
+                              </div>
+
+                              <div className="flex gap-3 pt-2">
+                                <button type="submit" className="flex-1 h-12 bg-[#8B1A4A] text-white hover:bg-[#2D3A4A] rounded-full text-xs font-bold uppercase transition-all shadow-md">
+                                  {isEditingDoc ? 'Save Changes' : 'Publish Profile'}
+                                </button>
+                                {isEditingDoc && (
+                                  <button 
+                                    type="button" 
+                                    onClick={() => {
+                                      setIsEditingDoc(false)
+                                      setCurrentDoctor({ name: '', specialty: '', specialtyId: 'ortho', sub: '', exp: '', branch: 'LB Nagar', availability: '', photoUrl: '', status: 'Active', bio: '', languages: 'English', tagline: '', education: '', blogs: [] })
+                                    }}
+                                    className="h-12 px-6 bg-slate-200 rounded-full text-xs font-bold uppercase"
+                                  >
+                                    Cancel
+                                  </button>
+                                )}
+                              </div>
+                            </form>
+
+                            {/* Live visual preview card */}
+                            <div className="p-6 rounded-[32px] bg-slate-50 border border-slate-200 shadow-inner space-y-4">
+                              <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Live Profile Card Preview</p>
+                              <div className="bg-white rounded-3xl p-5 shadow border flex items-center gap-4">
+                                <img src={currentDoctor.photoUrl || 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300'} className="w-16 h-16 rounded-full object-cover border" />
+                                <div>
+                                  <h4 className="font-bold text-slate-800 text-lg">{currentDoctor.name || 'Doctor Name'}</h4>
+                                  <p className="text-xs text-[#8B1A4A] font-extrabold uppercase">{currentDoctor.specialty || 'Specialty'}</p>
+                                  <p className="text-[11px] text-gray-500 mt-1 font-semibold">{currentDoctor.branch} · {currentDoctor.exp || 'Yrs experience'}</p>
+                                </div>
+                              </div>
+                            </div>
+                          </>
+                        ) : (
+                          /* Blogs section for doctor */
+                          !currentDoctor.id ? (
+                            <div className="glass-card-admin rounded-[32px] p-8 shadow-sm text-center py-16 space-y-4">
+                              <div className="w-16 h-16 bg-[#8B1A4A]/5 rounded-full flex items-center justify-center mx-auto text-[#8B1A4A]">
+                                <Users className="w-8 h-8" />
+                              </div>
+                              <h3 className="font-garamond text-2xl font-bold text-[#2D3A4A]">Doctor Specific Blogs</h3>
+                              <p className="text-xs text-slate-500 max-w-xs mx-auto">Please save or edit an existing doctor profile first before adding blogs to their page.</p>
+                            </div>
+                          ) : (
+                            !isEditingDoctorBlog ? (
+                              <div className="glass-card-admin rounded-[32px] p-8 shadow-sm space-y-6">
+                                <div className="flex items-center justify-between">
+                                  <h3 className="font-garamond text-2xl font-bold text-[#2D3A4A]">Blogs for {currentDoctor.name}</h3>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setIsEditingDoctorBlog(true)
+                                      setDoctorBlogBlocks([{ id: Date.now().toString(), type: 'paragraph', value: '' }])
+                                      setCurrentDoctorBlog({
+                                        id: '',
+                                        title: '',
+                                        category: currentDoctor.specialty || 'Orthopaedics',
+                                        tag: 'Case Study',
+                                        excerpt: '',
+                                        content: '',
+                                        date: '',
+                                        readTime: '5 min read',
+                                        image: '',
+                                        videoUrl: '',
+                                        mediaType: 'image'
+                                      })
+                                    }}
+                                    className="px-4 py-2.5 rounded-xl bg-[#8B1A4A] text-white text-xs font-bold uppercase hover:bg-[#2D3A4A] transition-all shadow-sm flex items-center gap-1.5"
+                                  >
+                                    <Plus className="w-3.5 h-3.5" /> Add Blog
+                                  </button>
+                                </div>
+
+                                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin', scrollbarColor: '#8B1A4A #f1f5f9' }}>
+                                  {(!currentDoctor.blogs || currentDoctor.blogs.length === 0) ? (
+                                    <p className="text-xs text-slate-400 text-center py-10">No blogs published for this doctor yet.</p>
+                                  ) : (
+                                    currentDoctor.blogs.map(blog => (
+                                      <div key={blog.id} className="p-4 rounded-2xl bg-white border border-slate-100 flex justify-between items-center shadow-sm">
+                                        <div className="flex items-center gap-4 min-w-0 flex-1">
+                                          {blog.mediaType === 'video' ? (
+                                            <div className="w-12 h-12 rounded-xl bg-slate-900 border border-slate-100 flex items-center justify-center relative flex-shrink-0">
+                                              <Video className="w-5 h-5 text-white" />
+                                              <div className="absolute -bottom-1 -right-1 bg-[#8B1A4A] rounded-full p-0.5">
+                                                <Play className="w-2.5 h-2.5 text-white fill-white" />
+                                              </div>
+                                            </div>
+                                          ) : (
+                                            <img src={blog.image} className="w-12 h-12 rounded-xl object-cover border flex-shrink-0" onError={e => e.target.src = 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=800'} />
+                                          )}
+                                          <div className="min-w-0 flex-1">
+                                            <h4 className="font-bold text-slate-800 text-xs truncate">{blog.title}</h4>
+                                            <p className="text-[10px] text-gray-400 font-semibold mt-0.5">{blog.category} · {blog.tag || 'Case Study'}</p>
+                                          </div>
+                                        </div>
+                                        <div className="flex gap-1.5 ml-2">
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setCurrentDoctorBlog(blog)
+                                              setDoctorBlogBlocks(parseHtmlToBlocks(blog.content))
+                                              setIsEditingDoctorBlog(true)
+                                            }}
+                                            className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                                          >
+                                            <Edit2 className="w-3.5 h-3.5" />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => requestConfirm('Delete Blog Post?', `Are you sure you want to remove this blog from ${currentDoctor.name}'s page?`, () => deleteDoctorBlog(blog.id))}
+                                            className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                                          >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ))
+                                  )}
+                                </div>
+                              </div>
+                            ) : (
+                              <form onSubmit={saveDoctorBlog} className="glass-card-admin rounded-[32px] p-8 shadow-sm space-y-4 max-h-[650px] overflow-y-auto pr-3" style={{ scrollbarWidth: 'thin', scrollbarColor: '#8B1A4A #f1f5f9' }}>
+                                <h3 className="font-garamond text-2xl font-bold text-[#2D3A4A]">
+                                  {currentDoctorBlog.id ? 'Edit Blog Article' : 'Write Blog Article'}
+                                </h3>
+
+                                <div>
+                                  <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Blog Title</label>
+                                  <input type="text" value={currentDoctorBlog.title} onChange={e => setCurrentDoctorBlog(prev => ({ ...prev, title: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" placeholder="NAVIO Robotic Knee Joint Balancing..." required />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Category</label>
+                                    <input type="text" value={currentDoctorBlog.category} onChange={e => setCurrentDoctorBlog(prev => ({ ...prev, category: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" placeholder="Orthopaedics" required />
+                                  </div>
+                                  <div>
+                                    <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Tag</label>
+                                    <input type="text" value={currentDoctorBlog.tag} onChange={e => setCurrentDoctorBlog(prev => ({ ...prev, tag: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" placeholder="Case Study" />
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Read Time / Video Duration</label>
+                                  <input type="text" value={currentDoctorBlog.readTime} onChange={e => setCurrentDoctorBlog(prev => ({ ...prev, readTime: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" placeholder="5 min read or 3:45 mins" />
+                                </div>
+
+                                <div>
+                                  <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Excerpt / Summary</label>
+                                  <textarea value={currentDoctorBlog.excerpt} onChange={e => setCurrentDoctorBlog(prev => ({ ...prev, excerpt: e.target.value }))} className="w-full h-16 p-3 rounded-xl border bg-white text-xs" placeholder="Provide a short description of the post..." />
+                                </div>
+
+                                <div>
+                                  <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-2">Blog Body Content</label>
+                                  <div className="space-y-3">
+                                    {doctorBlogBlocks.map((block, index) => (
+                                      <div key={block.id} className="flex gap-2 items-start p-3 bg-white rounded-xl border border-slate-200/60 relative group">
+                                        <div className="flex-grow space-y-1">
+                                          <div className="flex justify-between items-center mb-1">
+                                            <span className="text-[9px] font-black uppercase tracking-wider text-[#8B1A4A] bg-[#8B1A4A]/5 px-2 py-0.5 rounded">
+                                              {block.type === 'heading' ? 'Heading 3' : block.type === 'quote' ? 'Blockquote' : block.type === 'list' ? 'List' : 'Paragraph'}
+                                            </span>
+                                            <div className="flex gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity">
+                                              <ThemedDropdown
+                                                value={block.type}
+                                                onChange={(e) => updateDoctorBlockType(block.id, e.target.value)}
+                                                options={[
+                                                  { value: 'paragraph', label: 'Paragraph' },
+                                                  { value: 'heading', label: 'Heading 3' },
+                                                  { value: 'quote', label: 'Quote' },
+                                                  { value: 'list', label: 'List' }
+                                                ]}
+                                                heightClass="h-7 !rounded-lg !px-2 text-[10px] font-bold"
+                                                className="w-28"
+                                              />
+                                              <button
+                                                type="button"
+                                                onClick={() => removeDoctorBlock(block.id)}
+                                                className="p-0.5 text-slate-400 hover:text-red-500 rounded hover:bg-slate-200/50"
+                                                title="Delete block"
+                                              >
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                              </button>
+                                            </div>
+                                          </div>
+                                          {block.type === 'list' ? (
+                                            <textarea
+                                              value={block.value}
+                                              onChange={(e) => updateDoctorBlockValue(block.id, e.target.value)}
+                                              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-xs font-normal focus:border-[#8B1A4A] focus:ring-1 focus:ring-[#8B1A4A]/30 outline-none transition-all"
+                                              placeholder="Enter list items (one item per line)..."
+                                              rows={3}
+                                            />
+                                          ) : (
+                                            <textarea
+                                              value={block.value}
+                                              onChange={(e) => updateDoctorBlockValue(block.id, e.target.value)}
+                                              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-xs font-normal focus:border-[#8B1A4A] focus:ring-1 focus:ring-[#8B1A4A]/30 outline-none transition-all"
+                                              placeholder={
+                                                block.type === 'heading' ? 'Type heading content...' :
+                                                block.type === 'quote' ? 'Type quote content...' :
+                                                'Type paragraph content... Use **word** for bold.'
+                                              }
+                                              rows={block.type === 'paragraph' ? 3 : 1}
+                                            />
+                                          )}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                  
+                                  <div className="flex flex-wrap gap-2 pt-2">
+                                    <button type="button" onClick={() => addDoctorBlock('paragraph')} className="px-3 py-1.5 text-[9px] font-bold uppercase bg-white border border-dashed rounded-lg text-slate-600 hover:bg-slate-50 transition-colors">+ Add Paragraph</button>
+                                    <button type="button" onClick={() => addDoctorBlock('heading')} className="px-3 py-1.5 text-[9px] font-bold uppercase bg-white border border-dashed rounded-lg text-slate-600 hover:bg-slate-50 transition-colors">+ Add Heading</button>
+                                    <button type="button" onClick={() => addDoctorBlock('quote')} className="px-3 py-1.5 text-[9px] font-bold uppercase bg-white border border-dashed rounded-lg text-slate-600 hover:bg-slate-50 transition-colors">+ Add Quote</button>
+                                    <button type="button" onClick={() => addDoctorBlock('list')} className="px-3 py-1.5 text-[9px] font-bold uppercase bg-white border border-dashed rounded-lg text-slate-600 hover:bg-slate-50 transition-colors">+ Add List</button>
+                                  </div>
+                                </div>
+
+
+                                <div>
+                                  <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Blog Media Type</label>
+                                  <div className="flex gap-4 mt-1.5">
+                                    <label className="flex items-center gap-2 text-xs text-slate-700 font-bold cursor-pointer">
+                                      <input type="radio" checked={currentDoctorBlog.mediaType === 'image'} onChange={() => setCurrentDoctorBlog(prev => ({ ...prev, mediaType: 'image' }))} className="accent-[#8B1A4A]" />
+                                      <span>Image Blog</span>
+                                    </label>
+                                    <label className="flex items-center gap-2 text-xs text-slate-700 font-bold cursor-pointer">
+                                      <input type="radio" checked={currentDoctorBlog.mediaType === 'video'} onChange={() => setCurrentDoctorBlog(prev => ({ ...prev, mediaType: 'video' }))} className="accent-[#8B1A4A]" />
+                                      <span>Video Blog</span>
+                                    </label>
+                                  </div>
+                                </div>
+
+                                {currentDoctorBlog.mediaType === 'video' ? (
+                                  <div>
+                                    <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Video URL (direct link or YouTube link)</label>
+                                    <div className="flex gap-2">
+                                      <input type="text" value={currentDoctorBlog.videoUrl || ''} onChange={e => setCurrentDoctorBlog(prev => ({ ...prev, videoUrl: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" placeholder="https://www.youtube.com/embed/... or direct MP4 URL" required />
+                                      <button 
+                                        type="button"
+                                        onClick={() => {
+                                          const input = document.createElement('input')
+                                          input.type = 'file'
+                                          input.accept = 'video/*'
+                                          input.onchange = (e) => {
+                                            const file = e.target.files[0]
+                                            handleVideoUpload(file, (url) => {
+                                              setCurrentDoctorBlog(prev => ({ ...prev, videoUrl: url }))
+                                            })
+                                          }
+                                          input.click()
+                                        }}
+                                        className="px-3 h-11 rounded-xl bg-[#8B1A4A] hover:bg-[#2D3A4A] text-white text-xs font-bold flex items-center justify-center gap-1 shrink-0 transition-colors"
+                                      >
+                                        <Upload className="w-4 h-4" /> Upload
+                                      </button>
+                                    </div>
+                                    
+                                    <label className="block text-[10px] uppercase font-extrabold text-slate-400 mt-2 mb-1">Thumbnail Image (Optional)</label>
+                                    <div className="flex gap-2">
+                                      <input type="text" value={currentDoctorBlog.image || ''} onChange={e => setCurrentDoctorBlog(prev => ({ ...prev, image: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" placeholder="https://..." />
+                                      <button 
+                                        type="button"
+                                        onClick={() => {
+                                          const input = document.createElement('input')
+                                          input.type = 'file'
+                                          input.accept = 'image/*'
+                                          input.onchange = (e) => {
+                                            const file = e.target.files[0]
+                                            handleImageUpload(file, (url) => {
+                                              setCurrentDoctorBlog(prev => ({ ...prev, image: url }))
+                                            })
+                                          }
+                                          input.click()
+                                        }}
+                                        className="px-3 h-11 rounded-xl bg-[#8B1A4A] hover:bg-[#2D3A4A] text-white text-xs font-bold flex items-center justify-center gap-1 shrink-0 transition-colors"
+                                      >
+                                        <Upload className="w-4 h-4" /> Upload
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div>
+                                    <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Image URL</label>
+                                    <div className="flex gap-2">
+                                      <input type="text" value={currentDoctorBlog.image || ''} onChange={e => setCurrentDoctorBlog(prev => ({ ...prev, image: e.target.value }))} className="w-full h-11 px-3 rounded-xl border bg-white text-xs" placeholder="https://..." />
+                                      <button 
+                                        type="button"
+                                        onClick={() => {
+                                          const input = document.createElement('input')
+                                          input.type = 'file'
+                                          input.accept = 'image/*'
+                                          input.onchange = (e) => {
+                                            const file = e.target.files[0]
+                                            handleImageUpload(file, (url) => {
+                                              setCurrentDoctorBlog(prev => ({ ...prev, image: url }))
+                                            })
+                                          }
+                                          input.click()
+                                        }}
+                                        className="px-3 h-11 rounded-xl bg-[#8B1A4A] hover:bg-[#2D3A4A] text-white text-xs font-bold flex items-center justify-center gap-1 shrink-0 transition-colors"
+                                      >
+                                        <Upload className="w-4 h-4" /> Upload
+                                      </button>
+                                      <button 
+                                        type="button" 
+                                        onClick={() => triggerMediaPicker((url) => setCurrentDoctorBlog(prev => ({ ...prev, image: url })))}
+                                        className="px-3 h-11 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold flex items-center justify-center gap-1 shrink-0 text-slate-700"
+                                      >
+                                        <FolderOpen className="w-4 h-4" /> Pick
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+
+                                <div className="flex gap-3 pt-2">
+                                  <button type="submit" className="flex-1 h-12 bg-[#8B1A4A] text-white hover:bg-[#2D3A4A] rounded-full text-xs font-bold uppercase transition-all shadow-md">
+                                    {currentDoctorBlog.id ? 'Save Changes' : 'Publish Blog'}
+                                  </button>
+                                  <button 
+                                    type="button" 
+                                    onClick={() => {
+                                      setIsEditingDoctorBlog(false)
+                                      setDoctorBlogBlocks([{ id: Date.now().toString(), type: 'paragraph', value: '' }])
+                                    }}
+                                    className="h-12 px-6 bg-slate-200 rounded-full text-xs font-bold uppercase"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </form>
+                            )
+                          )
+                        )}
                       </div>
                     </motion.div>
                   )}
@@ -3248,6 +4126,7 @@ export function AdminDashboard() {
                                   <button 
                                     onClick={() => {
                                       setCurrentBlog(blog)
+                                      setBlogBlocks(parseHtmlToBlocks(blog.body || blog.content))
                                       setIsEditingBlog(true)
                                     }}
                                     className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
@@ -3269,7 +4148,7 @@ export function AdminDashboard() {
 
                       {/* Right: Blog Creator */}
                       <div className="xl:col-span-6 space-y-6">
-                        <form onSubmit={saveBlog} className="glass-card-admin rounded-[32px] p-8 shadow-sm space-y-4">
+                        <form onSubmit={saveBlog} className="glass-card-admin rounded-[32px] p-8 shadow-sm space-y-4 max-h-[650px] overflow-y-auto pr-3" style={{ scrollbarWidth: 'thin', scrollbarColor: '#8B1A4A #f1f5f9' }}>
                           <h3 className="font-garamond text-2xl font-bold text-[#2D3A4A]">
                             {isEditingBlog ? 'Edit Blog Article' : 'Write New Article'}
                           </h3>
@@ -3327,8 +4206,80 @@ export function AdminDashboard() {
                           </div>
 
                           <div>
-                            <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">HTML Body Content</label>
-                            <textarea value={currentBlog.body} onChange={e => setCurrentBlog(prev => ({ ...prev, body: e.target.value }))} className="w-full h-32 p-3 rounded-xl border bg-white text-xs font-mono" placeholder="<h3>Subtitle</h3><p>Content...</p>" required />
+                          <div>
+                            <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-2">Blog Body Content</label>
+                            <div className="space-y-3">
+                              {blogBlocks.map((block, index) => (
+                                <div key={block.id} className="flex gap-2 items-start p-3 bg-white rounded-xl border border-slate-200/60 relative group">
+                                  <div className="flex-grow space-y-1">
+                                    <div className="flex justify-between items-center mb-1">
+                                      <span className="text-[9px] font-black uppercase tracking-wider text-[#8B1A4A] bg-[#8B1A4A]/5 px-2 py-0.5 rounded">
+                                        {block.type === 'heading' ? 'Heading 3' : block.type === 'quote' ? 'Blockquote' : block.type === 'list' ? 'List' : 'Paragraph'}
+                                      </span>
+                                      <div className="flex gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity">
+                                        <ThemedDropdown
+                                          value={block.type}
+                                          onChange={(e) => updateMainBlockType(block.id, e.target.value)}
+                                          options={[
+                                            { value: 'paragraph', label: 'Paragraph' },
+                                            { value: 'heading', label: 'Heading 3' },
+                                            { value: 'quote', label: 'Quote' },
+                                            { value: 'list', label: 'List' }
+                                          ]}
+                                          heightClass="h-7 !rounded-lg !px-2 text-[10px] font-bold"
+                                          className="w-28"
+                                        />
+                                        <button
+                                          type="button"
+                                          onClick={() => removeMainBlock(block.id)}
+                                          className="p-0.5 text-slate-400 hover:text-red-500 rounded hover:bg-slate-200/50"
+                                          title="Delete block"
+                                        >
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                    {block.type === 'list' ? (
+                                      <textarea
+                                        value={block.value}
+                                        onChange={(e) => updateMainBlockValue(block.id, e.target.value)}
+                                        className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-xs font-normal focus:border-[#8B1A4A] focus:ring-1 focus:ring-[#8B1A4A]/30 outline-none transition-all"
+                                        placeholder="Enter list items (one item per line)..."
+                                        rows={3}
+                                      />
+                                    ) : (
+                                      <textarea
+                                        value={block.value}
+                                        onChange={(e) => updateMainBlockValue(block.id, e.target.value)}
+                                        className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-xs font-normal focus:border-[#8B1A4A] focus:ring-1 focus:ring-[#8B1A4A]/30 outline-none transition-all"
+                                        placeholder={
+                                          block.type === 'heading' ? 'Type heading content...' :
+                                          block.type === 'quote' ? 'Type quote content...' :
+                                          'Type paragraph content... Use **word** for bold.'
+                                        }
+                                        rows={block.type === 'paragraph' ? 3 : 1}
+                                      />
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            
+                            <div className="flex flex-wrap gap-2 pt-2">
+                              <button type="button" onClick={() => addMainBlock('paragraph')} className="px-3 py-1.5 text-[9px] font-bold uppercase bg-white border border-dashed rounded-lg text-slate-600 hover:bg-slate-50 transition-colors">+ Add Paragraph</button>
+                              <button type="button" onClick={() => addMainBlock('heading')} className="px-3 py-1.5 text-[9px] font-bold uppercase bg-white border border-dashed rounded-lg text-slate-600 hover:bg-slate-50 transition-colors">+ Add Heading</button>
+                              <button type="button" onClick={() => addMainBlock('quote')} className="px-3 py-1.5 text-[9px] font-bold uppercase bg-white border border-dashed rounded-lg text-slate-600 hover:bg-slate-50 transition-colors">+ Add Quote</button>
+                              <button type="button" onClick={() => addMainBlock('list')} className="px-3 py-1.5 text-[9px] font-bold uppercase bg-white border border-dashed rounded-lg text-slate-600 hover:bg-slate-50 transition-colors">+ Add List</button>
+                            </div>
+                          </div>
+
+                            <div className="mt-4 p-3 bg-slate-50 border rounded-xl max-h-36 overflow-y-auto">
+                              <p className="text-[9px] uppercase font-bold text-slate-400 mb-1">Live Formatting Preview</p>
+                              <div 
+                                className="text-slate-700 text-xs space-y-2 [&_h3]:font-bold [&_h3]:text-sm [&_blockquote]:border-l-2 [&_blockquote]:border-[#8B1A4A] [&_blockquote]:pl-2 [&_blockquote]:italic [&_strong]:font-bold"
+                                dangerouslySetInnerHTML={{ __html: blocksToHtml(blogBlocks) || '<span class="text-slate-400 italic">No formatting preview available.</span>' }}
+                              />
+                            </div>
                           </div>
 
                           <div className="flex gap-3">
@@ -4480,15 +5431,47 @@ export function AdminDashboard() {
                                     </p>
                                   )}
                                 </div>
-                                <button
-                                  type="button"
-                                  onClick={() => toggleAdminActive(a)}
-                                  className={`px-3 h-9 rounded-full text-[10px] font-black uppercase tracking-wide ${
-                                    a.active !== false ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
-                                  }`}
-                                >
-                                  {a.active !== false ? 'Active' : 'Disabled'}
-                                </button>
+                                <div className="flex gap-2 items-center">
+                                  {a.role !== 'Super Admin' && (
+                                    <>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setEditingAdminId(a.id)
+                                          setCurrentAdminUser({
+                                            email: a.email,
+                                            displayName: a.displayName || '',
+                                            password: '',
+                                            role: a.role,
+                                            extraPermissions: a.extraPermissions || [],
+                                            revokedPermissions: a.revokedPermissions || []
+                                          })
+                                        }}
+                                        className="p-2 text-slate-400 hover:text-[#8B1A4A] transition-colors"
+                                        title="Edit Permissions"
+                                      >
+                                        <Edit2 className="w-4 h-4" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => deleteAdminUser(a)}
+                                        className="p-2 text-slate-400 hover:text-rose-600 transition-colors"
+                                        title="Delete Account"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    </>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleAdminActive(a)}
+                                    className={`px-3 h-9 rounded-full text-[10px] font-black uppercase tracking-wide ${
+                                      a.active !== false ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
+                                    }`}
+                                  >
+                                    {a.active !== false ? 'Active' : 'Disabled'}
+                                  </button>
+                                </div>
                               </div>
                             ))}
                             {adminUsers.length === 0 && (
@@ -4500,13 +5483,13 @@ export function AdminDashboard() {
 
                       {/* Right: Create admin form */}
                       <div className="xl:col-span-5 space-y-6">
-                        <form onSubmit={createAdminUser} className="glass-card-admin rounded-[32px] p-8 shadow-sm space-y-5">
-                          <h3 className="font-garamond text-2xl font-bold text-[#2D3A4A]">New Admin</h3>
+                        <form onSubmit={saveAdminUser} className="glass-card-admin rounded-[32px] p-8 shadow-sm space-y-5">
+                          <h3 className="font-garamond text-2xl font-bold text-[#2D3A4A]">{editingAdminId ? 'Edit Admin Permissions' : 'New Admin'}</h3>
                           <div>
                             <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Email</label>
-                            <input type="email" required value={currentAdminUser.email}
+                            <input type="email" required disabled={!!editingAdminId} value={currentAdminUser.email}
                               onChange={e => setCurrentAdminUser(prev => ({ ...prev, email: e.target.value }))}
-                              className="w-full h-11 px-3 rounded-xl border bg-white text-xs" />
+                              className="w-full h-11 px-3 rounded-xl border bg-white text-xs disabled:opacity-50" />
                           </div>
                           <div>
                             <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Display Name</label>
@@ -4516,9 +5499,9 @@ export function AdminDashboard() {
                           </div>
                           <div>
                             <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Password</label>
-                            <input type="password" required value={currentAdminUser.password || ''}
+                            <input type="password" required={!editingAdminId} value={currentAdminUser.password || ''}
                               onChange={e => setCurrentAdminUser(prev => ({ ...prev, password: e.target.value }))}
-                              className="w-full h-11 px-3 rounded-xl border bg-white text-xs" placeholder="Create temporary or permanent password" />
+                              className="w-full h-11 px-3 rounded-xl border bg-white text-xs" placeholder={editingAdminId ? "Leave blank to keep unchanged" : "Create temporary or permanent password"} />
                           </div>
                           <div>
                             <label className="block text-[10px] uppercase font-extrabold text-slate-400 mb-1">Role</label>
@@ -4564,9 +5547,17 @@ export function AdminDashboard() {
                           </div>
                           <button type="submit" disabled={creatingAdminUser}
                             className="w-full h-12 bg-[#8B1A4A] text-white rounded-full text-xs font-bold uppercase disabled:opacity-50">
-                            {creatingAdminUser ? 'Creating…' : 'Create Admin Account'}
+                            {creatingAdminUser ? (editingAdminId ? 'Saving…' : 'Creating…') : (editingAdminId ? 'Save Permissions' : 'Create Admin Account')}
                           </button>
-                          {auth && <p className="text-[10px] text-slate-400 text-center">Set a temporary or permanent password. The new administrator can log in immediately.</p>}
+                          {editingAdminId && (
+                            <button type="button" onClick={() => {
+                              setEditingAdminId(null)
+                              setCurrentAdminUser({ email: '', displayName: '', password: '', role: 'Reception', extraPermissions: [], revokedPermissions: [] })
+                            }} className="w-full h-10 mt-2 bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors rounded-full text-xs font-bold uppercase">
+                              Cancel Editing
+                            </button>
+                          )}
+                          {auth && !editingAdminId && <p className="text-[10px] text-slate-400 text-center">Set a temporary or permanent password. The new administrator can log in immediately.</p>}
                         </form>
                       </div>
                     </motion.div>

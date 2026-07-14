@@ -7,7 +7,7 @@ export const MODULES = [
   'doctors', 'departments', 'blogs', 'news', 'gallery', 'jobs',
   'testimonials', 'faqs', 'downloads', 'media',
   'homepage', 'aboutpage', 'careers_customizer', 'branches',
-  'seo', 'admin_users',
+  'seo', 'admin_users', 'history',
 ]
 
 export const ROLES = ['Super Admin', 'Admin', 'Marketing Admin', 'HR', 'Doctor Admin', 'Reception']
@@ -32,13 +32,14 @@ export const MODULE_LABELS = {
   branches: 'Branch Landing Pages',
   seo: 'SEO Meta Tags',
   admin_users: 'Admin User Management',
+  history: 'Audit & History Logs',
 }
 
 // admin_users is intentionally excluded here — it is never grantable via
 // extraPermissions, it is hardcoded to role === 'Super Admin' only.
 export const ROLE_DEFAULT_PERMISSIONS = {
   'Super Admin': MODULES.filter(m => m !== 'admin_users'),
-  'Admin': MODULES.filter(m => m !== 'admin_users'),
+  'Admin': MODULES.filter(m => m !== 'admin_users' && m !== 'history'),
   'Marketing Admin': ['analytics', 'heatmaps', 'departments', 'blogs', 'news', 'gallery', 'testimonials', 'faqs', 'downloads', 'media', 'homepage', 'aboutpage', 'branches', 'seo'],
   'HR': ['jobs', 'careers_customizer'],
   'Doctor Admin': ['doctors'],

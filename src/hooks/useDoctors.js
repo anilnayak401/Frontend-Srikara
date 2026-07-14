@@ -3,6 +3,7 @@ import { ALL_DOCTORS } from '@/data/doctors'
 import { db } from '@/lib/firebase'
 import { collection, getDocs } from 'firebase/firestore'
 import { assetUrl } from '@/lib/assetUrl'
+import { DOCTOR_MEDIA } from '@/data/doctorMedia'
 
 let cachedDoctorsList = [...ALL_DOCTORS]
 let isFetched = false
@@ -59,11 +60,15 @@ const loadDynamicDoctors = async (force = false) => {
     const imgSrc = rawImg ? resolveImage(rawImg) : (staticMatch?.image || assetUrl('doctors/doctor-placeholder.png'))
     const fbSrc = staticMatch?.image || assetUrl('doctors/doctor-placeholder.png')
 
+    const doctorSlug = d.slug || generatedSlug
+    const defaultMedia = DOCTOR_MEDIA[doctorSlug] || DOCTOR_MEDIA['default']
+    const initialBlogs = d.blogs !== undefined ? d.blogs : (defaultMedia?.blogs || [])
+
     return {
       ...staticMatch,
       ...d,
       id: Number(d.id) || d.id,
-      slug: d.slug || generatedSlug,
+      slug: doctorSlug,
       specialtyId: mapSpecialtyToId(rawSpecialty),
       image: imgSrc,
       fallback: fbSrc,
@@ -82,7 +87,8 @@ const loadDynamicDoctors = async (force = false) => {
         : (d.languages ? d.languages.split(',').map(s => s.trim()) : ['English']),
       education: Array.isArray(d.education)
         ? d.education
-        : (d.education ? d.education.split(',').map(s => s.trim()) : [])
+        : (d.education ? d.education.split(',').map(s => s.trim()) : []),
+      blogs: initialBlogs
     }
   }
 
