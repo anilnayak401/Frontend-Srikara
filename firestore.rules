@@ -113,6 +113,11 @@ service cloud.firestore {
       allow write: if docHasPerm(myDoc(), 'seo');
     }
 
+    match /site_contents/meta {
+      allow read: if true;
+      allow write: if isSuperAdmin(myDoc());
+    }
+
     match /audit_logs/{id} {
       allow read, write: if docHasPerm(myDoc(), 'history');
     }
