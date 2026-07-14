@@ -599,278 +599,279 @@ export function AdminDashboard() {
   }, [])
 
   // Sync to/from LocalStorage or Firestore
-  useEffect(() => {
-    const initializeData = async () => {
-      setLoading(true)
-      if (db) {
+  const initializeData = async () => {
+    setLoading(true)
+    if (db) {
+      try {
+        // 1. Load Doctors
         try {
-          // 1. Load Doctors
-          try {
-            const docSnap = await getDocs(collection(db, 'doctors'))
-            const fbDocs = docSnap.docs.map(d => ({ id: d.id, ...d.data() }))
-            const formattedFbDocs = fbDocs.map(d => {
-              const docSlug = d.slug || d.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-              const defaultMedia = DOCTOR_MEDIA[docSlug] || DOCTOR_MEDIA['default']
-              const initialBlogs = d.blogs !== undefined ? d.blogs : (defaultMedia?.blogs || [])
-              return {
-                ...d,
-                blogs: initialBlogs
-              }
-            })
-            const formattedStatic = ALL_DOCTORS.map(d => {
-              const docSlug = d.slug || d.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-              const defaultMedia = DOCTOR_MEDIA[docSlug] || DOCTOR_MEDIA['default']
-              const initialBlogs = d.blogs !== undefined ? d.blogs : (defaultMedia?.blogs || [])
-              return {
-                id: String(d.id),
-                name: d.name,
-                specialty: d.specialty,
-                specialtyId: d.specialtyId || 'ortho',
-                sub: d.sub || '',
-                exp: d.exp || '10+ Years',
-                branch: d.branch || 'LB Nagar',
-                availability: d.availability || 'Mon - Sat: 10 AM - 5 PM',
-                photoUrl: d.image || d.photoUrl || '',
-                status: 'Active',
-                bio: d.about || d.bio || '',
-                languages: Array.isArray(d.languages) ? d.languages.join(', ') : d.languages || 'English',
-                tagline: d.tagline || '',
-                education: Array.isArray(d.education) ? d.education.join(', ') : d.education || '',
-                blogs: initialBlogs
-              }
-            }).filter(sd => !formattedFbDocs.some(fd => fd.name.toLowerCase() === sd.name.toLowerCase()))
-
-            setDoctors([...formattedFbDocs, ...formattedStatic])
-          } catch (err) {
-            console.error('Failed to load doctors from Firestore', err)
-          }
-          
-          // 2. Load Jobs
-          try {
-            const jobSnap = await getDocs(collection(db, 'job_openings'))
-            if (jobSnap.empty) {
-              for (const jobItem of DEFAULT_JOBS) {
-                await setDoc(doc(db, 'job_openings', String(jobItem.id)), jobItem)
-              }
-              setJobs(DEFAULT_JOBS)
-            } else {
-              setJobs(jobSnap.docs.map(j => ({ id: j.id, ...j.data() })))
+          const docSnap = await getDocs(collection(db, 'doctors'))
+          const fbDocs = docSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+          const formattedFbDocs = fbDocs.map(d => {
+            const docSlug = d.slug || d.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+            const defaultMedia = DOCTOR_MEDIA[docSlug] || DOCTOR_MEDIA['default']
+            const initialBlogs = d.blogs !== undefined ? d.blogs : (defaultMedia?.blogs || [])
+            return {
+              ...d,
+              blogs: initialBlogs
             }
-          } catch (err) {
-            console.error('Failed to load jobs from Firestore', err)
-          }
-
-          // 3. Load Appointments
-          if (hasAccess('appointments')) {
-            try {
-              const appSnap = await getDocs(collection(db, 'appointments'))
-              if (appSnap.empty) {
-                for (const appItem of DEFAULT_APPOINTMENTS) {
-                  await setDoc(doc(db, 'appointments', String(appItem.id)), appItem)
-                }
-                setAppointments(DEFAULT_APPOINTMENTS)
-              } else {
-                const loadedAppts = appSnap.docs.map(a => ({ id: a.id, ...a.data() }))
-                loadedAppts.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
-                setAppointments(loadedAppts)
-              }
-            } catch (err) {
-              console.error('Failed to load appointments from Firestore', err)
+          })
+          const formattedStatic = ALL_DOCTORS.map(d => {
+            const docSlug = d.slug || d.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+            const defaultMedia = DOCTOR_MEDIA[docSlug] || DOCTOR_MEDIA['default']
+            const initialBlogs = d.blogs !== undefined ? d.blogs : (defaultMedia?.blogs || [])
+            return {
+              id: String(d.id),
+              name: d.name,
+              specialty: d.specialty,
+              specialtyId: d.specialtyId || 'ortho',
+              sub: d.sub || '',
+              exp: d.exp || '10+ Years',
+              branch: d.branch || 'LB Nagar',
+              availability: d.availability || 'Mon - Sat: 10 AM - 5 PM',
+              photoUrl: d.image || d.photoUrl || '',
+              status: 'Active',
+              bio: d.about || d.bio || '',
+              languages: Array.isArray(d.languages) ? d.languages.join(', ') : d.languages || 'English',
+              tagline: d.tagline || '',
+              education: Array.isArray(d.education) ? d.education.join(', ') : d.education || '',
+              blogs: initialBlogs
             }
-          } else {
-            setAppointments([])
-          }
+          }).filter(sd => !formattedFbDocs.some(fd => fd.name.toLowerCase() === sd.name.toLowerCase()))
 
-          // 4. Load Blogs
-          try {
-            const blogSnap = await getDocs(collection(db, 'blogs'))
-            const fbBlogs = blogSnap.docs.map(b => ({ id: b.id, ...b.data() }))
-            const filteredStaticBlogs = DEFAULT_BLOGS.map(b => ({
-              id: String(b.id),
-              title: b.title,
-              category: b.category,
-              tag: b.tag || 'Clinical',
-              body: b.body || b.content || '',
-              status: b.status || 'Active',
-              slug: b.slug || b.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-              seoTitle: b.seoTitle || b.title,
-              seoDesc: b.seoDesc || b.excerpt || '',
-              readTime: b.readTime || '5 min read',
-              image: b.image || ''
-            })).filter(sb => !fbBlogs.some(fb => fb.title.toLowerCase() === sb.title.toLowerCase()))
-
-            setBlogs([...fbBlogs, ...filteredStaticBlogs])
-          } catch (err) {
-            console.error('Failed to load blogs from Firestore', err)
-          }
-
-          // 5. Load FAQs
-          try {
-            const faqSnap = await getDocs(collection(db, 'faqs'))
-            if (faqSnap.empty) {
-              for (const faqItem of DEFAULT_FAQS) {
-                await setDoc(doc(db, 'faqs', String(faqItem.id)), faqItem)
-              }
-              setFaqs(DEFAULT_FAQS)
-            } else {
-              setFaqs(faqSnap.docs.map(f => ({ id: f.id, ...f.data() })))
-            }
-          } catch (err) {
-            console.error('Failed to load FAQs from Firestore', err)
-          }
-
-          // 6. Load Departments
-          try {
-            const deptSnap = await getDocs(collection(db, 'departments'))
-            const storedDepts = deptSnap.docs.map(d => ({ id: d.id, ...d.data() }))
-            const deptMetaRef = doc(db, 'site_contents', 'meta')
-            const deptMetaSnap = await getDoc(deptMetaRef)
-            const deptSeedVersion = deptMetaSnap.exists() ? (deptMetaSnap.data().departmentsSeedVersion || 1) : 1
-            if (deptSnap.empty || deptSeedVersion < DEPARTMENTS_SEED_VERSION) {
-              const missingDepts = missingDefaultDepartments(storedDepts)
-              for (const deptItem of missingDepts) {
-                await setDoc(doc(db, 'departments', String(deptItem.id)), deptItem)
-              }
-              await setDoc(deptMetaRef, { departmentsSeedVersion: DEPARTMENTS_SEED_VERSION }, { merge: true })
-              setDepartments([...storedDepts, ...missingDepts])
-            } else {
-              setDepartments(storedDepts)
-            }
-          } catch (err) {
-            console.error('Failed to load departments from Firestore', err)
-          }
-
-          // 7. Load Testimonials
-          try {
-            const testSnap = await getDocs(collection(db, 'testimonials'))
-            const storedTestimonials = testSnap.docs.map(t => ({ id: t.id, ...t.data() }))
-            const testMetaRef = doc(db, 'site_contents', 'meta')
-            const testMetaSnap = await getDoc(testMetaRef)
-            const testimonialsSeeded = testMetaSnap.exists() ? (testMetaSnap.data().testimonialsSeededVersion || 0) : 0
-            
-            if (testSnap.empty) {
-              for (const testItem of DEFAULT_TESTIMONIALS) {
-                await setDoc(doc(db, 'testimonials', String(testItem.id)), testItem)
-              }
-              await setDoc(testMetaRef, { testimonialsSeededVersion: 1 }, { merge: true })
-              setTestimonials(DEFAULT_TESTIMONIALS)
-            } else {
-              setTestimonials(storedTestimonials)
-            }
-          } catch (err) {
-            console.error('Failed to load testimonials from Firestore', err)
-          }
-
-          // 8. Load Downloads
-          try {
-            const dlSnap = await getDocs(collection(db, 'downloads'))
-            if (dlSnap.empty) {
-              for (const dlItem of DEFAULT_DOWNLOADS) {
-                await setDoc(doc(db, 'downloads', String(dlItem.id)), dlItem)
-              }
-              setDownloads(DEFAULT_DOWNLOADS)
-            } else {
-              setDownloads(dlSnap.docs.map(d => ({ id: d.id, ...d.data() })))
-            }
-          } catch (err) {
-            console.error('Failed to load downloads from Firestore', err)
-          }
-
-          // 9. Load News
-          try {
-            const newsSnap = await getDocs(collection(db, 'news'))
-            if (newsSnap.empty) {
-              for (const newsItem of DEFAULT_NEWS) {
-                await setDoc(doc(db, 'news', String(newsItem.id)), newsItem)
-              }
-              setNews(DEFAULT_NEWS)
-            } else {
-              setNews(newsSnap.docs.map(n => ({ id: n.id, ...n.data() })))
-            }
-          } catch (err) {
-            console.error('Failed to load news from Firestore', err)
-          }
-
-          // 10. Load Site Page Contents
-          try {
-            const pageRef = doc(db, 'site_contents', 'pages')
-            const pageSnap = await getDoc(pageRef)
-            if (pageSnap.exists()) {
-              setPageData(mergeWithDefaults(pageSnap.data()))
-            } else {
-              await setDoc(pageRef, DEFAULT_PAGE_DATA)
-              setPageData(DEFAULT_PAGE_DATA)
-            }
-          } catch (err) {
-            console.error('Failed to load page data from Firestore', err)
-          }
-
-          // 11. Load SEO contents
-          try {
-            const seoRef = doc(db, 'site_contents', 'seo')
-            const seoSnap = await getDoc(seoRef)
-            if (seoSnap.exists()) {
-              setSeoData(seoSnap.data())
-            } else {
-              await setDoc(seoRef, DEFAULT_SEO_DATA)
-              setSeoData(DEFAULT_SEO_DATA)
-            }
-          } catch (err) {
-            console.error('Failed to load SEO data from Firestore', err)
-          }
-
-          // 12. Load Media Files
-          try {
-            const mediaSnap = await getDocs(collection(db, 'media'))
-            if (mediaSnap.empty) {
-              for (const mediaItem of DEFAULT_MEDIA) {
-                await setDoc(doc(db, 'media', String(mediaItem.id)), mediaItem)
-              }
-              setMediaFiles(DEFAULT_MEDIA)
-            } else {
-              setMediaFiles(mediaSnap.docs.map(m => ({ id: m.id, ...m.data() })))
-            }
-          } catch (err) {
-            console.error('Failed to load media from Firestore', err)
-          }
-
-          // 13. Load Analytics Events
-          if (hasAccess('analytics') || hasAccess('heatmaps')) {
-            try {
-              const analyticsSnap = await getDocs(collection(db, 'analytics_events'))
-              setAnalyticsEvents(analyticsSnap.docs.map(e => ({ id: e.id, ...e.data() })))
-            } catch (err) {
-              console.error('Failed to load analytics events from Firestore', err)
-            }
-          } else {
-            setAnalyticsEvents([])
-          }
-
-          // 14. Load Audit Logs
-          if (hasAccess('history')) {
-            try {
-              const auditSnap = await getDocs(collection(db, 'audit_logs'))
-              const loadedLogs = auditSnap.docs.map(e => ({ id: e.id, ...e.data() }))
-              loadedLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-              setHistoryLogs(loadedLogs)
-            } catch (err) {
-              console.error('Failed to load audit logs from Firestore', err)
-            }
-          } else {
-            setHistoryLogs([])
-          }
-
+          setDoctors([...formattedFbDocs, ...formattedStatic])
         } catch (err) {
-          console.error('Firestore loading failed, falling back to local storage', err)
-          loadFromLocalStorage()
-        } finally {
-          setLoading(false)
+          console.error('Failed to load doctors from Firestore', err)
         }
-      } else {
+        
+        // 2. Load Jobs
+        try {
+          const jobSnap = await getDocs(collection(db, 'job_openings'))
+          if (jobSnap.empty) {
+            for (const jobItem of DEFAULT_JOBS) {
+              await setDoc(doc(db, 'job_openings', String(jobItem.id)), jobItem)
+            }
+            setJobs(DEFAULT_JOBS)
+          } else {
+            setJobs(jobSnap.docs.map(j => ({ id: j.id, ...j.data() })))
+          }
+        } catch (err) {
+          console.error('Failed to load jobs from Firestore', err)
+        }
+
+        // 3. Load Appointments
+        if (hasAccess('appointments')) {
+          try {
+            const appSnap = await getDocs(collection(db, 'appointments'))
+            if (appSnap.empty) {
+              for (const appItem of DEFAULT_APPOINTMENTS) {
+                await setDoc(doc(db, 'appointments', String(appItem.id)), appItem)
+              }
+              setAppointments(DEFAULT_APPOINTMENTS)
+            } else {
+              const loadedAppts = appSnap.docs.map(a => ({ id: a.id, ...a.data() }))
+              loadedAppts.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+              setAppointments(loadedAppts)
+            }
+          } catch (err) {
+            console.error('Failed to load appointments from Firestore', err)
+          }
+        } else {
+          setAppointments([])
+        }
+
+        // 4. Load Blogs
+        try {
+          const blogSnap = await getDocs(collection(db, 'blogs'))
+          const fbBlogs = blogSnap.docs.map(b => ({ id: b.id, ...b.data() }))
+          const filteredStaticBlogs = DEFAULT_BLOGS.map(b => ({
+            id: String(b.id),
+            title: b.title,
+            category: b.category,
+            tag: b.tag || 'Clinical',
+            body: b.body || b.content || '',
+            status: b.status || 'Active',
+            slug: b.slug || b.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+            seoTitle: b.seoTitle || b.title,
+            seoDesc: b.seoDesc || b.excerpt || '',
+            readTime: b.readTime || '5 min read',
+            image: b.image || ''
+          })).filter(sb => !fbBlogs.some(fb => fb.title.toLowerCase() === sb.title.toLowerCase()))
+
+          setBlogs([...fbBlogs, ...filteredStaticBlogs])
+        } catch (err) {
+          console.error('Failed to load blogs from Firestore', err)
+        }
+
+        // 5. Load FAQs
+        try {
+          const faqSnap = await getDocs(collection(db, 'faqs'))
+          if (faqSnap.empty) {
+            for (const faqItem of DEFAULT_FAQS) {
+              await setDoc(doc(db, 'faqs', String(faqItem.id)), faqItem)
+            }
+            setFaqs(DEFAULT_FAQS)
+          } else {
+            setFaqs(faqSnap.docs.map(f => ({ id: f.id, ...f.data() })))
+          }
+        } catch (err) {
+          console.error('Failed to load FAQs from Firestore', err)
+        }
+
+        // 6. Load Departments
+        try {
+          const deptSnap = await getDocs(collection(db, 'departments'))
+          const storedDepts = deptSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+          const deptMetaRef = doc(db, 'site_contents', 'meta')
+          const deptMetaSnap = await getDoc(deptMetaRef)
+          const deptSeedVersion = deptMetaSnap.exists() ? (deptMetaSnap.data().departmentsSeedVersion || 1) : 1
+          if (deptSnap.empty || deptSeedVersion < DEPARTMENTS_SEED_VERSION) {
+            const missingDepts = missingDefaultDepartments(storedDepts)
+            for (const deptItem of missingDepts) {
+              await setDoc(doc(db, 'departments', String(deptItem.id)), deptItem)
+            }
+            await setDoc(deptMetaRef, { departmentsSeedVersion: DEPARTMENTS_SEED_VERSION }, { merge: true })
+            setDepartments([...storedDepts, ...missingDepts])
+          } else {
+            setDepartments(storedDepts)
+          }
+        } catch (err) {
+          console.error('Failed to load departments from Firestore', err)
+        }
+
+        // 7. Load Testimonials
+        try {
+          const testSnap = await getDocs(collection(db, 'testimonials'))
+          const storedTestimonials = testSnap.docs.map(t => ({ id: t.id, ...t.data() }))
+          const testMetaRef = doc(db, 'site_contents', 'meta')
+          const testMetaSnap = await getDoc(testMetaRef)
+          const testimonialsSeeded = testMetaSnap.exists() ? (testMetaSnap.data().testimonialsSeededVersion || 0) : 0
+          
+          if (testSnap.empty) {
+            for (const testItem of DEFAULT_TESTIMONIALS) {
+              await setDoc(doc(db, 'testimonials', String(testItem.id)), testItem)
+            }
+            await setDoc(testMetaRef, { testimonialsSeededVersion: 1 }, { merge: true })
+            setTestimonials(DEFAULT_TESTIMONIALS)
+          } else {
+            setTestimonials(storedTestimonials)
+          }
+        } catch (err) {
+          console.error('Failed to load testimonials from Firestore', err)
+        }
+
+        // 8. Load Downloads
+        try {
+          const dlSnap = await getDocs(collection(db, 'downloads'))
+          if (dlSnap.empty) {
+            for (const dlItem of DEFAULT_DOWNLOADS) {
+              await setDoc(doc(db, 'downloads', String(dlItem.id)), dlItem)
+            }
+            setDownloads(DEFAULT_DOWNLOADS)
+          } else {
+            setDownloads(dlSnap.docs.map(d => ({ id: d.id, ...d.data() })))
+          }
+        } catch (err) {
+          console.error('Failed to load downloads from Firestore', err)
+        }
+
+        // 9. Load News
+        try {
+          const newsSnap = await getDocs(collection(db, 'news'))
+          if (newsSnap.empty) {
+            for (const newsItem of DEFAULT_NEWS) {
+              await setDoc(doc(db, 'news', String(newsItem.id)), newsItem)
+            }
+            setNews(DEFAULT_NEWS)
+          } else {
+            setNews(newsSnap.docs.map(n => ({ id: n.id, ...n.data() })))
+          }
+        } catch (err) {
+          console.error('Failed to load news from Firestore', err)
+        }
+
+        // 10. Load Site Page Contents
+        try {
+          const pageRef = doc(db, 'site_contents', 'pages')
+          const pageSnap = await getDoc(pageRef)
+          if (pageSnap.exists()) {
+            setPageData(mergeWithDefaults(pageSnap.data()))
+          } else {
+            await setDoc(pageRef, DEFAULT_PAGE_DATA)
+            setPageData(DEFAULT_PAGE_DATA)
+          }
+        } catch (err) {
+          console.error('Failed to load page data from Firestore', err)
+        }
+
+        // 11. Load SEO contents
+        try {
+          const seoRef = doc(db, 'site_contents', 'seo')
+          const seoSnap = await getDoc(seoRef)
+          if (seoSnap.exists()) {
+            setSeoData(seoSnap.data())
+          } else {
+            await setDoc(seoRef, DEFAULT_SEO_DATA)
+            setSeoData(DEFAULT_SEO_DATA)
+          }
+        } catch (err) {
+          console.error('Failed to load SEO data from Firestore', err)
+        }
+
+        // 12. Load Media Files
+        try {
+          const mediaSnap = await getDocs(collection(db, 'media'))
+          if (mediaSnap.empty) {
+            for (const mediaItem of DEFAULT_MEDIA) {
+              await setDoc(doc(db, 'media', String(mediaItem.id)), mediaItem)
+            }
+            setMediaFiles(DEFAULT_MEDIA)
+          } else {
+            setMediaFiles(mediaSnap.docs.map(m => ({ id: m.id, ...m.data() })))
+          }
+        } catch (err) {
+          console.error('Failed to load media from Firestore', err)
+        }
+
+        // 13. Load Analytics Events
+        if (hasAccess('analytics') || hasAccess('heatmaps')) {
+          try {
+            const analyticsSnap = await getDocs(collection(db, 'analytics_events'))
+            setAnalyticsEvents(analyticsSnap.docs.map(e => ({ id: e.id, ...e.data() })))
+          } catch (err) {
+            console.error('Failed to load analytics events from Firestore', err)
+          }
+        } else {
+          setAnalyticsEvents([])
+        }
+
+        // 14. Load Audit Logs
+        if (hasAccess('history')) {
+          try {
+            const auditSnap = await getDocs(collection(db, 'audit_logs'))
+            const loadedLogs = auditSnap.docs.map(e => ({ id: e.id, ...e.data() }))
+            loadedLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+            setHistoryLogs(loadedLogs)
+          } catch (err) {
+            console.error('Failed to load audit logs from Firestore', err)
+          }
+        } else {
+          setHistoryLogs([])
+        }
+
+      } catch (err) {
+        console.error('Firestore loading failed, falling back to local storage', err)
         loadFromLocalStorage()
+      } finally {
         setLoading(false)
       }
+    } else {
+      loadFromLocalStorage()
+      setLoading(false)
     }
+  }
+
+  useEffect(() => {
     initializeData()
   }, [user])
 
@@ -978,6 +979,113 @@ export function AdminDashboard() {
 
     } catch (e) {
       console.warn('Error loading from local storage', e)
+    }
+  }
+
+  const syncLocalToFirestore = async () => {
+    if (!db) {
+      notifyUser('error', 'Database is not connected. Check environment variables.')
+      return
+    }
+    setLoading(true)
+    try {
+      const data = localStorage.getItem('srikara_cms_data')
+      if (!data) {
+        notifyUser('warning', 'No local data found to sync.')
+        setLoading(false)
+        return
+      }
+      const parsed = JSON.parse(data)
+
+      // Sync Testimonials
+      if (Array.isArray(parsed.testimonials)) {
+        for (const item of parsed.testimonials) {
+          await setDoc(doc(db, 'testimonials', String(item.id)), item)
+        }
+      }
+
+      // Sync Blogs
+      if (Array.isArray(parsed.blogs)) {
+        for (const item of parsed.blogs) {
+          await setDoc(doc(db, 'blogs', String(item.id)), item)
+        }
+      }
+
+      // Sync Jobs
+      if (parsed.jobs && Array.isArray(parsed.jobs)) {
+        for (const item of parsed.jobs) {
+          await setDoc(doc(db, 'job_openings', String(item.id)), item)
+        }
+      }
+
+      // Sync FAQs
+      if (parsed.faqs && Array.isArray(parsed.faqs)) {
+        for (const item of parsed.faqs) {
+          await setDoc(doc(db, 'faqs', String(item.id)), item)
+        }
+      }
+
+      // Sync Downloads
+      if (parsed.downloads && Array.isArray(parsed.downloads)) {
+        for (const item of parsed.downloads) {
+          await setDoc(doc(db, 'downloads', String(item.id)), item)
+        }
+      }
+
+      // Sync News
+      if (parsed.news && Array.isArray(parsed.news)) {
+        for (const item of parsed.news) {
+          await setDoc(doc(db, 'news', String(item.id)), item)
+        }
+      }
+
+      // Sync Departments
+      if (parsed.departments && Array.isArray(parsed.departments)) {
+        for (const item of parsed.departments) {
+          await setDoc(doc(db, 'departments', String(item.id)), item)
+        }
+      }
+
+      // Sync Media Files
+      if (parsed.mediaFiles && Array.isArray(parsed.mediaFiles)) {
+        for (const item of parsed.mediaFiles) {
+          await setDoc(doc(db, 'media', String(item.id)), item)
+        }
+      }
+
+      // Sync pageData
+      if (parsed.pageData) {
+        await setDoc(doc(db, 'site_contents', 'pages'), parsed.pageData)
+      }
+
+      // Sync seoData
+      if (parsed.seoData) {
+        await setDoc(doc(db, 'site_contents', 'seo'), parsed.seoData)
+      }
+
+      notifyUser('success', 'Successfully uploaded and synchronized all local data to live Firestore database!')
+      
+      // Reload from Firestore to refresh state
+      await initializeData()
+    } catch (err) {
+      console.error('Failed to sync to Firestore:', err)
+      notifyUser('error', `Failed to sync database: ${err.message}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSyncClick = () => {
+    if (db) {
+      requestConfirm(
+        'Push Local Data to Database',
+        'Would you like to upload and synchronize all your local testimonials, blogs, page layouts, and other customizer changes from your local storage to the live Firestore database?',
+        syncLocalToFirestore,
+        'Upload & Sync'
+      )
+    } else {
+      loadFromLocalStorage()
+      notifyUser('success', 'Loaded data from local storage (mock mode).')
     }
   }
 
@@ -2784,7 +2892,7 @@ export function AdminDashboard() {
 
               <div className="flex gap-4 w-full xl:w-auto">
                 <button 
-                  onClick={loadFromLocalStorage}
+                  onClick={handleSyncClick}
                   className="flex-1 xl:flex-none h-14 px-6 rounded-full border border-slate-200 bg-white hover:bg-slate-50 transition-all text-xs font-bold flex items-center justify-center gap-2"
                 >
                   <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Sync Database
