@@ -538,7 +538,7 @@ export function AdminDashboard() {
   const [currentFaq, setCurrentFaq] = useState({ question: '', answer: '', category: 'General' })
   const [isEditingFaq, setIsEditingFaq] = useState(false)
   const [currentDept, setCurrentDept] = useState({ id: 'ortho', name: '', description: '', treatments: '', faqCategory: 'Treatments' })
-  const [currentTestimonial, setCurrentTestimonial] = useState({ patientName: '', rating: 5, review: '', videoUrl: '', page: 'General / Home' })
+  const [currentTestimonial, setCurrentTestimonial] = useState({ patientName: '', rating: 5, review: '', videoUrl: '', page: 'All Pages' })
   const [currentDownload, setCurrentDownload] = useState({ name: '', url: '', category: 'PDFs', size: '1.2 MB' })
   const [currentNews, setCurrentNews] = useState({ title: '', type: 'News', date: '', content: '' })
 
@@ -648,10 +648,14 @@ export function AdminDashboard() {
         try {
           const jobSnap = await getDocs(collection(db, 'job_openings'))
           if (jobSnap.empty) {
-            for (const jobItem of DEFAULT_JOBS) {
-              await setDoc(doc(db, 'job_openings', String(jobItem.id)), jobItem)
-            }
             setJobs(DEFAULT_JOBS)
+            try {
+              for (const jobItem of DEFAULT_JOBS) {
+                await setDoc(doc(db, 'job_openings', String(jobItem.id)), jobItem)
+              }
+            } catch (seedErr) {
+              console.warn('Failed to seed default jobs to Firestore:', seedErr.message)
+            }
           } else {
             setJobs(jobSnap.docs.map(j => ({ id: j.id, ...j.data() })))
           }
@@ -664,10 +668,14 @@ export function AdminDashboard() {
           try {
             const appSnap = await getDocs(collection(db, 'appointments'))
             if (appSnap.empty) {
-              for (const appItem of DEFAULT_APPOINTMENTS) {
-                await setDoc(doc(db, 'appointments', String(appItem.id)), appItem)
-              }
               setAppointments(DEFAULT_APPOINTMENTS)
+              try {
+                for (const appItem of DEFAULT_APPOINTMENTS) {
+                  await setDoc(doc(db, 'appointments', String(appItem.id)), appItem)
+                }
+              } catch (seedErr) {
+                console.warn('Failed to seed default appointments to Firestore:', seedErr.message)
+              }
             } else {
               const loadedAppts = appSnap.docs.map(a => ({ id: a.id, ...a.data() }))
               loadedAppts.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
@@ -707,10 +715,14 @@ export function AdminDashboard() {
         try {
           const faqSnap = await getDocs(collection(db, 'faqs'))
           if (faqSnap.empty) {
-            for (const faqItem of DEFAULT_FAQS) {
-              await setDoc(doc(db, 'faqs', String(faqItem.id)), faqItem)
-            }
             setFaqs(DEFAULT_FAQS)
+            try {
+              for (const faqItem of DEFAULT_FAQS) {
+                await setDoc(doc(db, 'faqs', String(faqItem.id)), faqItem)
+              }
+            } catch (seedErr) {
+              console.warn('Failed to seed default FAQs to Firestore:', seedErr.message)
+            }
           } else {
             setFaqs(faqSnap.docs.map(f => ({ id: f.id, ...f.data() })))
           }
@@ -727,11 +739,15 @@ export function AdminDashboard() {
           const deptSeedVersion = deptMetaSnap.exists() ? (deptMetaSnap.data().departmentsSeedVersion || 1) : 1
           if (deptSnap.empty || deptSeedVersion < DEPARTMENTS_SEED_VERSION) {
             const missingDepts = missingDefaultDepartments(storedDepts)
-            for (const deptItem of missingDepts) {
-              await setDoc(doc(db, 'departments', String(deptItem.id)), deptItem)
-            }
-            await setDoc(deptMetaRef, { departmentsSeedVersion: DEPARTMENTS_SEED_VERSION }, { merge: true })
             setDepartments([...storedDepts, ...missingDepts])
+            try {
+              for (const deptItem of missingDepts) {
+                await setDoc(doc(db, 'departments', String(deptItem.id)), deptItem)
+              }
+              await setDoc(deptMetaRef, { departmentsSeedVersion: DEPARTMENTS_SEED_VERSION }, { merge: true })
+            } catch (seedErr) {
+              console.warn('Failed to seed default departments to Firestore:', seedErr.message)
+            }
           } else {
             setDepartments(storedDepts)
           }
@@ -748,26 +764,35 @@ export function AdminDashboard() {
           const testimonialsSeeded = testMetaSnap.exists() ? (testMetaSnap.data().testimonialsSeededVersion || 0) : 0
           
           if (testSnap.empty) {
-            for (const testItem of DEFAULT_TESTIMONIALS) {
-              await setDoc(doc(db, 'testimonials', String(testItem.id)), testItem)
-            }
-            await setDoc(testMetaRef, { testimonialsSeededVersion: 1 }, { merge: true })
             setTestimonials(DEFAULT_TESTIMONIALS)
+            try {
+              for (const testItem of DEFAULT_TESTIMONIALS) {
+                await setDoc(doc(db, 'testimonials', String(testItem.id)), testItem)
+              }
+              await setDoc(testMetaRef, { testimonialsSeededVersion: 1 }, { merge: true })
+            } catch (seedErr) {
+              console.warn('Failed to seed default testimonials to Firestore:', seedErr.message)
+            }
           } else {
             setTestimonials(storedTestimonials)
           }
         } catch (err) {
           console.error('Failed to load testimonials from Firestore', err)
+          notifyUser('error', 'Failed to load testimonials: ' + err.message)
         }
 
         // 8. Load Downloads
         try {
           const dlSnap = await getDocs(collection(db, 'downloads'))
           if (dlSnap.empty) {
-            for (const dlItem of DEFAULT_DOWNLOADS) {
-              await setDoc(doc(db, 'downloads', String(dlItem.id)), dlItem)
-            }
             setDownloads(DEFAULT_DOWNLOADS)
+            try {
+              for (const dlItem of DEFAULT_DOWNLOADS) {
+                await setDoc(doc(db, 'downloads', String(dlItem.id)), dlItem)
+              }
+            } catch (seedErr) {
+              console.warn('Failed to seed default downloads to Firestore:', seedErr.message)
+            }
           } else {
             setDownloads(dlSnap.docs.map(d => ({ id: d.id, ...d.data() })))
           }
@@ -779,10 +804,14 @@ export function AdminDashboard() {
         try {
           const newsSnap = await getDocs(collection(db, 'news'))
           if (newsSnap.empty) {
-            for (const newsItem of DEFAULT_NEWS) {
-              await setDoc(doc(db, 'news', String(newsItem.id)), newsItem)
-            }
             setNews(DEFAULT_NEWS)
+            try {
+              for (const newsItem of DEFAULT_NEWS) {
+                await setDoc(doc(db, 'news', String(newsItem.id)), newsItem)
+              }
+            } catch (seedErr) {
+              console.warn('Failed to seed default news to Firestore:', seedErr.message)
+            }
           } else {
             setNews(newsSnap.docs.map(n => ({ id: n.id, ...n.data() })))
           }
@@ -822,10 +851,14 @@ export function AdminDashboard() {
         try {
           const mediaSnap = await getDocs(collection(db, 'media'))
           if (mediaSnap.empty) {
-            for (const mediaItem of DEFAULT_MEDIA) {
-              await setDoc(doc(db, 'media', String(mediaItem.id)), mediaItem)
-            }
             setMediaFiles(DEFAULT_MEDIA)
+            try {
+              for (const mediaItem of DEFAULT_MEDIA) {
+                await setDoc(doc(db, 'media', String(mediaItem.id)), mediaItem)
+              }
+            } catch (seedErr) {
+              console.warn('Failed to seed default media to Firestore:', seedErr.message)
+            }
           } else {
             setMediaFiles(mediaSnap.docs.map(m => ({ id: m.id, ...m.data() })))
           }
@@ -1111,6 +1144,7 @@ export function AdminDashboard() {
         }
       } catch (err) {
         console.warn(`Firestore sync error for key ${key}: ${err.message}`)
+        throw err
       }
     }
   }
@@ -1766,6 +1800,8 @@ export function AdminDashboard() {
       blogs: initialBlogs
     }
 
+    const originalDoctors = [...doctors]
+
     if (!isEditingDoc) {
       payload.createdAt = timestamp
       payload.createdBy = adminEmail
@@ -1778,20 +1814,33 @@ export function AdminDashboard() {
     }
 
     if (isEditingDoc) {
-      const prev = doctors.find(d => String(d.id) === String(currentDoctor.id))
       updated = doctors.map(d => String(d.id) === String(currentDoctor.id) ? payload : d)
-      setIsEditingDoc(false)
-      await logChange('Update', 'doctors', newDocId, payload.name, prev, payload)
     } else {
       updated = [...doctors, payload]
-      await logChange('Create', 'doctors', newDocId, payload.name, null, payload)
     }
+
     setDoctors(updated)
     await persistToStore('doctors', updated)
     
     // Add to Firebase directly if live
     if (db) {
-      await setDoc(doc(db, 'doctors', newDocId), payload)
+      try {
+        await setDoc(doc(db, 'doctors', newDocId), payload)
+      } catch (err) {
+        console.error('Failed to save doctor to Firestore:', err)
+        notifyUser('error', `Failed to save doctor profile to live database: ${err.message}`)
+        setDoctors(originalDoctors)
+        await persistToStore('doctors', originalDoctors)
+        return
+      }
+    }
+
+    if (isEditingDoc) {
+      const prev = originalDoctors.find(d => String(d.id) === String(currentDoctor.id))
+      await logChange('Update', 'doctors', newDocId, payload.name, prev, payload)
+      setIsEditingDoc(false)
+    } else {
+      await logChange('Create', 'doctors', newDocId, payload.name, null, payload)
     }
 
     setCurrentDoctor({ name: '', specialty: '', specialtyId: 'ortho', sub: '', exp: '', branch: 'LB Nagar', availability: '', photoUrl: '', status: 'Active', bio: '', languages: 'English', tagline: '', education: '', blogs: [] })
@@ -1880,17 +1929,29 @@ export function AdminDashboard() {
       blogs: updatedBlogs
     }
 
+    const prevDoctor = doctors.find(d => String(d.id) === String(currentDoctor.id))
+    const originalDoctorsList = [...doctors]
+    const originalCurrentDoctor = { ...currentDoctor }
+
     // Update current doctor state
     setCurrentDoctor(updatedDoctor)
 
     // Update doctors list state
-    const prevDoctor = doctors.find(d => String(d.id) === String(currentDoctor.id))
     const updatedDoctorsList = doctors.map(d => String(d.id) === String(currentDoctor.id) ? updatedDoctor : d)
     setDoctors(updatedDoctorsList)
     await persistToStore('doctors', updatedDoctorsList)
 
     if (db) {
-      await setDoc(doc(db, 'doctors', currentDoctor.id), updatedDoctor)
+      try {
+        await setDoc(doc(db, 'doctors', currentDoctor.id), updatedDoctor)
+      } catch (err) {
+        console.error('Failed to save doctor blog to Firestore:', err)
+        notifyUser('error', `Failed to save blog to live database: ${err.message}`)
+        setCurrentDoctor(originalCurrentDoctor)
+        setDoctors(originalDoctorsList)
+        await persistToStore('doctors', originalDoctorsList)
+        return
+      }
     }
 
     await logChange(
@@ -1934,6 +1995,9 @@ export function AdminDashboard() {
     }
 
     const prevDoctor = doctors.find(d => String(d.id) === String(currentDoctor.id))
+    const originalDoctorsList = [...doctors]
+    const originalCurrentDoctor = { ...currentDoctor }
+
     setCurrentDoctor(updatedDoctor)
 
     const updatedDoctorsList = doctors.map(d => String(d.id) === String(currentDoctor.id) ? updatedDoctor : d)
@@ -1941,7 +2005,16 @@ export function AdminDashboard() {
     await persistToStore('doctors', updatedDoctorsList)
 
     if (db) {
-      await setDoc(doc(db, 'doctors', currentDoctor.id), updatedDoctor)
+      try {
+        await setDoc(doc(db, 'doctors', currentDoctor.id), updatedDoctor)
+      } catch (err) {
+        console.error('Failed to delete doctor blog in Firestore:', err)
+        notifyUser('error', `Failed to delete blog from live database: ${err.message}`)
+        setCurrentDoctor(originalCurrentDoctor)
+        setDoctors(originalDoctorsList)
+        await persistToStore('doctors', originalDoctorsList)
+        return
+      }
     }
     await logChange(
       'Update',
@@ -2075,11 +2148,22 @@ export function AdminDashboard() {
       deletedBy: adminEmail
     }
 
+    const originalDoctors = [...doctors]
     const updated = doctors.map(d => String(d.id) === String(id) ? updatedPayload : d)
+    
     setDoctors(updated)
     await persistToStore('doctors', updated)
+    
     if (db) {
-      await setDoc(doc(db, 'doctors', id), updatedPayload)
+      try {
+        await setDoc(doc(db, 'doctors', id), updatedPayload)
+      } catch (err) {
+        console.error('Failed to delete doctor in Firestore:', err)
+        notifyUser('error', `Failed to delete doctor profile from live database: ${err.message}`)
+        setDoctors(originalDoctors)
+        await persistToStore('doctors', originalDoctors)
+        return
+      }
     }
     await logChange('Delete', 'doctors', id, docToDelete.name, docToDelete, updatedPayload)
     notifyUser('success', 'Doctor profile deleted and moved to recycle bin.')
@@ -2100,19 +2184,36 @@ export function AdminDashboard() {
       author: user?.email || 'Admin Editor'
     }
 
+    const originalBlogs = [...blogs]
     let updated
     if (isEditingBlog) {
-      const prev = blogs.find(b => String(b.id) === String(currentBlog.id))
       updated = blogs.map(b => b.id === currentBlog.id ? payload : b)
-      setIsEditingBlog(false)
-      await logChange('Update', 'blogs', newBlogId, payload.title, prev, payload)
     } else {
       updated = [...blogs, payload]
-      await logChange('Create', 'blogs', newBlogId, payload.title, null, payload)
     }
+    
     setBlogs(updated)
     await persistToStore('blogs', updated)
-    if (db) await setDoc(doc(db, 'blogs', newBlogId), payload)
+
+    if (db) {
+      try {
+        await setDoc(doc(db, 'blogs', newBlogId), payload)
+      } catch (err) {
+        console.error('Failed to save blog to Firestore:', err)
+        notifyUser('error', `Failed to save blog article to live database: ${err.message}`)
+        setBlogs(originalBlogs)
+        await persistToStore('blogs', originalBlogs)
+        return
+      }
+    }
+
+    if (isEditingBlog) {
+      const prev = originalBlogs.find(b => String(b.id) === String(currentBlog.id))
+      await logChange('Update', 'blogs', newBlogId, payload.title, prev, payload)
+      setIsEditingBlog(false)
+    } else {
+      await logChange('Create', 'blogs', newBlogId, payload.title, null, payload)
+    }
 
     setCurrentBlog({ title: '', category: 'Orthopaedics', tag: 'Case Study', body: '', status: 'Active', slug: '', seoTitle: '', seoDesc: '', readTime: '5 min read', image: '' })
     setBlogBlocks([{ id: Date.now().toString(), type: 'paragraph', value: '' }])
@@ -2130,10 +2231,24 @@ export function AdminDashboard() {
       deletedAt: timestamp,
       deletedBy: adminEmail
     }
+    const originalBlogs = [...blogs]
     const updated = blogs.map(b => String(b.id) === String(id) ? updatedPayload : b)
+    
     setBlogs(updated)
     await persistToStore('blogs', updated)
-    if (db) await setDoc(doc(db, 'blogs', id), updatedPayload)
+
+    if (db) {
+      try {
+        await setDoc(doc(db, 'blogs', id), updatedPayload)
+      } catch (err) {
+        console.error('Failed to delete blog in Firestore:', err)
+        notifyUser('error', `Failed to delete blog article from live database: ${err.message}`)
+        setBlogs(originalBlogs)
+        await persistToStore('blogs', originalBlogs)
+        return
+      }
+    }
+
     await logChange('Delete', 'blogs', id, blogToDelete.title, blogToDelete, updatedPayload)
     notifyUser('success', 'Blog article deleted and moved to recycle bin.')
   }
@@ -2144,19 +2259,36 @@ export function AdminDashboard() {
     const newJobId = isEditingJob ? currentJob.id : Date.now().toString()
     const payload = { ...currentJob, id: newJobId }
 
+    const originalJobs = [...jobs]
     let updated
     if (isEditingJob) {
-      const prev = jobs.find(j => String(j.id) === String(currentJob.id))
       updated = jobs.map(j => j.id === currentJob.id ? payload : j)
-      setIsEditingJob(false)
-      await logChange('Update', 'jobs', newJobId, payload.title, prev, payload)
     } else {
       updated = [...jobs, payload]
-      await logChange('Create', 'jobs', newJobId, payload.title, null, payload)
     }
+
     setJobs(updated)
     await persistToStore('jobs', updated)
-    if (db) await setDoc(doc(db, 'job_openings', newJobId), payload)
+
+    if (db) {
+      try {
+        await setDoc(doc(db, 'job_openings', newJobId), payload)
+      } catch (err) {
+        console.error('Failed to save job to Firestore:', err)
+        notifyUser('error', `Failed to save job to live database: ${err.message}`)
+        setJobs(originalJobs)
+        await persistToStore('jobs', originalJobs)
+        return
+      }
+    }
+
+    if (isEditingJob) {
+      const prev = originalJobs.find(j => String(j.id) === String(currentJob.id))
+      await logChange('Update', 'jobs', newJobId, payload.title, prev, payload)
+      setIsEditingJob(false)
+    } else {
+      await logChange('Create', 'jobs', newJobId, payload.title, null, payload)
+    }
 
     setCurrentJob({ title: '', department: 'Orthopedics', location: 'LB Nagar, Hyd', experience: '', description: '', status: 'Active' })
     notifyUser('success', 'Job posting updated on live board!')
@@ -2173,10 +2305,24 @@ export function AdminDashboard() {
       deletedAt: timestamp,
       deletedBy: adminEmail
     }
+    const originalJobs = [...jobs]
     const updated = jobs.map(j => String(j.id) === String(id) ? updatedPayload : j)
+    
     setJobs(updated)
     await persistToStore('jobs', updated)
-    if (db) await setDoc(doc(db, 'job_openings', id), updatedPayload)
+
+    if (db) {
+      try {
+        await setDoc(doc(db, 'job_openings', id), updatedPayload)
+      } catch (err) {
+        console.error('Failed to delete job in Firestore:', err)
+        notifyUser('error', `Failed to delete job opening from live database: ${err.message}`)
+        setJobs(originalJobs)
+        await persistToStore('jobs', originalJobs)
+        return
+      }
+    }
+
     await logChange('Delete', 'jobs', id, jobToDelete.title, jobToDelete, updatedPayload)
     notifyUser('success', 'Job opening deleted and moved to recycle bin.')
   }
@@ -2187,19 +2333,36 @@ export function AdminDashboard() {
     const newFaqId = isEditingFaq ? currentFaq.id : Date.now().toString()
     const payload = { ...currentFaq, id: newFaqId }
 
+    const originalFaqs = [...faqs]
     let updated
     if (isEditingFaq) {
-      const prev = faqs.find(f => String(f.id) === String(currentFaq.id))
       updated = faqs.map(f => f.id === currentFaq.id ? payload : f)
-      setIsEditingFaq(false)
-      await logChange('Update', 'faqs', newFaqId, payload.question, prev, payload)
     } else {
       updated = [...faqs, payload]
-      await logChange('Create', 'faqs', newFaqId, payload.question, null, payload)
     }
+
     setFaqs(updated)
     await persistToStore('faqs', updated)
-    if (db) await setDoc(doc(db, 'faqs', newFaqId), payload)
+
+    if (db) {
+      try {
+        await setDoc(doc(db, 'faqs', newFaqId), payload)
+      } catch (err) {
+        console.error('Failed to save FAQ to Firestore:', err)
+        notifyUser('error', `Failed to save FAQ to live database: ${err.message}`)
+        setFaqs(originalFaqs)
+        await persistToStore('faqs', originalFaqs)
+        return
+      }
+    }
+
+    if (isEditingFaq) {
+      const prev = originalFaqs.find(f => String(f.id) === String(currentFaq.id))
+      await logChange('Update', 'faqs', newFaqId, payload.question, prev, payload)
+      setIsEditingFaq(false)
+    } else {
+      await logChange('Create', 'faqs', newFaqId, payload.question, null, payload)
+    }
 
     setCurrentFaq({ question: '', answer: '', category: 'General' })
     notifyUser('success', 'FAQ saved successfully.')
@@ -2216,10 +2379,24 @@ export function AdminDashboard() {
       deletedAt: timestamp,
       deletedBy: adminEmail
     }
+    const originalFaqs = [...faqs]
     const updated = faqs.map(f => String(f.id) === String(id) ? updatedPayload : f)
+    
     setFaqs(updated)
     await persistToStore('faqs', updated)
-    if (db) await setDoc(doc(db, 'faqs', id), updatedPayload)
+
+    if (db) {
+      try {
+        await setDoc(doc(db, 'faqs', id), updatedPayload)
+      } catch (err) {
+        console.error('Failed to delete FAQ in Firestore:', err)
+        notifyUser('error', `Failed to delete FAQ from live database: ${err.message}`)
+        setFaqs(originalFaqs)
+        await persistToStore('faqs', originalFaqs)
+        return
+      }
+    }
+
     await logChange('Delete', 'faqs', id, faqToDelete.question, faqToDelete, updatedPayload)
     notifyUser('success', 'FAQ deleted and moved to recycle bin.')
   }
@@ -2228,18 +2405,36 @@ export function AdminDashboard() {
   const saveDepartment = async (e) => {
     e.preventDefault()
     const exists = departments.find(d => d.id === currentDept.id)
+    const originalDepts = [...departments]
     let updated
     if (exists) {
-      const prev = departments.find(d => d.id === currentDept.id)
       updated = departments.map(d => d.id === currentDept.id ? currentDept : d)
-      await logChange('Update', 'departments', currentDept.id, currentDept.name, prev, currentDept)
     } else {
       updated = [...departments, currentDept]
-      await logChange('Create', 'departments', currentDept.id, currentDept.name, null, currentDept)
     }
+
     setDepartments(updated)
     await persistToStore('departments', updated)
-    if (db) await setDoc(doc(db, 'departments', currentDept.id), currentDept)
+
+    if (db) {
+      try {
+        await setDoc(doc(db, 'departments', currentDept.id), currentDept)
+      } catch (err) {
+        console.error('Failed to save department to Firestore:', err)
+        notifyUser('error', `Failed to save department to live database: ${err.message}`)
+        setDepartments(originalDepts)
+        await persistToStore('departments', originalDepts)
+        return
+      }
+    }
+
+    if (exists) {
+      const prev = originalDepts.find(d => d.id === currentDept.id)
+      await logChange('Update', 'departments', currentDept.id, currentDept.name, prev, currentDept)
+    } else {
+      await logChange('Create', 'departments', currentDept.id, currentDept.name, null, currentDept)
+    }
+
     notifyUser('success', exists ? 'Department updated.' : 'New department added!')
     if (!exists) setCurrentDept({ id: '', name: '', description: '', treatments: '', faqCategory: 'Treatments' })
   }
@@ -2260,10 +2455,24 @@ export function AdminDashboard() {
           deletedAt: timestamp,
           deletedBy: adminEmail
         }
+        const originalDepts = [...departments]
         const updated = departments.map(d => String(d.id) === String(deptId) ? updatedPayload : d)
+        
         setDepartments(updated)
         await persistToStore('departments', updated)
-        if (db) await setDoc(doc(db, 'departments', deptId), updatedPayload)
+
+        if (db) {
+          try {
+            await setDoc(doc(db, 'departments', deptId), updatedPayload)
+          } catch (err) {
+            console.error('Failed to delete department in Firestore:', err)
+            notifyUser('error', `Failed to delete department from live database: ${err.message}`)
+            setDepartments(originalDepts)
+            await persistToStore('departments', originalDepts)
+            return
+          }
+        }
+
         await logChange('Delete', 'departments', deptId, deptToDelete.name, deptToDelete, updatedPayload)
         notifyUser('success', 'Department deleted and moved to recycle bin.')
         if (currentDept.id === deptId) setCurrentDept({ id: '', name: '', description: '', treatments: '', faqCategory: 'Treatments' })
@@ -2276,12 +2485,26 @@ export function AdminDashboard() {
     e.preventDefault()
     const newId = Date.now().toString()
     const payload = { ...currentTestimonial, id: newId }
+    const originalTestimonials = [...testimonials]
     const updated = [...testimonials, payload]
+    
     setTestimonials(updated)
     await persistToStore('testimonials', updated)
-    if (db) await setDoc(doc(db, 'testimonials', newId), payload)
+
+    if (db) {
+      try {
+        await setDoc(doc(db, 'testimonials', newId), payload)
+      } catch (err) {
+        console.error('Failed to save testimonial to Firestore:', err)
+        notifyUser('error', `Failed to save testimonial to live database: ${err.message}`)
+        setTestimonials(originalTestimonials)
+        await persistToStore('testimonials', originalTestimonials)
+        return
+      }
+    }
+
     await logChange('Create', 'testimonials', newId, payload.patientName, null, payload)
-    setCurrentTestimonial({ patientName: '', rating: 5, review: '', videoUrl: '', page: 'General / Home' })
+    setCurrentTestimonial({ patientName: '', rating: 5, review: '', videoUrl: '', page: 'All Pages' })
     notifyUser('success', 'Testimonial added.')
   }
 
@@ -2299,12 +2522,25 @@ export function AdminDashboard() {
       deletedBy: adminEmail
     }
 
+    const originalTestimonials = [...testimonials]
     const updated = testimonials.map(t => String(t.id) === String(id) ? updatedPayload : t)
+    
     setTestimonials(updated)
     await persistToStore('testimonials', updated)
+
     if (db) {
-      await setDoc(doc(db, 'testimonials', id), updatedPayload)
+      try {
+        await setDoc(doc(db, 'testimonials', id), updatedPayload)
+      } catch (err) {
+        console.error('Failed to delete testimonial in Firestore:', err)
+        notifyUser('error', `Failed to delete testimonial from live database: ${err.message}`)
+        setTestimonials(originalTestimonials)
+        await persistToStore('testimonials', originalTestimonials)
+        return
+      }
     }
+
+    await logChange('Delete', 'testimonials', id, testToDelete.patientName, testToDelete, updatedPayload)
     notifyUser('success', 'Testimonial deleted and moved to history log.')
   }
 
@@ -2313,10 +2549,24 @@ export function AdminDashboard() {
     e.preventDefault()
     const newId = Date.now().toString()
     const payload = { ...currentDownload, id: newId }
+    const originalDownloads = [...downloads]
     const updated = [...downloads, payload]
+    
     setDownloads(updated)
     await persistToStore('downloads', updated)
-    if (db) await setDoc(doc(db, 'downloads', newId), payload)
+
+    if (db) {
+      try {
+        await setDoc(doc(db, 'downloads', newId), payload)
+      } catch (err) {
+        console.error('Failed to save download to Firestore:', err)
+        notifyUser('error', `Failed to save download link to live database: ${err.message}`)
+        setDownloads(originalDownloads)
+        await persistToStore('downloads', originalDownloads)
+        return
+      }
+    }
+
     await logChange('Create', 'downloads', newId, payload.name, null, payload)
     setCurrentDownload({ name: '', url: '', category: 'PDFs', size: '1.2 MB' })
     notifyUser('success', 'Download link added.')
@@ -2333,10 +2583,24 @@ export function AdminDashboard() {
       deletedAt: timestamp,
       deletedBy: adminEmail
     }
+    const originalDownloads = [...downloads]
     const updated = downloads.map(d => String(d.id) === String(id) ? updatedPayload : d)
+    
     setDownloads(updated)
     await persistToStore('downloads', updated)
-    if (db) await setDoc(doc(db, 'downloads', id), updatedPayload)
+
+    if (db) {
+      try {
+        await setDoc(doc(db, 'downloads', id), updatedPayload)
+      } catch (err) {
+        console.error('Failed to delete download in Firestore:', err)
+        notifyUser('error', `Failed to delete download from live database: ${err.message}`)
+        setDownloads(originalDownloads)
+        await persistToStore('downloads', originalDownloads)
+        return
+      }
+    }
+
     await logChange('Delete', 'downloads', id, dlToDelete.name, dlToDelete, updatedPayload)
     notifyUser('success', 'Download item deleted and moved to recycle bin.')
   }
@@ -2346,10 +2610,24 @@ export function AdminDashboard() {
     e.preventDefault()
     const newId = Date.now().toString()
     const payload = { ...currentNews, id: newId }
+    const originalNews = [...news]
     const updated = [...news, payload]
+    
     setNews(updated)
     await persistToStore('news', updated)
-    if (db) await setDoc(doc(db, 'news', newId), payload)
+
+    if (db) {
+      try {
+        await setDoc(doc(db, 'news', newId), payload)
+      } catch (err) {
+        console.error('Failed to save news to Firestore:', err)
+        notifyUser('error', `Failed to save news to live database: ${err.message}`)
+        setNews(originalNews)
+        await persistToStore('news', originalNews)
+        return
+      }
+    }
+
     await logChange('Create', 'news', newId, payload.title, null, payload)
     setCurrentNews({ title: '', type: 'News', date: '', content: '' })
     notifyUser('success', 'News item created.')
@@ -2366,10 +2644,24 @@ export function AdminDashboard() {
       deletedAt: timestamp,
       deletedBy: adminEmail
     }
+    const originalNews = [...news]
     const updated = news.map(n => String(n.id) === String(id) ? updatedPayload : n)
+    
     setNews(updated)
     await persistToStore('news', updated)
-    if (db) await setDoc(doc(db, 'news', id), updatedPayload)
+
+    if (db) {
+      try {
+        await setDoc(doc(db, 'news', id), updatedPayload)
+      } catch (err) {
+        console.error('Failed to delete news in Firestore:', err)
+        notifyUser('error', `Failed to delete news from live database: ${err.message}`)
+        setNews(originalNews)
+        await persistToStore('news', originalNews)
+        return
+      }
+    }
+
     await logChange('Delete', 'news', id, newsToDelete.title, newsToDelete, updatedPayload)
     notifyUser('success', 'News item deleted and moved to recycle bin.')
   }
@@ -2417,6 +2709,7 @@ export function AdminDashboard() {
       const apptToDelete = appointments.find(a => String(a.id) === String(id))
       if (!apptToDelete) return
 
+      const originalAppointments = [...appointments]
       const updated = appointments.filter(a => String(a.id) !== String(id))
       setAppointments(updated)
       await persistToStore('appointments', updated)
@@ -2425,6 +2718,10 @@ export function AdminDashboard() {
           await deleteDoc(doc(db, 'appointments', String(id)))
         } catch (err) {
           console.error('Failed to delete appointment in Firestore:', err)
+          notifyUser('error', `Failed to delete appointment from live database: ${err.message}`)
+          setAppointments(originalAppointments)
+          await persistToStore('appointments', originalAppointments)
+          return
         }
       }
       await logChange('Delete', 'appointments', id, `Appointment: ${apptToDelete.patientName} (${apptToDelete.date})`, apptToDelete, null)
@@ -2435,21 +2732,39 @@ export function AdminDashboard() {
   // 4. Page-wise editing
   const savePageData = async (section, data) => {
     const prev = pageData[section] ? JSON.parse(JSON.stringify(pageData[section])) : null
+    const originalPageData = { ...pageData }
     const updated = { ...pageData }
     updated[section] = data
     setPageData(updated)
-    await persistToStore('pageData', updated)
+    try {
+      await persistToStore('pageData', updated)
+    } catch (err) {
+      console.error('Failed to sync page data to Firestore:', err)
+      notifyUser('error', `Failed to save page edits to live database: ${err.message}`)
+      setPageData(originalPageData)
+      await persistToStore('pageData', originalPageData)
+      return
+    }
     await logChange('Update', 'site_contents', section, `Page Section: ${section}`, prev, data)
     notifyUser('success', `Page edits for "${section}" saved successfully!`)
   }
 
   const saveBranchData = async (slug, data) => {
     const prev = pageData.branches?.[slug] ? JSON.parse(JSON.stringify(pageData.branches[slug])) : null
+    const originalPageData = { ...pageData }
     const updated = { ...pageData }
     updated.branches = updated.branches || {}
     updated.branches[slug] = data
     setPageData(updated)
-    await persistToStore('pageData', updated)
+    try {
+      await persistToStore('pageData', updated)
+    } catch (err) {
+      console.error('Failed to sync branch page data to Firestore:', err)
+      notifyUser('error', `Failed to save branch edits to live database: ${err.message}`)
+      setPageData(originalPageData)
+      await persistToStore('pageData', originalPageData)
+      return
+    }
     await logChange('Update', 'branches', slug, `Branch Page Layout: ${slug}`, prev, data)
     notifyUser('success', `Branch details for ${slug.toUpperCase()} updated.`)
   }
@@ -2473,15 +2788,15 @@ export function AdminDashboard() {
       highlights: highlightsArray
     }
 
+    const originalBranchesList = [...branchesList]
+    const originalPageData = { ...pageData }
+
     // 1. Local Cache Sync
     let updated
     if (isEditingBranch) {
-      const prev = branchesList.find(b => b.slug === slug)
       updated = branchesList.map(b => b.slug === slug ? payload : b)
-      await logChange('Update', 'branches', slug, `Location details: ${payload.title}`, prev, payload)
     } else {
       updated = [...branchesList.filter(b => b.slug !== slug), payload]
-      await logChange('Create', 'branches', slug, `Location details: ${payload.title}`, null, payload)
     }
 
     setBranchesList(updated)
@@ -2505,7 +2820,25 @@ export function AdminDashboard() {
     }
     const updatedPageData = { ...pageData, branches: pageDataBranchesCopy, branchesList: updated }
     setPageData(updatedPageData)
-    await persistToStore('pageData', updatedPageData)
+    
+    try {
+      await persistToStore('pageData', updatedPageData)
+    } catch (err) {
+      console.error('Failed to sync pageData on save branch:', err)
+      notifyUser('error', `Failed to save branch to live database: ${err.message}`)
+      setBranchesList(originalBranchesList)
+      localStorage.setItem('srikara_branches', JSON.stringify(originalBranchesList))
+      setPageData(originalPageData)
+      await persistToStore('pageData', originalPageData)
+      return
+    }
+
+    if (isEditingBranch) {
+      const prev = originalBranchesList.find(b => b.slug === slug)
+      await logChange('Update', 'branches', slug, `Location details: ${payload.title}`, prev, payload)
+    } else {
+      await logChange('Create', 'branches', slug, `Location details: ${payload.title}`, null, payload)
+    }
 
     setIsEditingBranch(false)
     setCurrentBranchDetails({
@@ -2533,8 +2866,21 @@ export function AdminDashboard() {
       const pageDataBranchesCopy = { ...pageData.branches }
       delete pageDataBranchesCopy[slug]
       const updatedPageData = { ...pageData, branches: pageDataBranchesCopy, branchesList: updated }
+      const originalPageData = { ...pageData }
+      const originalBranchesList = [...branchesList]
+
       setPageData(updatedPageData)
-      await persistToStore('pageData', updatedPageData)
+      try {
+        await persistToStore('pageData', updatedPageData)
+      } catch (err) {
+        console.error('Failed to delete branch in Firestore:', err)
+        notifyUser('error', `Failed to delete location from live database: ${err.message}`)
+        setPageData(originalPageData)
+        setBranchesList(originalBranchesList)
+        localStorage.setItem('srikara_branches', JSON.stringify(originalBranchesList))
+        await persistToStore('pageData', originalPageData)
+        return
+      }
 
       await logChange('Delete', 'branches', slug, `Location details: ${branchToDelete?.title || slug}`, branchToDelete, null)
       notifyUser('success', 'Location removed successfully.')
@@ -2545,10 +2891,19 @@ export function AdminDashboard() {
   // 5. SEO metadata management
   const saveSeoData = async (pageKey, data) => {
     const prev = seoData[pageKey] ? JSON.parse(JSON.stringify(seoData[pageKey])) : null
+    const originalSeoData = { ...seoData }
     const updated = { ...seoData }
     updated[pageKey] = data
     setSeoData(updated)
-    await persistToStore('seoData', updated)
+    try {
+      await persistToStore('seoData', updated)
+    } catch (err) {
+      console.error('Failed to sync SEO data to Firestore:', err)
+      notifyUser('error', `Failed to save SEO metadata to live database: ${err.message}`)
+      setSeoData(originalSeoData)
+      await persistToStore('seoData', originalSeoData)
+      return
+    }
     await logChange('Update', 'seo', pageKey, `SEO metadata: ${pageKey}`, prev, data)
     notifyUser('success', `SEO meta tags for "${pageKey}" synchronized!`)
   }
@@ -2563,6 +2918,7 @@ export function AdminDashboard() {
     setUploadingMedia(true)
     setTimeout(async () => {
       const newAsset = { ...newMediaFile, id: Date.now().toString() }
+      const originalMediaFiles = [...mediaFiles]
       const updated = [...mediaFiles, newAsset]
       setMediaFiles(updated)
       persistToStore('mediaFiles', updated)
@@ -2571,6 +2927,11 @@ export function AdminDashboard() {
           await setDoc(doc(db, 'media', newAsset.id), newAsset)
         } catch (err) {
           console.error("Firebase media save error:", err)
+          notifyUser('error', `Failed to upload media to live database: ${err.message}`)
+          setMediaFiles(originalMediaFiles)
+          persistToStore('mediaFiles', originalMediaFiles)
+          setUploadingMedia(false)
+          return
         }
       }
       await logChange('Create', 'media', newAsset.id, newAsset.name, null, newAsset)
@@ -2584,6 +2945,7 @@ export function AdminDashboard() {
     const mediaToDelete = mediaFiles.find(m => m.id === id)
     if (!mediaToDelete) return
 
+    const originalMediaFiles = [...mediaFiles]
     const updated = mediaFiles.filter(m => m.id !== id)
     setMediaFiles(updated)
     persistToStore('mediaFiles', updated)
@@ -2592,6 +2954,10 @@ export function AdminDashboard() {
         await deleteDoc(doc(db, 'media', id))
       } catch (err) {
         console.error('Failed to delete media in Firestore:', err)
+        notifyUser('error', `Failed to delete media from live database: ${err.message}`)
+        setMediaFiles(originalMediaFiles)
+        persistToStore('mediaFiles', originalMediaFiles)
+        return
       }
     }
     await logChange('Delete', 'media', id, mediaToDelete.name, mediaToDelete, null)
@@ -2885,8 +3251,10 @@ export function AdminDashboard() {
                     {userRole}
                   </span>
                   <span className="text-sm text-gray-500">Active Operator: <strong className="text-slate-800">{user.email}</strong></span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-2" />
-                  <span className="text-[11px] text-emerald-600 font-bold uppercase">Online & Synced</span>
+                  <span className={`w-1.5 h-1.5 rounded-full animate-pulse ml-2 ${db ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                  <span className={`text-[11px] font-bold uppercase ${db ? 'text-emerald-600' : 'text-amber-600'}`}>
+                    {db ? 'Online & Synced' : 'Offline (Mock Mode)'}
+                  </span>
                 </div>
               </div>
 
@@ -4698,7 +5066,7 @@ export function AdminDashboard() {
                                   </div>
                                   <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                                     <h4 className="font-bold text-slate-800 text-base">{item.patientName}</h4>
-                                    <span className="px-2 py-0.5 rounded-full bg-[#8B1A4A]/5 text-[#8B1A4A] text-[9px] font-black uppercase tracking-wider">{item.page || 'General / Home'}</span>
+                                    <span className="px-2 py-0.5 rounded-full bg-[#8B1A4A]/5 text-[#8B1A4A] text-[9px] font-black uppercase tracking-wider">{item.page || 'All Pages'}</span>
                                   </div>
                                   <p className="text-xs text-gray-500 mt-1 font-semibold">"{item.review}"</p>
                                   {item.videoUrl && <p className="text-xs text-[#8B1A4A] font-mono mt-2 font-bold">{item.videoUrl}</p>}
@@ -4735,7 +5103,8 @@ export function AdminDashboard() {
                                 value={currentTestimonial.page}
                                 onChange={e => setCurrentTestimonial(prev => ({ ...prev, page: e.target.value }))}
                                 options={[
-                                  { value: 'General / Home', label: 'General / Home' },
+                                  { value: 'All Pages', label: 'All Pages' },
+                                  { value: 'Home', label: 'Home Page Only' },
                                   { value: 'About Page', label: 'About Page' },
                                   { value: 'ECIL', label: 'ECIL Branch' },
                                   { value: 'LB Nagar', label: 'LB Nagar Branch' },

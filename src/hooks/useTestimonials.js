@@ -64,8 +64,6 @@ const loadTestimonials = async (force = false) => {
       
       if (fbList.length > 0) {
         list = fbList
-      } else if (loadedFromStore) {
-        list = fbList
       }
     }
   } catch (err) {

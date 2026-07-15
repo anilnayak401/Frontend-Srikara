@@ -172,7 +172,7 @@ export function HomePage() {
           {/* 6.5 CASE STUDIES */}
           <PremiumCaseStudies />
 
-          <TestimonialsSection category="General / Home" />
+          <TestimonialsSection category="Home" />
 
           {/* 7. PREMIUM LOCATION & REVIEWS */}
           <PremiumLocation branch={branch} />

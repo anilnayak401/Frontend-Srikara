@@ -9,11 +9,30 @@ export function TestimonialsSection({ category = 'General / Home' }) {
 
   // Filter testimonials matching the category, fallback to General if none exist
   const filtered = useMemo(() => {
-    const matched = testimonials.filter(t => t.page?.toLowerCase() === category.toLowerCase())
+    const matched = testimonials.filter(t => {
+      const pageLower = t.page?.toLowerCase() || ''
+      const catLower = category.toLowerCase()
+      
+      // 'all pages' matches every page
+      if (pageLower === 'all pages') return true
+      
+      // 'home' page matches
+      if (catLower === 'general / home' || catLower === 'home') {
+        return pageLower === 'home' || pageLower === 'general / home'
+      }
+      
+      // Otherwise, exact match (e.g. branch names)
+      return pageLower === catLower
+    })
+    
     if (matched.length > 0) return matched
     
-    const general = testimonials.filter(t => t.page?.toLowerCase() === 'general / home')
-    if (general.length > 0) return general
+    // Fallback to 'All Pages' or 'General / Home' if no matches found
+    const fallback = testimonials.filter(t => {
+      const pageLower = t.page?.toLowerCase() || ''
+      return pageLower === 'all pages' || pageLower === 'general / home'
+    })
+    if (fallback.length > 0) return fallback
     
     // Catchy placeholder invitation if no testimonials exist in store
     return [{
